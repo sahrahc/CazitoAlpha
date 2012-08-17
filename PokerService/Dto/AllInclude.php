@@ -1,0 +1,10 @@
+<?php
+include_once('CasinoTableDto.php');
+require_once('GameInstanceSetupDto.php');
+include_once('GameResultDto.php');
+include_once('GameStatusDto.php');
+include_once('PlayerActionDto.php');
+include_once('PlayerActionResultDto.php');
+include_once('PlayerDto.php');
+include_once('PlayerStatusDto.php');
+?>

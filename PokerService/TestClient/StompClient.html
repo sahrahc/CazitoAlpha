@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Test STOMP connections</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+  <script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>
+        <script src="../Stomp.js" type="text/javascript"></script>
+    </head>
+    <body>
+        <p>Connect to server, establish channel, subscribe and get the message</p>
+        <input type="submit" onclick="getMessage()" />
+        <p id="outputId">Output:</p>
+        <script>
+            function O(obj) {
+                if (typeof obj == 'object') return obj;
+                else return document.getElementById(obj);
+            }
+
+            
+            Stomp.WebSocketClass = SockJS;
+            var client = Stomp.client('http://127.0.0.1:55674/stomp');
+
+            O("outputId").innerHTML = O("outputId").innerHTML + '\n Log started...'
+
+            error_callback = function(error) {
+                alert (error);
+            }
+
+            message_callback = function(message) {
+                if (message.body) {
+                    O("outputId").innerHTML = O("outputId").innerHTML + message + "<br />";
+                }
+                else {
+                    O("outputId").innerHTML = O("outputId").innerHTML + "Got Empty Message. <br />";
+                }
+            }
+
+            connect_callback = function(data) {
+                O("outputId").innerHTML = "Connected to queue... <br />";
+
+                client.subscribe("/queue/user2", message_callback);
+
+                /*client.disconnect(function() {
+                    O("outputId").innerHTML = O("outputId").innerHTML + "Disconnected.. \n";
+                }); */
+            }
+            // format: client.connect(login, passcode, connect_callback, error_callback);
+            client.connect('guest', 'guest', connect_callback, error_callback, '/');
+            client.send('/queue/user1', {}, 'test');
+        </script>
+    </body>
+</html>

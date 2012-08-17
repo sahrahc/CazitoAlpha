@@ -1,0 +1,14 @@
+<?php
+include_once('CardHelper.php');
+include_once('CasinoTable.php');
+include_once('EntityHelper.php');
+include_once('EventMessage.php');
+include_once('GameInstanceSetup.php');
+include_once('GameInstanceStatus.php');
+include_once('GameSession.php');
+include_once('NextPokerMove.php');
+include_once('PlayerInstanceSetup.php');
+include_once('PlayerInstanceStatus.php');
+include_once('PlayerTurn.php');
+include_once('PracticeSession.php');
+?>

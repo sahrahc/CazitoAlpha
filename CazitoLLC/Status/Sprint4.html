@@ -1,0 +1,20 @@
+<ol>
+    <li> User can enter a name, which the system will remember and add to his play. I am using JQuery UI library, that's why the styling is so much better.
+    </li>
+    <li>
+        User can choose between a practice game and a live game</li>
+    <li>
+        NOT TESTED - A user can start a new table, and another user can join that table if he knows the table number. I only tested the service, not end to end, that would have taken another day. We are close to allowing two or more live players play again each other
+    </li>
+    <li>
+        Browser polls (not long polling yet) for changes in status. Currently storing the messages in a table, but the basic infrastructure of creating messages for changes which are polled by client is there.
+    </li>
+    <li>
+        Time out of overdue moves not very consistent. I had php script + cron to check every second, but I has having some problems I set it back to every minute and you can trigger manually. Currently the game gets stuck if a message is lost, need to make this more robust. Using this system to trigger a practice player move every 2 seconds.
+    </li>
+</ol>
+
+<a href="http://www.cazito.net/Sprint4/PokerService/ScheduledJob.php"></a>
+
+<p>Issues: call vs. check vs. raise have have some bugs. I need to lean how to step through the code on NetBeans. Every move is validated but any errors are just logged until I get those bugs fixed.
+</p>
