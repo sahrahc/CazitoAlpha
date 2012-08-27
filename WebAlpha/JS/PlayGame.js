@@ -1,40 +1,9 @@
 /** Main game play javascript
  * 
  */
+constServiceUrl = "http://localhost//Sprint7//PokerService//PokerPlayerService.php";
+constServer = "http://localhost:55674/stomp";
 
-constObjectOffset = 5;
-constLargeOffset = 10;
-// the following must match values in css files because can't read CSS file values
-constStatusBoxWidth = 150;
-constStatusUserWidth = 180;
-constStatusBoxHeight = 78;
-
-constStatusBoxNormalBGColor = '#D3D3D3';
-constStatusBoxTimeOutBGColor = '#E59093';
-constStatusBoxNextBGColor = '#8F8F8F';
-constStatusBoxWinnerBGColor = '#1463FF';
-
-constMessageHeight = 100;
-
-constDealerButtonWidth = 20;
-constDealerButtonHeight = 20;
-
-constBetMessageHeight = 28;
-constBetMessageWidth = 120;
-
-userButtonWideWidth = 95;
-userButtonMediumWidth = 75;
-userButtonSmallWidth = 55;
-userButtonHeight = 28;
-constSmallOffset = 2;
-
-constCardLargeHeight = 70;
-constCardLargeWidth = 50;
-constCardNormalHeight = 42;
-constCardNormalWidth = 30;
-
-constServiceUrl = "http://localhost//Sprint6//PokerService//PokerPlayerService.php";
-constPollUrl = "http://localhost//Sprint6//PokerService//EventMessageService.php";
 /*------------------------------------------------------------------------------------------*/
 // helper functions
 
@@ -45,37 +14,17 @@ function O(obj) {
 function S(obj) {
     return O(obj).style;
 }
-function C(name) {
-    var elements = document.getElementsByName('*');
-    var objects = [];
-    for (var i = 0; i < elements.length; ++i) {
-        if (elements[i].className == name) {
-            objects.push(elements[i]);
-            return objects;
-        }
-    }
-    return null;
-}
 
-function getStyle(className, property) {
-    var classes = document.styleSheets[0].rules || document.styleSheets[0].cssRules;
-    for(var x=0, l=classes.length; x<l; x++) {
-        if(classes[x].selectorText==className) {
-            return classes[x].style[property];
-            break;
-        }
-    }
-    return null;
-}
-
+/**
+ * Removes the 'px' on a CSS dimensional attribute
+ */
 function getSize(pixel) {
     return Number(pixel.substr(0, pixel.length - 2));
 }
 
 /********************************************************************************************/
 //FIXME: may want to keep an array of reverse key value pair
-// FXME: rename to getPlayerPosition
-function getPlayerElementByValue(playerId){
+function getPlayerPositionTag(playerId){
     switch (String(playerId)) {
         case O('player0Id').innerHTML:
             return 'player0';
@@ -137,7 +86,7 @@ function addUserToCasinoTableCallback(gameStatusDto) {
     // initialize the seats. There's always at least one seat, which is occupied by user.
     setupPlayerStatuses(gameStatusDto.playerStatusDtos);
     if (gameStatusDto.playerStatusDtos.length > 4) {
-        O('WaitingMessageId').innerHTML = 'There are ' + gameStatusDto.waitingListSize +
+        O('waitingMessageId').innerHTML = 'There are ' + gameStatusDto.waitingListSize +
         ' players waiting for a seat';
     }
     if (gameStatusDto.gameStatus == 'Active'){
@@ -164,12 +113,11 @@ function addUserToCasinoTableCallback(gameStatusDto) {
         O('casinoTableHeader').innerHTML = 'Casino Table ' + gameStatusDto.casinoTableId + ' (On Waiting List)';
     }
 
-    // startPolling();
     startQueueing();
 }
 
 function addUserToCasinoTable() {
-    var tableSize = $.cookies.get("tableValue") == null ? null : ($.cookies.get("tableValue")).replace("table", "");
+    var tableSize = $.cookies.get("tableValue") == "" ? null : $.cookies.get("tableValue");
     var obj = {
         playerName:O('playerNameText').value,
         casinoTableId:O('tableIdText').value,
@@ -203,7 +151,8 @@ function startPracticeSessionCallback(gameInstanceSetupDto) {
 
     resizeUserElements();
     positionUserButtons(0);
-
+	O('startGameButton').disabled = false;
+            
     //startPolling();
     startQueueing();
 }
@@ -252,23 +201,6 @@ function startGame() {
 Create JS object for game instance
  */
 function sendPlayerActionCallback(resp) {
-/*    var skipped = false;
-    if (resp.playerStatusDto.status == 'Skipped') {
-        skipped = true;
-    }
-    processStatusChange(resp.playerStatusDto);
-    // disable buttons
-    O('userRaiseButton').disabled = true;
-    O('userCheckButton').disabled = true;
-    O('userCallButton').disabled = true;
-    O('userFoldButton').disabled = true;
-    if (resp.isEndGameNext == 1) {
-        var previousPlayerTag = getPlayerElementByValue(O('nextPlayerId').innerHTML);
-        resetLastPlayerDisplay(previousPlayerTag, skipped);
-        processGameResult(resp.gameResultDto);
-        return;
-    }
-    processNextPlayer(resp, skipped); */
 }
 
 function clickRaise() {
@@ -306,7 +238,7 @@ function sendPlayerAction(actionType, value) {
 function leaveSaloonCallback(resp) {
     stopQueueing();
     // FIXME
-    window.location = resp.page + '.html';
+    window.location = resp.page + '.php';
 }
 
 function leaveSaloon() {
@@ -343,6 +275,116 @@ function takeSeat() {
         obj,
         takeSeatCallback);
 }
+
+/********************************************************************************************/
+/* cheating AJAX functions */
+function cheatHeartMarkerCallback(cardList) {
+    /* FIXME: same as diamond and heart marker reuse */
+	for (var j=0, m=cardList.length; j<m; j++) {
+		if (cardList[j].suit != null && cardList[j].playerId != O('userPlayerId').innerHTML) {
+			var playerTag = getPlayerPositionTag(cardList[j].playerId);
+			var cardMarkerTag = playerTag + 'Card' + cardList[j].cardNumber + 'Marker';
+			// using the small marker
+			var cardMarkerClassTag = playerTag + 'Card' + cardList[j].cardNumber + 'SmallMarker';
+			S(cardMarkerTag).display = 'block';
+			/* set the class */
+			O(cardMarkerTag).src = "../../../images/PokerCard_hearts_small.png";
+			O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
+		}
+	}
+}
+
+function cheatHeartMarker() {
+    var obj = {
+        itemType: 'HeartMarker',
+        userPlayerId: O('userPlayerId').innerHTML,
+        gameSessionId: O('gameSessionId').innerHTML,
+        gameInstanceId: O('gameInstanceId').innerHTML
+    };
+
+    WSClient.call("cheat",
+        obj,
+        cheatHeartMarkerCallback);
+}
+
+function cheatClubsMarkerCallback(cardList) {
+    /* FIXME: same as diamond and heart marker reuse */
+	for (var j=0, m=cardList.length; j<m; j++) {
+		if (cardList[j].suit != null && cardList[j].playerId != O('userPlayerId').innerHTML) {
+			var playerTag = getPlayerPositionTag(cardList[j].playerId);
+			var cardMarkerTag = playerTag + 'Card' + cardList[j].cardNumber + 'Marker';
+			// using the small marker
+			var cardMarkerClassTag = playerTag + 'Card' + cardList[j].cardNumber + 'SmallMarker';
+			S(cardMarkerTag).display = 'block';
+			/* set the class */
+			O(cardMarkerTag).src = "../../../images/PokerCard_clubs_small.png";
+			O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
+		}
+	}
+}
+
+function cheatClubsMarker() {
+    var obj = {
+        itemType: 'ClubMarker',
+        userPlayerId: O('userPlayerId').innerHTML,
+        gameSessionId: O('gameSessionId').innerHTML,
+        gameInstanceId: O('gameInstanceId').innerHTML
+    };
+
+    WSClient.call("cheat",
+        obj,
+        cheatClubsMarkerCallback);
+}
+
+function cheatDiamondMarkerCallback(cardList) {
+    /* for the player id player0Card1Marker */
+	for (var j=0, m=cardList.length; j<m; j++) {
+		if (cardList[j].suit != null && cardList[j].playerId != O('userPlayerId').innerHTML) {
+			var playerTag = getPlayerPositionTag(cardList[j].playerId);
+			var cardMarkerTag = playerTag + 'Card' + cardList[j].cardNumber + 'Marker';
+			// using the small marker
+			var cardMarkerClassTag = playerTag + 'Card' + cardList[j].cardNumber + 'SmallMarker';
+			S(cardMarkerTag).display = 'block';
+			/* set the class */
+			O(cardMarkerTag).src = "../../../images/PokerCard_diamonds_small.png";
+			O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
+		}
+	}
+}
+
+function cheatDiamondMarker() {
+    var obj = {
+        itemType: 'DiamondMarker',
+        userPlayerId: O('userPlayerId').innerHTML,
+        gameSessionId: O('gameSessionId').innerHTML,
+        gameInstanceId: O('gameInstanceId').innerHTML
+    };
+
+    WSClient.call("cheat",
+        obj,
+        cheatDiamondMarkerCallback);
+}
+
+function cheatAcePusherCallback(returnDto) {
+    // FIXME: hard coded 
+	var playerElement = getPlayerPositionTag(returnDto.playerId);
+        O(playerElement + 'Card1').innerHTML = returnDto.cardName;
+    showPlayerCard(playerElement, 1, returnDto.cardName);
+}
+
+function cheatAcePusher() {
+    var obj = {
+        itemType: 'AcePusher',
+        userPlayerId: O('userPlayerId').innerHTML,
+        gameSessionId: O('gameSessionId').innerHTML,
+        gameInstanceId: O('gameInstanceId').innerHTML,
+        cardNumber: 1
+    };
+
+    WSClient.call("cheat",
+        obj,
+        cheatAcePusherCallback);
+}
 /********************************************************************************************/
 /*
  * Callback for polling function. Sets the next poll.
@@ -351,11 +393,12 @@ function getEventMessageCallback(event) {
     var resp = jQuery.parseJSON(event.body);
     var message = resp.eventData;
     if (resp.eventType == "UserJoined") {
+		// FIXME: a user may a seat number but still not be in game
         if (message[0].seatNumber != null) {
             processStatusChange(message[0]);
         }
         else {
-            O('WaitingMessageId').innerHTML = 'There are ' + message[0].waitingListSize +
+            O('waitingMessageId').innerHTML = 'There are ' + message[0].waitingListSize +
             ' players waiting for a seat';
         }
         O('startGameButton').disabled = false;
@@ -368,7 +411,7 @@ function getEventMessageCallback(event) {
         processStatusChange(message[0]);
         // FIXME:
         if (message[0].waitingListSize > 0) {
-            O('WaitingMessageId').innerHTML = 'There are ' + message[0].waitingListSize +
+            O('waitingMessageId').innerHTML = 'There are ' + message[0].waitingListSize +
             ' players waiting for a seat';
         }
         return;
@@ -395,10 +438,7 @@ function getEventMessageCallback(event) {
         displayCenterMessage("You are being offered a seat...");
         // overlay button to allow user select seat
         S('takeSeatButton').display = 'block';
-        S('takeSeatButton').top = S('player' + message + 'Table').top;
-        S('takeSeatButton').left = S('player' + message + 'Table').left;
-        S('takeSeatButton').width = getStyle('.playerTable', 'width')
-        S('takeSeatButton').height = getStyle('.playerTable', 'height')
+        O('takeSeatButton').setAttribute("class", 'player' + message + 'Info');
         return;
     }
     var skipped = false;
@@ -409,7 +449,7 @@ function getEventMessageCallback(event) {
     processStatusChange(message.playerStatusDto);
     // 1. Check if gameResultDto and update
     if (message.gameResultDto != null) {
-        var previousPlayerTag = getPlayerElementByValue(O('nextPlayerId').innerHTML);
+        var previousPlayerTag = getPlayerPositionTag(O('nextPlayerId').innerHTML);
         resetLastPlayerDisplay(previousPlayerTag, skipped);
         processGameResult(message.gameResultDto);
     }
@@ -431,52 +471,6 @@ function getEventMessageCallback(event) {
     }
 }
 
-/*----------------------------------------------------------------------------------------- */
-/*
-function poll(param) {
-    setTimeout(function() {
-
-        $.ajax({
-            type: "GET",
-            url: constPollUrl,
-            data: param,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function (req) {
-                // already parsed
-                // var rval = $.parseJSON(req);
-                getEventMessageCallback(req);
-                startPolling(param);
-                // return new GameSession(rval);
-            },
-            error: function (xhr) {
-                alert(xhr);
-                //alert(xhr.responseText);
-                return;
-            }
-        });
-    }, 2000)
-}
-*/
-/*----------------------------------------------------------------------------------------- */
-/*
-function startPolling() {
-    // get response if ready (no animation going on)
-    if (cardQueue.length == 0) {
-        //start polling
-        obj = {
-            gameSessionId:O('gameSessionId').innerHTML,
-            requestingPlayerId:O('userPlayerId').innerHTML
-        };
-        var param = "method=getMessage&param=" + JSON.stringify(obj);
-        poll(param);
-    }
-    else
-    {
-        setTimeout(startPolling, 1000);
-    }
-}
-*/
 /********************************************************************************************/
 /* player status and cards */
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -507,6 +501,23 @@ function initPlayersCardsDisplay() {
 
     O('player3Card1Image').src="../../../images/PokerCard_back_small.png";
     O('player3Card2Image').src="../../../images/PokerCard_back_small.png";
+	
+	hideCardMarkers();	
+}
+
+function hideCardMarkers() {
+	S('player0Card1Marker').display = 'none';
+	S('player0Card2Marker').display = 'none';
+
+	S('player1Card1Marker').display = 'none';
+	S('player1Card2Marker').display = 'none';
+
+	S('player2Card1Marker').display = 'none';
+	S('player2Card2Marker').display = 'none';
+
+	S('player3Card1Marker').display = 'none';
+	S('player3Card2Marker').display = 'none';
+	
 }
 
 /**
@@ -529,35 +540,38 @@ function showPlayerCard(playerTag, cardPosition, cardValue) {
  * 3) show game in progress
  */
 function resetLastPlayerDisplay(playerTag, skipped){
+    var playerStyle = O(playerTag + 'Info');
+    var userTag = getPlayerPositionTag(O('userPlayerId').innerHTML);
+    
+    $('#' + playerTag + 'Info').removeClass('playerInfoNext')
     if (skipped) {
-        O(playerTag).getElementsByTagName('table')[0].style.backgroundColor = constStatusBoxTimeOutBGColor;
+        playerStyle.setAttribute("class", "playerInfo playerInfoTimeOut");
     }
     else {
-        O(playerTag).getElementsByTagName('table')[0].style.backgroundColor = constStatusBoxNormalBGColor;
-
-    }
-    userTag = getPlayerElementByValue(O('userPlayerId').innerHTML);
-    O(playerTag).getElementsByTagName('table')[0].style.borderWidth = '1px';
-    if (playerTag == userTag) {
-        O(playerTag).getElementsByTagName('table')[0].style.borderWidth = "thick";
+        if (playerTag == userTag) {
+            playerStyle.setAttribute("class",  "playerInfo playerInfoUser");
+        }
+        else {
+            playerStyle.setAttribute("class",  "playerInfo playerInfoNormal");
+        }
     }
 }
 
 function focusNextPlayerDisplay(playerTag){
-    O(playerTag).getElementsByTagName('table')[0].style.backgroundColor = constStatusBoxNextBGColor;
-    O(playerTag).getElementsByTagName('table')[0].style.borderWidth = '3px';
+    var playerStyle = O(playerTag + 'Info');
+    playerStyle.setAttribute("class", "playerInfo playerInfoNext");
 }
 
 /**~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * When a player wins, its player status box outline and colors change
  */
 function updateWinnerDisplay(playerTag){        
-    S(playerTag + 'Message').fontsize = "160%";
-    S(playerTag + 'Message').fontcolor = "yellow";
-    O(playerTag + 'Status').innerHTML = "Won";
+    var playerStyle = O(playerTag + 'Info');
+    playerStyle.setAttribute("class", "playerInfo playerInfoWinner");
 
-    O(playerTag).getElementsByTagName('table')[0].style.backgroundColor = constStatusBoxWinnerBGColor;
-    O(playerTag).getElementsByTagName('table')[0].style.borderWidth = '3px';
+    O(playerTag + 'Status').setAttribute("class", "playerStatusWinner");
+/* O(playerTag + 'Status').innerHTML = "Won"; */
+
 }
 
 counter = null;
@@ -569,18 +583,21 @@ speedX = null;
 speedY = null;
 canvas = O('playGameCanvasId');
 context  = canvas.getContext("2d");
-cardQueue = new Array;
+cardQueue = [];
 currentCard = null;
+constCardNormalWidth = 43;
+constCardNormalHeight = 60;
 /*
  * shows the specified community card
  */
 function showCommunityCard(cardPosition, cardValue) {
-    card = new Object();
-    card.position = cardPosition;
-    card.image = O('communityCard' + cardPosition);
+    card = {
+        position: cardPosition,
+        image: O('communityCard' + cardPosition),
+        playerId: -1,
+        value: cardValue
+    };
     card.image.src = "../../../images/" + "PokerCard_" + cardValue + "_small.png";
-    card.playerId = -1;
-    card.value = cardValue;
     cardQueue.push(card);
 }
 
@@ -596,30 +613,31 @@ function animateCard() {
             counter = 0;
             currentCard = cardQueue.shift();
             // initialize
-            var dealerPlayerTag = getPlayerElementByValue(O('currentDealerId').innerHTML);
-            // show dealer button
-            var dealerButtonStyle = O(dealerPlayerTag).getElementsByTagName('label')[0].style;
-            startX = getSize(dealerButtonStyle.left);
-            startY = getSize(dealerButtonStyle.top);
+            var dealerPlayerTag = getPlayerPositionTag(O('currentDealerId').innerHTML);
+            // get dealer button
+            var dealerButtonStyle = $('#' + dealerPlayerTag + 'DealerButton');
+            startX = getSize(dealerButtonStyle.css('left'));
+            startY = getSize(dealerButtonStyle.css('top'));
             if (currentCard.playerId == -1 ) {
-                endX = getSize(S('communityCard' + currentCard.position).left);
-                endY = getSize(S('communityCard' + currentCard.position).top);
+                endX = getSize($('#communityCard' + currentCard.position).css('left'));
+                endY = getSize($('#communityCard' + currentCard.position).css('top'));
             }
             speedX = (endX - startX) / 30;
             speedY = (endY - startY) / 30;
 
-            setTimeout(drawCard, 30);
+            setTimeout(drawCard, 20);
         }
     }
     // still animating a card
     else {
-        setTimeout(drawCard, 30);
+        setTimeout(drawCard, 20);
     }
 }
 function drawCard() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     counter++;
     if (counter < 30) {
+	
         context.drawImage(currentCard.image, startX, startY, constCardNormalWidth, constCardNormalHeight);
         //img.src = currentCard.image.src;
         startX += speedX;
@@ -651,7 +669,7 @@ function moveChips() {
     // loop to move incrementally
     context.rotate(Math.PI / 20);
     context.restore();
-};
+}
 
 /********************************************************************************************/
 /*
@@ -669,11 +687,13 @@ function processStatusChange(playerStatus) {
         O('player' + playerPosition + 'Id').innerHTML = playerStatus.playerId;
         O('player' + playerPosition + 'Name').innerHTML = playerStatus.playerName;
         O('player' + playerPosition + 'Image').innerHTML = playerStatus.playerImageUrl;
-        O('player' + playerPosition + 'Message').value = playerStatus.playAmount;
-    }
-    if (O('player' + playerPosition + 'Message').value == 'null' ||
-        O('player' + playerPosition + 'Message').value == '0' ) {
-        O('player' + playerPosition + 'Message').value = "";
+        if (playerStatus.status == "Called") {
+            O('player' + playerPosition + 'Status').innerHTML = 'Called ' + playerStatus.playAmount;
+        }
+        if (playerStatus.status == "Raised") {
+            O('player' + playerPosition + 'Status').innerHTML = 'Raised ' + playerStatus.playAmount;
+            
+        }
     }
 }
 
@@ -684,17 +704,18 @@ function processStatusChange(playerStatus) {
 function processNextPlayer(nextMove, skipped) {
     // set next player id
     var previousPlayerId = O('nextPlayerId').innerHTML;
-    var previousPlayerTag = getPlayerElementByValue(previousPlayerId);
-    O('nextPlayerId').innerHTML = nextMove.nextPlayerId;
-    var nextPlayerTag = getPlayerElementByValue(O('nextPlayerId').innerHTML);
+    var previousPlayerTag = getPlayerPositionTag(previousPlayerId);
+    O('nextPlayerId').innerHTML = nextMove.nextPokerMoveDto.nextPlayerId;
+    var nextPlayerTag = getPlayerPositionTag(O('nextPlayerId').innerHTML);
     resetLastPlayerDisplay(previousPlayerTag, skipped);
     focusNextPlayerDisplay(nextPlayerTag);
 
     if (O('userPlayerId').innerHTML == O('nextPlayerId').innerHTML) {
-        O('userCallAmount').innerHTML = nextMove.callAmount;
-        O('userRaiseAmount').innerHTML = nextMove.raiseAmount;
-        O('userRaiseButton').value = 'Raise ' + nextMove.raiseAmount;
-        enableUserButtons(nextMove.checkAmount);
+        O('userCallAmount').innerHTML = nextMove.nextPokerMoveDto.callAmount;
+        O('userRaiseAmount').innerHTML = nextMove.nextPokerMoveDto.raiseAmount;
+        O('userCallButton').value = 'Call ' + nextMove.nextPokerMoveDto.callAmount;
+        O('userRaiseButton').value = 'Raise ' + nextMove.nextPokerMoveDto.raiseAmount;
+        enableUserButtons(nextMove.nextPokerMoveDto.checkAmount);
     }
     if (O('userPlayerId').innerHTML == previousPlayerId) {
         O('userRaiseButton').disabled = true;
@@ -710,19 +731,25 @@ function processNextPlayer(nextMove, skipped) {
 function processGameResult(gameResultDto) {
     // show everyone's hands
     for(var i=0, l=gameResultDto.playerHands.length; i<l; i++) {
-        var playerElement = getPlayerElementByValue(gameResultDto.playerHands[i].playerId);
+        var playerElement = getPlayerPositionTag(gameResultDto.playerHands[i].playerId);
         showPlayerCard(playerElement, 1, gameResultDto.playerHands[i].pokerCard1.cardName)
         showPlayerCard(playerElement, 2, gameResultDto.playerHands[i].pokerCard2.cardName);
-        O(playerElement + 'Message').value = gameResultDto.playerHands[i].pokerHandType;
-        O(playerElement + 'Status').innerHTML = 'Lost';
+        if (gameResultDto.playerHands[i].playerId == gameResultDto.winningPlayerId) {
+            O(playerElement + 'Status').innerHTML = 'Won - ' + gameResultDto.playerHands[i].pokerHandType;
+        }
+        else {
+            O(playerElement + 'Status').innerHTML = 'Lost - ' + gameResultDto.playerHands[i].pokerHandType;
+        }
     }
+	// hide markers
+	hideCardMarkers();
     // update stakes
-    for (var i=0, l=gameResultDto.playerStatusDtos.length; i<l; i++) {
-        var playerElement = getPlayerElementByValue(gameResultDto.playerStatusDtos[i].playerId);
-        O(playerElement + 'Stake').innerHTML = gameResultDto.playerStatusDtos[i].stake;
+    for (var j=0, m=gameResultDto.playerStatusDtos.length; j<m; j++) {
+        playerElement = getPlayerPositionTag(gameResultDto.playerStatusDtos[j].playerId);
+        O(playerElement + 'Stake').innerHTML = gameResultDto.playerStatusDtos[j].stake;
     }
     // set winner
-    var winnerElement = getPlayerElementByValue(gameResultDto.winningPlayerId);
+    var winnerElement = getPlayerPositionTag(gameResultDto.winningPlayerId);
     // FIXME: find previous
     updateWinnerDisplay(winnerElement);
     O('startGameButton').disabled = false;
@@ -732,8 +759,7 @@ function processGameResult(gameResultDto) {
  *
  */
 function processFoldOrLeft(playerId, status) {
-    var playerTag = getPlayerElementByValue(playerId);
-    O(playerTag + 'Message').value = status;
+    var playerTag = getPlayerPositionTag(playerId);
     S(playerTag + 'Card1Image').display = 'none';
     S(playerTag + 'Card2Image').display = 'none';
 	
@@ -769,13 +795,13 @@ function setupTable(gameInstanceSetupDto) {
 
     // put blind bets
     for (var k=0, n=gameInstanceSetupDto.blindBets.length; k<n; k++) {
-        var blindPosition = getPlayerElementByValue(gameInstanceSetupDto.blindBets[k].playerId);
-        O(blindPosition + 'Message').value = gameInstanceSetupDto.blindBets[k].betSize;
+        var blindPosition = getPlayerPositionTag(gameInstanceSetupDto.blindBets[k].playerId);
+        O(blindPosition + 'Status').innerHTML = 'Blind Bet ' + gameInstanceSetupDto.blindBets[k].betSize;
     }
 
     // get the user's hands'
     var playerElement;
-    playerElement = getPlayerElementByValue(O('userPlayerId').innerHTML);
+    playerElement = getPlayerPositionTag(O('userPlayerId').innerHTML);
     if (gameInstanceSetupDto.userPlayerHand != null) {
         // null if user is in waiting list
         O(playerElement + 'Card1').innerHTML = gameInstanceSetupDto.userPlayerHand.pokerCard1.cardName;
@@ -786,21 +812,24 @@ function setupTable(gameInstanceSetupDto) {
     // next player
     O('nextPlayerId').innerHTML = gameInstanceSetupDto.firstPlayerId;
     // update display with current user and allowed action
-    var nextPlayerTag = getPlayerElementByValue(O('nextPlayerId').innerHTML);
+    var nextPlayerTag = getPlayerPositionTag(O('nextPlayerId').innerHTML);
     focusNextPlayerDisplay(nextPlayerTag);
 
     // dealer designation
-    var dealerPlayerTag = getPlayerElementByValue(gameInstanceSetupDto.dealerPlayerId);
+    var dealerPlayerTag = getPlayerPositionTag(gameInstanceSetupDto.dealerPlayerId);
     //O('dealerPlayerId').innerHTML = resp.dealerPlayerId;
     O('currentDealerId').innerHTML = gameInstanceSetupDto.dealerPlayerId;
     // show dealer button
-    O(dealerPlayerTag).getElementsByTagName('label')[0].style.display = 'block';
+
+    S(dealerPlayerTag + 'DealerButton').display = 'block';
 
     if (O('userPlayerId').innerHTML == gameInstanceSetupDto.firstPlayerId){
         // call and raise amounts (only for first move raise is 2*blind
-        O('userCallAmount').innerHTML = gameInstanceSetupDto.blindBets[1].betSize;
-        O('userRaiseAmount').innerHTML = 2*O('userCallAmount').innerHTML;
-        O('userRaiseButton').value = 'Raise ' + O('userRaiseAmount').innerHTML;
+        var bigBlind = gameInstanceSetupDto.blindBets[1].betSize;
+        O('userCallButton').value = 'Call ' + bigBlind;
+        O('userCallAmount').innerHTML = bigBlind;
+        O('userRaiseButton').value = 'Raise ' + 2*bigBlind;
+        O('userRaiseAmount').innerHTML = 2*bigBlind;
         // check is disabled when a game first starts
         enableUserButtons(null);
     }
@@ -828,7 +857,7 @@ function showGameInProgress(gameStatusDto) {
     // in the middle of the game
     if (gameStatusDto.userPlayerHand != null) {
         var playerElement
-        playerElement = getPlayerElementByValue(O('userPlayerId').innerHTML);
+        playerElement = getPlayerPositionTag(O('userPlayerId').innerHTML);
         O(playerElement + 'Card1').innerHTML = gameStatusDto.userPlayerHand.pokerCard1.cardName;
         O(playerElement + 'Card2').innerHTML = gameStatusDto.userPlayerHand.pokerCard2.cardName;
         // FIXME: the status return is null, so it's set in the UI but
@@ -841,17 +870,17 @@ function showGameInProgress(gameStatusDto) {
         // next player
         O('nextPlayerId').innerHTML = gameStatusDto.firstPlayerId;
         // update display with current user and allowed action
-        var nextPlayerTag = getPlayerElementByValue(O('nextPlayerId').innerHTML);
+        var nextPlayerTag = getPlayerPositionTag(O('nextPlayerId').innerHTML);
         focusNextPlayerDisplay(nextPlayerTag);
     }
     
     // dealer designation
-    var dealerPlayerTag = getPlayerElementByValue(gameStatusDto.dealerPlayerId);
+    var dealerPlayerTag = getPlayerPositionTag(gameStatusDto.dealerPlayerId);
     //O('dealerPlayerId').innerHTML = resp.dealerPlayerId;
     O('currentDealerId').innerHTML = gameStatusDto.dealerPlayerId;
     // show dealer button
-    O(dealerPlayerTag).getElementsByTagName('label')[0].style.display = 'block';
-
+    S(dealerPlayerTag + 'DealerButton').display = 'block';
+    
     // check is disabled when a game first starts
     // FIXME:
     if (gameStatusDto.nextMove != null) {
@@ -871,57 +900,15 @@ function showGameInProgress(gameStatusDto) {
 function positionUserButtons(seatNumber) {
     var userTag = 'player' + seatNumber;
 
-    var userCheckButtonStyle = S('userCheckButton');
-    var userRaiseButtonStyle = S('userRaiseButton');
-    var userCallButtonStyle = S('userCallButton');
-    var userFoldButtonStyle = S('userFoldButton');
-    //var userRaiseAmountStyle = S('userRaiseAmount');
-
-    // top - two layers
-    // top layer: raise amount and button
-    // bottom layer: fold, call, check
-    switch (userTag) {
-        case "player0":
-        case "player3":
-            var minBottomOffset = bH - constStatusBoxHeight - constLargeOffset - ubH;
-            userRaiseButtonStyle.top = minBottomOffset - (ubH + constSmallOffset) + 'px';
-            userCheckButtonStyle.top = minBottomOffset + 'px';
-            //userRaiseAmountStyle.top = minBottomOffset - (ubH + constSmallOffset) + 'px';
-            break;
-        case "player1":
-        case "player2":
-            var minTopOffset = constStatusBoxHeight + constLargeOffset + constSmallOffset;
-            userRaiseButtonStyle.top = minTopOffset + 'px';
-            userCheckButtonStyle.top = minTopOffset + (ubH + constSmallOffset) + 'px';
-            //userRaiseAmountStyle.top = minTopOffset + (ubH + constSmallOffset) + 'px';
-            break;
-    }
-    userCallButtonStyle.top = userRaiseButtonStyle.top;
-    userFoldButtonStyle.top = userCheckButtonStyle.top;
-
-    switch (userTag) {
-        case "player0":
-        case "player1":
-            var minLeftOffset = 0;
-            //userRaiseAmountStyle.left = minLeftOffset + 'px';
-            break;
-        case "player2":
-        case "player3":
-            minLeftOffset = bW - (statusW + constObjectOffset);
-            //userRaiseAmountStyle.left = minRightOffset + 'px';
-            break;
-    }
-    userRaiseButtonStyle.left = minLeftOffset + 'px';
-    userCallButtonStyle.left = minLeftOffset + ubWW + constObjectOffset + 'px';
-    userCheckButtonStyle.left = minLeftOffset + 'px';
-    userFoldButtonStyle.left = minLeftOffset + ubMW + constObjectOffset + 'px';
-
-    userCheckButtonStyle.display = 'block';
-    userCallButtonStyle.display = 'block';
-    userCallButtonStyle.display = 'block';
-    userFoldButtonStyle.display = 'block';
-    //userRaiseAmountStyle.display = 'block';
-    userRaiseButtonStyle.display = 'block';
+    O('userRaiseButton').setAttribute("class", "userButton " + userTag + "Raise");
+    O('userCallButton').setAttribute("class", "userButton " + userTag + "Call");
+    O('userCheckButton').setAttribute("class", "userButton " + userTag + "Check");
+    O('userFoldButton').setAttribute("class", "userButton " + userTag + "Fold");
+    
+    S('userRaiseButton').display = 'block';
+    S('userCallButton').display = 'block';
+    S('userCheckButton').display = 'block';
+    S('userFoldButton').display = 'block';
 }
 
 /** ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -930,39 +917,12 @@ function positionUserButtons(seatNumber) {
  * - bottom cards: move both cards up by card height difference
  */
 function resizeUserElements() {
-    var uTag = getPlayerElementByValue(O('userPlayerId').innerHTML);
+    var uTag = getPlayerPositionTag(O('userPlayerId').innerHTML);
     
     // add border on status
-    var userTableStyle = O(uTag).getElementsByTagName('table')[0].style;
-    userTableStyle.borderStyle = "dotted";
-    userTableStyle.borderColor = "#504D64";
-    userTableStyle.borderWidth = "thick";
-    
-    var extraW = constCardLargeWidth - constCardNormalWidth + constObjectOffset;
-    var extraH = constCardLargeHeight - constCardNormalHeight + constObjectOffset;
-    if (uTag == 'player0' || uTag == 'player3') {
-        var newTop =  getSize(S(uTag + 'Card1Image').top) - extraH + 'px';
-        S(uTag + 'Card1Image').top = newTop;
-        S(uTag + 'Card2Image').top = newTop;
-    }
-    switch (uTag) {
-        case 'player0':
-        case 'player1':
-            var newLeft = getSize(S(uTag + 'Card2Image').left) + extraW + 'px';
-            S(uTag + 'Card2Image').left = newLeft;
-            break;
-        case 'player2':
-        case 'player3':
-            var newRight = getSize(S(uTag + 'Card2Image').left) - extraW + 'px';
-            S(uTag + 'Card2Image').left = newRight;
-            S(uTag + 'Card1Image').left = getSize(S(uTag + 'Card1Image').left) - constObjectOffset + 'px';
-            break;
-    }
-    $("#" + uTag + 'Card1Image').css("height", constCardLargeHeight);
-    $("#" + uTag + 'Card1Image').css("width", constCardLargeWidth);
-
-    $("#" + uTag + 'Card2Image').css("height", constCardLargeHeight);
-    $("#" + uTag + 'Card2Image').css("width", constCardLargeWidth);
+    O(uTag + 'Info').setAttribute("class", "playerInfo playerInfoUser");
+    O(uTag + 'Card1Image').setAttribute("class", "userCard " + uTag + "UserCard1");
+    O(uTag + 'Card2Image').setAttribute("class", "userCard " + uTag + "UserCard2");
 }
 
 /** ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -977,67 +937,6 @@ function enableUserButtons(checkAmount) {
     O('userFoldButton').disabled = false;
 }
 
-/********************************************************************************************/
-/* display and positioning */
-/*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- * processing: set positions for all HTML elements dynamically in case of sizing
- * dynamically position player status boxes, which are shown
- * set position for all cards and chips but keep hidden
- * TODO: may have more than 4 players
- * 1) all the player's items such as status box, messages, dealer button and cards
- * 2) community cards
- */
-window.onload = function() {
-    $('#dialog-modal').dialog('open');
-    document.getElementById('playerNameText').select();
-    
-    var widthToHeight = 4 / 3;
-    var newWidth = window.innerWidth;
-    var newHeight = window.innerHeight;
-
-    // board table sizes
-    bW = getSize(S('boardTable').width);
-    bH = getSize(S('boardTable').height);
-
-    // player status sizes
-    var boxWStyle = getStyle('.playerTable', 'width');
-    var boxHStyle = getStyle('.playerTable', 'height');
-    statusW = Number(boxWStyle.substr(0, boxWStyle.length - 2));
-    statusH = Number(boxHStyle.substr(0, boxHStyle.length - 2));
-
-    // dealer button sizes
-    var dWStyle = getStyle('.dealerButton', 'width');
-    var dHStyle = getStyle('.dealerButton', 'height');
-    dW = Number(dWStyle.substr(0, dWStyle.length - 2));
-    dH = Number(dHStyle.substr(0, dHStyle.length - 2));
-
-    // button width and height
-    ubH = userButtonHeight;
-    ubWW = userButtonWideWidth;
-    ubMW = userButtonMediumWidth;
-    ubSW = userButtonSmallWidth;
-
-    // community card sizes
-    var cardWStyle = getStyle('.communityCard', 'width');
-    var cardHStyle = getStyle('.communityCard', 'height');
-    cardW = Number(cardWStyle.substr(0, cardWStyle.length - 2));
-    cardH = Number(cardHStyle.substr(0, cardHStyle.length - 2));
-
-    $("#playGameCanvasId").css("top", getSize(S('boardTable').top));
-    $("#playGameCanvasId").css("left", getSize(S('boardTable').left));
-    canvas.top = S('boardTable').top;
-    canvas.left = S('boardTable').left;
-    S('gameBackground').height = S('boardTable').height;
-    S('gameBackground').width = S('boardTable').width;
-    S('gameBackground').top = S('boardTable').top;
-    S('gameBackground').left = S('boardTable').left;
-    //test canvas
-    //context.fillStyle="#FF0000";
-    //context.fillRect(0, 0, 400, 400);
-    positionSizeBoardItems();
-    animateCard();
-
-}
 
 window.onbeforeunload = function() {
     stopQueueing();
@@ -1052,7 +951,7 @@ window.onreset = function() {
 function startQueueing() {
     // websockets
     Stomp.WebSocketClass = SockJS;
-    client = Stomp.client('http://127.0.0.1:55674/stomp');
+    client = Stomp.client(constServer);
 
     // FIXME: log error
     error_callback = function(error) {
@@ -1072,138 +971,6 @@ function stopQueueing() {
         client.disconnect();
     }
 }
-/** ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- * Position items on the board dynamically. 
- * TODO: use window size and test different sizes
- */
-function positionSizeBoardItems() {
-    // get the fixed sizes first, so they can be centered and offset appropriatel
-    // get handlers to common elements
-
-    // FIXME: assuming first label is dealer button, may want to use id
-    var player0Style = O('player0').getElementsByTagName('table')[0].style;
-    var player0DealerStyle = O('player0').getElementsByTagName('label')[0].style;
-    var player0Card1Style = S('player0Card1Image');
-    var player0Card2Style = S('player0Card2Image');
-    var player0MessageStyle = S('player0Message');
-
-    var player1Style = O('player1').getElementsByTagName('table')[0].style;
-    var player1DealerStyle = O('player1').getElementsByTagName('label')[0].style;
-    var player1Card1Style = S('player1Card1Image');
-    var player1Card2Style = S('player1Card2Image');
-    var player1MessageStyle = S('player1Message');
-
-    var player2Style = O('player2').getElementsByTagName('table')[0].style;
-    var player2DealerStyle = O('player2').getElementsByTagName('label')[0].style;
-    var player2Card1Style = S('player2Card1Image');
-    var player2Card2Style = S('player2Card2Image');
-    var player2MessageStyle = S('player2Message');
-
-    var player3Style = O('player3').getElementsByTagName('table')[0].style;
-    var player3DealerStyle = O('player3').getElementsByTagName('label')[0].style;
-    var player3Card1Style = S('player3Card1Image');
-    var player3Card2Style = S('player3Card2Image');
-    var player3MessageStyle = S('player3Message');
-
-    var communityCard0Style = S('communityCard0');
-    var communityCard1Style = S('communityCard1');
-    var communityCard2Style = S('communityCard2');
-    var communityCard3Style = S('communityCard3');
-    var communityCard4Style = S('communityCard4');
-
-    var playerLeft = constObjectOffset;
-    var playerBottomTop = bH - constStatusBoxHeight - constObjectOffset; // for math
-    /////////////////////////////////////////////////////////
-    player0Style.top = playerBottomTop + 'px';
-    player0Style.left = playerLeft + 'px';
-    player0Style.width = constStatusBoxWidth + 'px';
-
-    player0DealerStyle.top = bH - dH - constLargeOffset + 'px';
-    player0DealerStyle.left = constStatusBoxWidth + 2*constLargeOffset + 'px';
-
-    player0Card1Style.top = bH - constCardNormalHeight - dH - constLargeOffset + 'px'; // offset by button
-    player0Card1Style.left = constStatusBoxWidth + 2*constLargeOffset + 'px';
-
-    // see player0card1Style.
-    player0Card2Style.top = bH - constCardNormalHeight - dH - constLargeOffset + 'px';
-    player0Card2Style.left = constStatusBoxWidth + constCardNormalWidth + 3*constLargeOffset + 'px';
-
-    player0MessageStyle.top = bH - (constStatusBoxHeight + constObjectOffset + 2*constBetMessageHeight) + 'px';
-    player0MessageStyle.left = constStatusBoxWidth + constObjectOffset + 'px';
-    player0MessageStyle.textAlign = "center";
-    /////////////////////////////////////////////////////////
-    player1Style.top = constObjectOffset + 'px';
-    player1Style.left = constObjectOffset + 'px';
-
-    player1DealerStyle.top = player1Style.top;
-    player1DealerStyle.left = constStatusBoxWidth + constLargeOffset + 'px';
-
-    player1Card1Style.top = constDealerButtonHeight + constLargeOffset + 'px';
-    player1Card1Style.left = player0Card1Style.left;
-
-    player1Card2Style.top = player1Card1Style.top;
-    player1Card2Style.left = player0Card2Style.left;
-    
-    player1MessageStyle.top = constStatusBoxHeight + constObjectOffset + 2*constBetMessageHeight + 'px';
-    player1MessageStyle.left = player0MessageStyle.left;
-    player1MessageStyle.textAlign = "center";
-
-    /////////////////////////////////////////////////////////
-
-    player2Style.top = player1Style.top;
-    player2Style.left = bW - (constStatusBoxWidth + constObjectOffset) + 'px';
-
-    player2DealerStyle.top = player2Style.top;
-    player2DealerStyle.left = bW - (constStatusBoxWidth + constLargeOffset + dW) + 'px';
-
-    player2Card1Style.top = player1Card1Style.top;
-    player2Card1Style.left = bW - (constStatusBoxWidth + 2*constLargeOffset + constCardNormalWidth) + 'px';
-
-    player2Card2Style.top = player1Card2Style.top;
-    player2Card2Style.left = bW - (constStatusBoxWidth + 3*constLargeOffset + 2*constCardNormalWidth) + 'px';
-
-    player2MessageStyle.top = player1MessageStyle.top;
-    player2MessageStyle.left = bW - (constStatusBoxWidth + constObjectOffset + constBetMessageWidth ) + 'px';
-    player2MessageStyle.textAlign = "center";
-
-    /////////////////////////////////////////////////////////
-
-    player3Style.top = player0Style.top;
-    player3Style.left = player2Style.left;
-
-    player3DealerStyle.top = player0DealerStyle.top;
-    player3DealerStyle.left = player2DealerStyle.left;
-
-    player3Card1Style.top = player0Card1Style.top;
-    player3Card1Style.left = player2Card1Style.left;
-
-    player3Card2Style.top = player0Card1Style.top;
-    player3Card2Style.left = player2Card2Style.left;
-
-    player3MessageStyle.top = player0MessageStyle.top;
-    player3MessageStyle.left = player2MessageStyle.left;
-    player3MessageStyle.textAlign = "center";
-
-    // community cards
-    communityCard0Style.top = Math.round(bH / 2 - (cardH / 2)) + 'px';
-    communityCard1Style.top = communityCard0Style.top;
-    communityCard2Style.top = communityCard0Style.top;
-    communityCard3Style.top =communityCard0Style.top;
-    communityCard4Style.top =communityCard0Style.top;
-	
-    communityCard0Style.left = bW - Math.round(bW / 2) - 2*(cardW + constObjectOffset) + 'px';
-    communityCard1Style.left = bW - Math.round(bW / 2) - 1*(cardW + constObjectOffset) + 'px';
-    communityCard2Style.left = bW - Math.round(bW / 2) + 'px';
-    communityCard3Style.left = bW - Math.round(bW / 2) + 1*(cardW + constObjectOffset) + 'px';
-    communityCard4Style.left = bW - Math.round(bW / 2) + 2*(cardW + constObjectOffset) + 'px';
-
-    // un-hide the status boxes. just in case, should neve be hidden...
-    S('player0').display = 'block';
-    S('player1').display = "inline";
-    S('player2').display = "inline";
-    S('player3').display = "inline";
-
-}
 
 /** ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  * Initialize board table items to values appropriate before a game starts.
@@ -1216,12 +983,8 @@ function positionSizeBoardItems() {
  *
  */
 function initBoardItemsDisplay() {
-    // everything is hidden
-    S('communityCard0').display = 'none';
-    S('communityCard1').display = 'none';
-    S('communityCard2').display = 'none';
-    S('communityCard3').display = 'none';
-    S('communityCard4').display = 'none';
+
+    O('centerMessageId').innerHTML = "";
 
     S('player0Card1Image').display = 'none';
     S('player0Card2Image').display = 'none';
@@ -1236,51 +999,50 @@ function initBoardItemsDisplay() {
     S('player3Card2Image').display = 'none';
 
     // hide dealer buttons
-    O('player0').getElementsByTagName('label')[0].style.display = 'none';
-    O('player1').getElementsByTagName('label')[0].style.display = 'none';
-    O('player2').getElementsByTagName('label')[0].style.display = 'none';
-    O('player3').getElementsByTagName('label')[0].style.display = 'none';
+    // FIXME: single button, move with CSS class
+    S('player0DealerButton').display = 'none';
+    S('player1DealerButton').display = 'none';
+    S('player2DealerButton').display = 'none';
+    S('player3DealerButton').display = 'none';
 
+    O('player0Info').setAttribute("class", "playerInfo playerInfoNormal");
+    O('player1Info').setAttribute("class", "playerInfo playerInfoNormal");
+    O('player2Info').setAttribute("class", "playerInfo playerInfoNormal");
+    O('player3Info').setAttribute("class", "playerInfo playerInfoNormal");
+
+    O('player0Status').setAttribute("class", "playerStatus");
+    O('player1Status').setAttribute("class", "playerStatus");
+    O('player2Status').setAttribute("class", "playerStatus");
+    O('player3Status').setAttribute("class", "playerStatus");
+
+    // user should be known before a game starts
+    var userTag = getPlayerPositionTag(O('userPlayerId').innerHTML);
+    if (userTag != null) {
+        O(userTag + 'Info').setAttribute("class",  'playerInfo playerInfoUser');
+    }
     // display status
-    O('player0').getElementsByTagName('table')[0].style.backgroundColor = constStatusBoxNormalBGColor;
-    O('player0').getElementsByTagName('table')[0].style.borderWidth = '1px';
-
-    O('player1').getElementsByTagName('table')[0].style.backgroundColor = constStatusBoxNormalBGColor;
-    O('player1').getElementsByTagName('table')[0].style.borderWidth = '1px';
-
-    O('player2').getElementsByTagName('table')[0].style.backgroundColor = constStatusBoxNormalBGColor;
-    O('player2').getElementsByTagName('table')[0].style.borderWidth = '1px';
-
-    O('player3').getElementsByTagName('table')[0].style.backgroundColor = constStatusBoxNormalBGColor;
-    O('player3').getElementsByTagName('table')[0].style.borderWidth = '1px';
-
-    // O('gamePlayerNumber').innerHTML = 0;
-    // O('nextPlayerId').innerHTML = '0';
     O('nextCommunityCardPosition').value = 0;
 
     // erase any previous message
+    /*
     O('player0Message').value = "";
     O('player1Message').value = "";
     O('player2Message').value = "";
     O('player3Message').value = "";
-
-    // reset the size, which may have been changed during the game.
-    S('player0Message').fontsize = "120%";
-    S('player1Message').fontsize = "120%";
-    S('player2Message').fontsize = "120%";
-    S('player3Message').fontsize = "120%";
-
-    S('player0Message').fontcolor = "black";
-    S('player1Message').fontcolor = "black";
-    S('player2Message').fontcolor = "black";
-    S('player3Message').fontcolor = "black";
-
+*/
     O('userRaiseButton').disabled = true;
     O('userCheckButton').disabled = true;
     O('userCallButton').disabled = true;
     O('userFoldButton').disabled = true;
 
-    O('centerMessageId').innerHTML = "";
+    // everything is hidden
+    S('communityCard0').display = 'none';
+    S('communityCard1').display = 'none';
+    S('communityCard2').display = 'none';
+    S('communityCard3').display = 'none';
+    S('communityCard4').display = 'none';
+
+	hideCardMarkers();
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1289,9 +1051,31 @@ function initBoardItemsDisplay() {
  * FIXME: to be a popup or a rasterized image, HTML text not centering properly
  */
 function displayCenterMessage(msg) {
-    S("centerMessageId").top = bH/2 - 30 + 'px';
-    S("centerMessageId").left = bW/2 - 120 + 'px';
+    /* S("centerMessageId").top = bH/2 - 30 + 'px';
+    S("centerMessageId").left = bW/2 - 120 + 'px'; */
     O("centerMessageId").innerHTML = msg;
     S("centerMessageId").display = 'block';
+}
+
+/********************************************************************************************/
+/* display and positioning */
+/*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ * processing: set positions for all HTML elements dynamically in case of sizing
+ * dynamically position player status boxes, which are shown
+ * set position for all cards and chips but keep hidden
+ * TODO: may have more than 4 players
+ * 1) all the player's items such as status box, messages, dealer button and cards
+ * 2) community cards
+ */
+window.onload = function() {
+    $('#dialog-modal').dialog('open');
+    document.getElementById('playerNameText').select();
+    
+    var widthToHeight = 4 / 3;
+    var newWidth = window.innerWidth;
+    var newHeight = window.innerHeight;
+    
+    animateCard();
+
 }
 

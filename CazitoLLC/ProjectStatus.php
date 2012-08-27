@@ -1,3 +1,10 @@
+<?php
+// check if logged in
+session_start();
+if (!isset($_SESSION['myusername'])) {
+    header("location:Login.php");
+}
+?>
 <!doctype html>
 <html>
     <head>

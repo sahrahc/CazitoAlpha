@@ -213,19 +213,17 @@ class CasinoTable {
                     : Error updating Player id $playerId to reserved seat number $seatNumber");
         } catch (Exception $e) {
             $playerDtos[$key]->reservedSeatNumber = null;
-            return 0;
+            return false;
         }
         // TODO: place message in queue
         $actionType = EventType::SEAT_OFFER;
 
-        //$jsonEvent = json_encode($seatNumber);
         $message = new EventMessage($this->currentGameSessionId, $playerId, $actionType,
-                        $statusDT, $actionType, null);
-        $message->eventData = $seatNumber;
-        //$message->enQueue();
+                        $statusDT, $actionType, $seatNumber);
+        //$message->eventData = $seatNumber;
         queueMessage($playerId, json_encode($message));
 
-        return 1;
+        return true;
     }
 
     /**
@@ -361,15 +359,13 @@ class CasinoTable {
         $playerStatusDtos[0]->waitingListSize = $waitingListSize;
         // dynamically adding this
         $eventType = EventType::USER_JOINED;
-        //$jsonEvent = json_encode($playerStatusDtos);
-
+        
         for ($i = 0; $i < count($playerDtos); $i++) {
             if ($playerDtos[$i]->playerId != $dto->playerId) {
                 $message = new EventMessage($this->currentGameSessionId,
                                 $playerDtos[$i]->playerId, $eventType, $this->lastUpdateDateTime,
-                                null);
-                $message->eventData = $playerStatusDtos;
-                //$message->enQueue();
+                                $playerStatusDtos);
+                //$message->eventData = $playerStatusDtos;
                 queueMessage($playerDtos[$i]->playerId, json_encode($message));
             }
         }
@@ -385,8 +381,8 @@ class CasinoTable {
             if ($playerDtos[$i]->playerId != $dto->playerId) {
                 $message = new EventMessage($this->currentGameSessionId,
                                 $playerDtos[$i]->playerId, $eventType, $this->lastUpdateDateTime,
-                                null);
-                $message->eventData = $playerStatusDtos;
+                                $playerStatusDtos);
+                //$message->eventData = $playerStatusDtos;
                 queueMessage($playerDtos[$i]->playerId, json_encode($message));
             }
         }
@@ -403,9 +399,8 @@ class CasinoTable {
 
                 $message = new EventMessage($this->currentGameSessionId,
                                 $playerId, $eventType, $this->lastUpdateDateTime,
-                                null);
-                $message->eventData = $instanceSetupDto;
-                //$message->enQueue();
+                                $instanceSetupDto);
+                //$message->eventData = $instanceSetupDto;
                 queueMessage($playerId, json_encode($message));
             }
         }
@@ -416,15 +411,13 @@ class CasinoTable {
         $this->log->debug(__FUNCTION__ . ": Waiting list size " . $waitingListSize);
         $playerStatusDtos[0]->waitingListSize = $waitingListSize;
         $eventType = EventType::SEAT_TAKEN;
-        //$jsonEvent = json_encode($playerStatusDtos);
-
+        
         for ($i = 0; $i < count($playerDtos); $i++) {
             //if ($playerDtos[$i]->playerId != $dto->playerId) {
                 $message = new EventMessage($this->currentGameSessionId,
                                 $playerDtos[$i]->playerId, $eventType, $this->lastUpdateDateTime,
-                                null);
-                $message->eventData = $playerStatusDtos;
-                //$message->enQueue();
+                                $playerStatusDtos);
+                //$message->eventData = $playerStatusDtos;
                 queueMessage($playerDtos[$i]->playerId, json_encode($message));
             //}
         }

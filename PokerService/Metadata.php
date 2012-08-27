@@ -119,4 +119,23 @@ final class GameStatus {
     const ACTIVE = 'Active';
     const INACTIVE = 'Inactive';
 }
+
+final class ItemType {
+    const HEART_MARKER = 'HeartMarker';
+    const LOAD_CARD_ON_SLEEVE = 'LoadCardOnSleeve';
+    const USE_CARD_ON_SLEEVE = 'UseCardOnSleeve';
+    const CLUB_MARKER = 'ClubMarker';
+    const DIAMOND_MARKER = 'DiamondMarker';
+    const POKER_PEEKER = 'PokerPeeker';
+    const SOCIAL_SPOTTER = 'SocialSpotter';
+    const SNAKE_OIL_MARKER = 'SnakeOilMarker';
+    const ACE_PUSHER = 'AcePusher';
+    const LOOK_RIVER_CARD = 'LookRiverCard';
+    const SWAP_RIVER_CARD = 'SwapRiverCard';
+    const ACTIVATE_TUCKER_TABLE = 'ActivateTuckerTable';
+    const SLIDE_UNDER_TABLE = 'SlideUnderTable';
+    const SLIDE_OUT_OF_TABLE = 'SlideOutOfTable';
+    const KEEP_FACE_CARDS = 'KeepFaceCards';
+    const ANTI_OIL_MARKER = 'AntiOilMarker';
+}
 ?>

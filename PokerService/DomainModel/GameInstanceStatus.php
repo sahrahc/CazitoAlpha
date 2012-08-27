@@ -45,7 +45,7 @@ class GameInstanceStatus {
      * Only used once, to get all the cards in order to identify the winner and publish everyone's hands at the end of the game.
      * @return GameCards
      */
-    private function getAllGameCards() {
+    public function getAllGameCards() {
         // get all the cards, order with community cards first.
         $result = executeSQL("SELECT g.*, ps.status AS Status FROM GameCard g 
                 LEFT JOIN PlayerState ps ON g.GameInstanceId = ps.GameInstanceId
@@ -103,6 +103,44 @@ class GameInstanceStatus {
                     LastUpdateDateTime = '$statusDT' WHERE PlayerId = $playerId", __FUNCTION__ . "
                         :ERROR updating PlayerState player id $playerId");
         }
+    }
+
+    /**
+     * Evalate whether community cards need to be dealt on table based on turns.
+     */
+    private function dealCommunityCards($actionPlayerId, $playerPlayNumber) {
+        // fold
+        $previousNumberCards = $this->numberCommunityCardsShown;
+        $numberCards = $previousNumberCards;
+        $numberPlayers = $this->gameInstanceSetup->numberPlayers;
+        $instancePlayNumber = $this->lastInstancePlayNumber;
+        $cardsToSend = null;
+
+        // round is complete if next player is the first player
+        // deal community cards must be called after play is processed.
+        switch (floor($instancePlayNumber / $numberPlayers)) {
+            // if ($this->nextPlayerId == $this->gameInstanceSetup->firstPlayerId) {
+            //switch ($playerPlayNumber) {
+            case 0:
+                $numberCards = 0;
+                break;
+            case 1:
+                $numberCards = 3;
+                break;
+            case 2:
+                $numberCards = 4;
+                break;
+            default:
+                $numberCards = 5;
+        }
+        // get the new cards if more this time.
+        if ($previousNumberCards != $numberCards) {
+            $allCards = CardHelper::getCommunityCards($this->id, $numberCards);
+            $length = $numberCards == 3 ? 3 : 1;
+            $cardsToSend = array_slice($allCards, $previousNumberCards, $length);
+        }
+        // returning
+        return $cardsToSend;
     }
 
     /**
@@ -200,45 +238,7 @@ class GameInstanceStatus {
         return $playerActionResultDto;
     }
 
-    /**
-     * Evalate whether community cards need to be dealt on table based on turns.
-     */
-    private function dealCommunityCards($actionPlayerId, $playerPlayNumber) {
-        // fold
-        $previousNumberCards = $this->numberCommunityCardsShown;
-        $numberCards = $previousNumberCards;
-        $numberPlayers = $this->gameInstanceSetup->numberPlayers;
-        $instancePlayNumber = $this->lastInstancePlayNumber;
-        $cardsToSend = null;
-
-        // round is complete if next player is the first player
-        // deal community cards must be called after play is processed.
-        switch (floor($instancePlayNumber / $numberPlayers)) {
-            // if ($this->nextPlayerId == $this->gameInstanceSetup->firstPlayerId) {
-            //switch ($playerPlayNumber) {
-            case 0:
-                $numberCards = 0;
-                break;
-            case 1:
-                $numberCards = 3;
-                break;
-            case 2:
-                $numberCards = 4;
-                break;
-            default:
-                $numberCards = 5;
-        }
-        // get the new cards if more this time.
-        if ($previousNumberCards != $numberCards) {
-            $allCards = CardHelper::getCommunityCards($this->id, $numberCards);
-            $length = $numberCards == 3 ? 3 : 1;
-            $cardsToSend = array_slice($allCards, $previousNumberCards, $length);
-        }
-        // returning
-        return $cardsToSend;
-    }
-
-    function loadGameInstanceHands() {
+    function getGameInstanceHands() {
         $result = executeSQL("SELECT gc.*, HandType, HandInfo, HandCategory, 
                 HandRankWithinCategory
                 FROM GameCard gc INNER JOIN PlayerState ps
@@ -268,51 +268,6 @@ class GameInstanceStatus {
             $counter++;
         }
         return $playerHands;
-    }
-
-    /**
-     * Create an message and send it to the queue.
-     * @param type $isTimeout Whether the action was by a player or triggered by timeout
-     */
-    function communicateMoveResult($playerActionResultDto, $isTimeout) {
-
-        // a timeout by a practice game is not a time out.
-        $actionType = EventType::PLAYER_MOVE;
-        if ($this->gameInstanceSetup->isPractice == 0 && $isTimeout == 1) {
-            $actionType = EventType::TIME_OUT;
-        }
-
-        // get the players;
-        $playerInstances = null;
-        if ($this->gameInstanceSetup->isPractice == 1) {
-            $playerInstances = EntityHelper::getPlayerInstancesForGame($this->id);
-            for ($i = 0; $i < count($playerInstances); $i++) {
-                // FIXME - is this good form to add an arbitrary property?
-                $playerInstances[$i]->isVirtual = $playerInstances[$i]->playerInstanceSetup->isVirtual;
-            }
-        } else {
-            $casinoTable = EntityHelper::getCasinoTableForSession($this->gameInstanceSetup->gameSessionId);
-            $playerInstances = $casinoTable->loadPlayers();
-        }
-        //$jsonEventM = addslashes(json_encode($updatedPlayerStatus));
-        $jsonEvent = json_encode($playerActionResultDto);
-        for ($i = 0; $i < count($playerInstances); $i++) {
-
-            $this->log->debug(__FUNCTION__ . " - Event Message Created: " . $jsonEvent);
-            /*   if ($playerInstances[$i]->playerId
-              == $playerActionResultDto->playerStatusDto->playerId)
-              continue; */
-            if ($playerInstances[$i]->isVirtual == 1) {
-                continue;
-            }
-            $message = new EventMessage($this->gameInstanceSetup->gameSessionId,
-                    $playerInstances[$i]->playerId, $actionType, $this->lastUpdateDateTime,
-                                null);
-            //$jsonEvent);
-                $message->eventData = $playerActionResultDto;
-                //$message->enQueue();
-                queueMessage($playerInstances[$i]->playerId, json_encode($message));
-        }
     }
 
     /**
@@ -379,6 +334,43 @@ class GameInstanceStatus {
             return null;
         }
         return new GameResultDto($this->playerHands, $this->winningPlayerId, $this->id);
+    }
+
+    /**
+     * Create an message and send it to everyone's queue including the player who made the move.
+     * @param type $isTimeOut Whether the action was by a player or triggered by timeout
+     */
+    function communicateMoveResult($playerActionResultDto, $isTimeOut) {
+
+        // a timeout by a practice game is not a time out.
+        $actionType = EventType::PLAYER_MOVE;
+        if ($this->gameInstanceSetup->isPractice == 0 && $isTimeOut == 1) {
+            $actionType = EventType::TIME_OUT;
+        }
+
+        // get the players;
+        $playerInstances = null;
+        if ($this->gameInstanceSetup->isPractice == 1) {
+            $playerInstances = EntityHelper::getPlayerInstancesForGame($this->id);
+            for ($i = 0; $i < count($playerInstances); $i++) {
+                // FIXME - is this good form to add an arbitrary property?
+                $playerInstances[$i]->isVirtual = $playerInstances[$i]->playerInstanceSetup->isVirtual;
+            }
+        } else {
+            $casinoTable = EntityHelper::getCasinoTableForSession($this->gameInstanceSetup->gameSessionId);
+            $playerInstances = $casinoTable->loadPlayers();
+        }
+        for ($i = 0; $i < count($playerInstances); $i++) {
+
+            if ($playerInstances[$i]->isVirtual == 1) {
+                continue;
+            }
+            $message = new EventMessage($this->gameInstanceSetup->gameSessionId,
+                    $playerInstances[$i]->playerId, $actionType, $this->lastUpdateDateTime,
+                                $playerActionResultDto);
+                //$message->eventData = $playerActionResultDto;
+                queueMessage($playerInstances[$i]->playerId, json_encode($message));
+        }
     }
 
 }

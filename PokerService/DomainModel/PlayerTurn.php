@@ -242,7 +242,7 @@ class PlayerTurn {
      * 4) Find next move, increase player # and community cards shown
      * @return PlayerActionResultDto
      */
-    function ApplyPlayerAction() {
+    function applyPlayerAction() {
         $currentMoveId = $this->validateMove();
 
         // fields that automatically update

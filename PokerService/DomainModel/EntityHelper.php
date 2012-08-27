@@ -162,13 +162,13 @@ class EntityHelper {
 
     /**
      * Send the player hand information for every non virtual player at the beginning of the game.
-     * @param type $playerId The player whose hand is being sent
+     * @param type $pId The player whose hand is being sent
      */
-    public static function getUserHand($playerId, $gameInstanceId) {
-        $result = executeSQL("SELECT * from GAMECARD where GameInstanceId = $gameInstanceId
-                AND PlayerId = $playerId ORDER BY CardNumber", __FUNCTION__ . "
-                : ERROR selecting game card for game instance id $gameInstanceId and player
-                id $playerId");
+    public static function getUserHand($pId, $gInstId) {
+        $result = executeSQL("SELECT * from GameCard where GameInstanceId = $gInstId
+                AND PlayerId = $pId ORDER BY CardNumber", __FUNCTION__ . "
+                : ERROR selecting game card for game instance id $gInstId and player
+                id $pId");
         if (mysql_num_rows($result) == 0) {return null;}
 
         $row = mysql_fetch_array($result);
@@ -177,7 +177,7 @@ class EntityHelper {
         $row = mysql_fetch_array($result);
         $pokerCard2 = new PokerCard($row["CardNumber"], $row["CardIndex"], $row["CardName"]);
 
-        return new PlayerHand($playerId, $pokerCard1, $pokerCard2);
+        return new PlayerHand($pId, $pokerCard1, $pokerCard2);
     }
 
     /**
@@ -351,7 +351,7 @@ class EntityHelper {
      * @param type $statusDT
      * @return CasinoTable
      */
-    public static function getOrCreateCasinoTable($cTableId, $statusDT, $tableSize) {
+    public static function getOrCreateCasinoTable($cTableId, $tableSize, $statusDT) {
         global $numberSeats;
 		global $defaultTableMin;
         $casinoTable = self::getCasinoTable($cTableId);

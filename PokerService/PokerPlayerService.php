@@ -7,6 +7,7 @@ include_once(dirname(__FILE__) . '/../../Libraries/log4php/Logger.php');
 // Include Application Scripts
 require_once('Config.php');
 include_once('Components/EvalHelper.php');
+include_once('Components/CheatingHelper.php');
 include_once('Data/AllInclude.php');
 include_once('DomainModel/AllInclude.php');
 include_once('Dto/AllInclude.php');
@@ -56,9 +57,9 @@ function startPracticeSession($par) {
     $practiceSession->addDummyPlayersAndBlindBets($statusDateTime);
 
     $gameInstanceSetupDto->userPlayerId = $playerDto->playerId;
-    $gameInstanceSetupDto->dealerPlayerId = $practiceSession->playerStatusDTOs[0]->playerId;
-    $gameInstanceSetupDto->playerStatusDtos = $practiceSession->playerStatusDTOs;
-    $gameInstanceSetupDto->firstPlayerId = $practiceSession->playerStatusDTOs[3]->playerId;
+    $gameInstanceSetupDto->dealerPlayerId = $practiceSession->playerStatusDtos[0]->playerId;
+    $gameInstanceSetupDto->playerStatusDtos = $practiceSession->playerStatusDtos;
+    $gameInstanceSetupDto->firstPlayerId = $practiceSession->playerStatusDtos[3]->playerId;
     $gameInstanceSetupDto->blindBets = $practiceSession->blindBets;
 
     executeSQL("update GameInstance SET DealerPlayerId = $gameInstanceSetupDto->dealerPlayerId,
@@ -66,7 +67,7 @@ function startPracticeSession($par) {
             NextPlayerId=$gameInstanceSetupDto->firstPlayerId, NumberPlayers = $numberSeats
             WHERE id = $gameInstanceStatus->id", __FUNCTION__ . ":
                 Error updating practice game instance $gameInstanceStatus->id");
-    $pokerCards = EvalHelper::dealAllCards(count($practiceSession->playerStatusDTOs));
+    $pokerCards = EvalHelper::dealAllCards(count($practiceSession->playerStatusDtos));
     $gameInstanceSetupDto->userPlayerHand = $gameInstanceStatus->gameInstanceSetup->
                     saveGameCardsGetUserHand($pokerCards, $playerDto->playerId);
 
@@ -120,7 +121,7 @@ function addUserToCasinoTable($par) {
     // 1. get or create a new table if it does not exist
     $mustUpdateInstance = false;
     $seatNumber = null;
-    $casinoTable = entityHelper::getOrCreateCasinoTable($casinoTableId, $statusDateTime, $tableSize);
+    $casinoTable = entityHelper::getOrCreateCasinoTable($casinoTableId, $tableSize, $statusDateTime);
     $gameSession = new GameSession($casinoTable->id, $casinoTable->currentGameSessionId);
     $gameInstance = null;
     /* Business rules for stale session:
@@ -168,7 +169,7 @@ function addUserToCasinoTable($par) {
         $gameStatusDto->updateInstanceData($gameInstance);
         $gameStatusDto->communityCards = CardHelper::getCommunityCards($gameInstance->id, $gameInstance->numberCommunityCardsShown);
         if (!is_null($gameInstance->winningPlayerId)) {
-            $gameInstance->playerHands = $gameInstance->loadGameInstanceHands();
+            $gameInstance->playerHands = $gameInstance->getGameInstanceHands();
             $gameStatusDto->gameResultDto = $gameInstance->getGameResult();
         }
         $gameStatusDto->playerStatusDtos = EntityHelper::getPlayerStatusDtosForInstance($gameInstance->id);
@@ -318,7 +319,7 @@ function sendPlayerAction($par) {
     $playerTurn = new PlayerTurn($playerAction, $gameInstance, $statusDateTime);
     $gameInstance = $playerTurn->gameInstanceStatus; // convenience
 
-    $nextPokerMove = $playerTurn->ApplyPlayerAction(); // updates the next player id
+    $nextPokerMove = $playerTurn->applyPlayerAction(); // updates the next player id
     // follow player status update with instance level follow-up
     $playerActionResultDto = $gameInstance->followUpPlayerTurn($nextPokerMove, $playerTurn->action->playerId, $playerTurn->playerInstanceStatus->playerPlayNumber, $statusDateTime);
     $playerActionResultDto->playerStatusDto = new PlayerStatusDto($playerTurn->playerInstanceStatus);
@@ -400,16 +401,60 @@ function leaveSaloon($par) {
 }
 
 /* * ************************************************************************************** */
+
+function cheat($par) {
+    global $log;
+    global $defaultAvatarUrl;
+
+    $cheatRequestDto = json_decode($par);
+
+    /* --------------------------------------------------------------------- */
+    $con = connectToStateDB();
+    global $dateTimeFormat;
+    $statusDateTime = date($dateTimeFormat);
+
+    $gameInstance = EntityHelper::getSessionLastInstance($cheatRequestDto->gameSessionId);
+    if (is_null($gameInstance)) {
+        return null;
+    }
+    // convenience vars
+    $gameInstanceId = $cheatRequestDto->gameInstanceId;
+    $playerId = $cheatRequestDto->userPlayerId;
+    // Logic -----------------------------------------------------------------
+    $returnDto = null;
+    switch($cheatRequestDto->itemType) {
+        case ItemType::ACE_PUSHER:
+            $cardNumber = $cheatRequestDto->cardNumber;
+            $returnDto = CheatingHelper::pushRandomAce($gameInstanceId, $playerId, $cardNumber);
+            break;
+        case ItemType::HEART_MARKER:
+            $returnDto = CheatingHelper::getSuitForAllGameCards($gameInstance, 'hearts');
+            break;
+        case ItemType::CLUB_MARKER:
+            $returnDto = CheatingHelper::getSuitForAllGameCards($gameInstance, 'clubs');
+            break;
+        case ItemType::DIAMOND_MARKER:
+            $returnDto = CheatingHelper::getSuitForAllGameCards($gameInstance, 'diamonds');
+            break;
+        default:
+            break;
+    }
+    return json_encode($returnDto);
+}
+
+/* * ************************************************************************************** */
 $server->register("startPracticeSession");
 $server->register("addUserToCasinoTable");
 $server->register("startGame");
 $server->register("sendPlayerAction");
 $server->register("takeSeat");
 $server->register("leaveSaloon");
+$server->register("cheat");
 
 // fixme: convert to POST
 $method = $_GET["method"];
 $param = $_GET["param"];
 $server->serve($method, $param);
+
 
 ?>

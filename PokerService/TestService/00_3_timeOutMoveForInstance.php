@@ -13,7 +13,7 @@ $con = connectToStateDB();
 $result = executeSQL("SELECT GameInstanceId AS LastInstanceId, NextPlayerId
     FROM PlayerState ps
     INNER JOIN Player p ON p.id = ps.PlayerId
-    INNER JOIN GameInstance i ON ps.GameInstanceId = i.Id WHERE GAmeInstanceId = 37
+    INNER JOIN GameInstance i ON ps.GameInstanceId = i.Id WHERE GAmeInstanceId = 38
     ORDER BY ps.GameInstanceId desc", 'ERROR');
 $row = mysql_fetch_array($result);
 $gameInstanceId = $row[0];

@@ -32,7 +32,7 @@ class PlayerInstanceStatus {
             $blindBet = "null";
         }
         $lastPlayAmount = $this->lastPlayAmount;
-        if (is_null($lastPlayAmount)) {
+        if (is_null($lastPlayAmount) || $lastPlayAmount == "") {
             $lastPlayAmount = "null";
         }
         executeSQL("UPDATE PlayerState SET LastUpdateDateTime = '$statusDT',

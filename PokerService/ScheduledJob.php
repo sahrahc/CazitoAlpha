@@ -4,7 +4,7 @@ include_once('TimerService.php');
 
 // the following two happen every minute
 cleanUp();
-ejectInactivePlayer();
+//ejectInactivePlayer();
 // trying different values...
 checkExpiration();
 

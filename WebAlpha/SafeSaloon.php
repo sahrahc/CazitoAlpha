@@ -1,7 +1,3 @@
-<!--
-To change this template, choose Tools | Templates
-and open the template in the editor.
--->
 <?php
 // check if logged in
 session_start();
@@ -14,7 +10,7 @@ if (!isset($_SESSION['myusername'])) {
     <head>
         <title>Welcome to the Cazito saloon</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <link rel="stylesheet" type="text/css" href="CSS/SafeSaloon.css" />
+        <link rel="stylesheet" type="text/css" href="CSS/safeSaloon.css" />
         <script src="../../Libraries/jQuery/js/jquery-1.7.2.min.js" type="text/javascript"></script>
         <script src="../../Libraries/jQuery/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
     </head>

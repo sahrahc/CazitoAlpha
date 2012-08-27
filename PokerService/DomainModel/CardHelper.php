@@ -45,7 +45,7 @@ class CardHelper {
             self::log()->Debug(__FUNCTION__ . " - Card Number " . $rowCard['CardNumber']);
 
             $pokerCards[$counter] = new PokerCard($rowCard['CardNumber'],
-                    $rowCard['CardIndex'], $rowCard['CardName']);
+                            $rowCard['CardIndex'], $rowCard['CardName']);
             $counter++;
         }
         return $pokerCards;
@@ -89,6 +89,27 @@ class CardHelper {
             $hH2->winningPlayerId = $playerHand->playerId;
         }
         return $hH2;
+    }
+
+    public static function getPlayerHand($playerId, $gInstanceId, $cardNumber) {
+        $resultCard = executeSQL("SELECT * FROM GameCard WHERE GameInstanceId = $gInstanceId
+                AND PlayerId = $playerId AND CardNumber = $cardNumber", __FUNCTION__ . ":
+                Error selecting GameCards for instance id $gInstanceId player id $playerId
+                and card number $cardNumber");
+
+        // populate the return object
+        $rowCard = mysql_fetch_array($resultCard);
+
+        $pokerCard = new PokerCard($rowCard['CardNumber'],
+                        $rowCard['CardIndex'], $rowCard['CardName']);
+        return $pokerCard;
+    }
+
+    public static function updatePlayerHand($playerId, $gInstanceId, $cNumber, $cIndex, $cName) {
+        $resultCard = executeSQL("UPDATE GameCard SET CardIndex = $cIndex, CardName = '$cName'
+                WHERE GameInstanceId = $gInstanceId AND PlayerId = $playerId and CardNumber =
+                $cNumber", __FUNCTION__ . "Error updating game card for instance $gInstanceId,
+                player $playerId and card number $cNumber");
     }
 
 }

@@ -17,7 +17,7 @@ class PracticeSession {
     public $numberSeats;
     // transient data */
     public $currentInstanceId;
-    public $playerStatusDTOs = array();
+    public $playerStatusDtos = array();
     public $blindBets;
     private $log;
 
@@ -88,7 +88,7 @@ class PracticeSession {
         $playerInstance->playerInstanceSetup->turnNumber = $pNumber;
         $playerInstance->playerInstanceSetup->blindBet = $blindBet;
         $playerState = new PlayerStatusDto($playerInstance);
-        $this->playerStatusDTOs = array_merge($this->playerStatusDTOs, array($playerState));
+        $this->playerStatusDtos = array_merge($this->playerStatusDtos, array($playerState));
     }
 
     /**
@@ -108,8 +108,8 @@ class PracticeSession {
         $this->savePracticePlayer(3, $player3->playerId, $playerName, $statusDT);
 
         // add blind bets
-        $this->blindBets = array(new Bet($this->playerStatusDTOs[1]->playerId, $this->playerStatusDTOs[1]->blindBet),
-            new Bet($this->playerStatusDTOs[2]->playerId, $this->playerStatusDTOs[2]->blindBet));
+        $this->blindBets = array(new Bet($this->playerStatusDtos[1]->playerId, $this->playerStatusDtos[1]->blindBet),
+            new Bet($this->playerStatusDtos[2]->playerId, $this->playerStatusDtos[2]->blindBet));
     }
 
     /**

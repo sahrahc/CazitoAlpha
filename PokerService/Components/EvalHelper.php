@@ -176,7 +176,7 @@ class EvalHelper {
 //   b = bit turned on depending on rank of card
 //
 // JMD: added "void" return type
-    private static function init_deck() {
+    public static function init_deck() {
         $n = 1;
         $suit = 0x8000;
         $primes = array(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41);
@@ -199,8 +199,8 @@ class EvalHelper {
      * FIXME: this will be refactored to deal cards as needed but
      * duplicates will be checked
      */
-    private static function findDeckIndex($rank, $suit, $deck) {
-        for ($i = 0; $i < 52; $i++) {
+    public static function findDeckIndex($rank, $suit, $deck) {
+        for ($i = 1; $i < 53; $i++) {
             $c = $deck[$i];
             if (($c & $suit) && (self::evalRank($c) == $rank))
                 return( $i );

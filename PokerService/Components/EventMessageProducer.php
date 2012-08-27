@@ -19,6 +19,8 @@ function queueMessage($playerId, $msg) {
     global $log;
     global $rabbitmq_default_host;
     global $rabbitmq_default_exchange;
+    global $rabbitmq_default_vhost;
+
     $HOST = $rabbitmq_default_host;
     $USER = 'guest';
     $PASS = 'guest';

@@ -8,7 +8,6 @@
 class GameResultDto {
 
     public $playerHands;
-    //public $potSize;
     public $winningPlayerId;
     public $playerStatusDtos;
 

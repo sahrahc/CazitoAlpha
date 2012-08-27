@@ -106,7 +106,7 @@ function checkExpiration() {
         $playerTurn = new PlayerTurn($playerAction, $gameInstance, $statusDateTime);
 
         if ($isPlayerVirtual == 1) {
-            $nextPokerMove = $playerTurn->ApplyPlayerAction();
+            $nextPokerMove = $playerTurn->applyPlayerAction();
             $isExpired = 0;
         } else {
             $nextPokerMove = $playerTurn->skipTurn($row["Id"], $isPractice, $statusDateTime);
@@ -162,5 +162,5 @@ function ejectInactivePlayer(){
 /*
   checkExpiration();
   cleanUp();
- */
+*/
 ?>

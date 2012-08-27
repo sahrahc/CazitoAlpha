@@ -5,25 +5,14 @@
  */
 class PlayerActionResultDto {
     public $gameInstanceId;
-    public $nextPlayerId;
-    public $expirationDate;
-    public $isEndGameNext;
-    public $callAmount;
-    public $checkAmount;
-    public $raiseAmount;
-    // if additional events occurred
+    public $nextPokerMoveDto;
     public $gameResultDto;
     public $cardsToSend;
     public $playerStatusDto;
 
     public function __construct($nextPokerMove) {
+        $this->nextPokerMoveDto = new NextPokerMoveDto($nextPokerMove);
         $this->gameInstanceId = $nextPokerMove->gameInstanceId;
-        $this->nextPlayerId = $nextPokerMove->playerId;
-        $this->expirationDate = $nextPokerMove->expirationDate;
-        $this->isEndGameNext = $nextPokerMove->isEndGameNext;
-        $this->callAmount = $nextPokerMove->callAmount;
-        $this->checkAmount = $nextPokerMove->checkAmount;
-        $this->raiseAmount = $nextPokerMove->raiseAmount;
     }
 }
 ?>

@@ -1,0 +1,241 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Test</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style type="text/css">
+        #leftFrame{
+            width:120px;
+        }
+        .hiddenCard {
+            width:105px;
+            height:105px;
+            background-color:#7E8493;
+            padding: 5px 5px;
+            border-radius: 5px;
+            border: 2px solid #B6BFD7;
+            color: #D9E1F5;
+            font-family: Comic Sans MS;
+        }
+        .cheatingItemDesc {
+            background-color:#F0F6F9;
+            font-size:small;
+            position:absolute;
+            width:115px;
+            padding: 2px 2px;
+            overflow: auto;
+            z-index: 10;
+            border: 2px solid #B6BFD7;
+            border-radius: 5px;
+        }
+        .cheatingItemAction {
+            background-color:#F1F6FB;
+            font-size:small;
+            width:120px;
+            overflow: auto;
+            width:115px;
+            padding: 1px 2px;
+            border: 2px solid #B6BFD7;
+            border-radius: 5px;
+        }
+        #nextCard {
+            top:373px;
+            position:absolute;
+            z-index:-1;
+            vertical-align:bottom;
+        }
+        .cheatImg {
+            border-radius: 2px;
+            border: 2px solid #B6BFD7;
+        }
+        </style>
+        <link rel="stylesheet" href="../../../Libraries/jQuery/development-bundle/themes/base/jquery.ui.all.css" />
+        <script src="../../../Libraries/jQuery/js/jquery-1.7.2.min.js" type="text/javascript"></script>
+        <script src="../../../Libraries/jQuery/js/jquery-ui-1.8.22.custom.min.js" type="text/javascript"></script>
+        <script src="../../../Libraries/jQuery/development-bundle/ui/jquery.ui.core.js"></script>
+        <script src="../../../Libraries/jQuery/development-bundle/ui/jquery.ui.widget.js"></script>
+        <script src="../../../Libraries/jQuery/development-bundle/ui/jquery.ui.tabs.js"></script>
+        <!--
+          jCarousel library
+        -->
+        <script type="text/javascript" src="../../../jcarousel/lib/jquery.jcarousel.min.js"></script>
+        <!--
+          jCarousel skin stylesheet
+        -->
+        <link rel="stylesheet" type="text/css" href="../../../jcarousel/skins/tango/skin-cazito.css" />
+
+        <script type="text/javascript">
+
+            jQuery(document).ready(function() {
+                jQuery('#mycarousel').jcarousel({
+                    vertical: true,
+                    scroll: 8
+                });
+            });
+
+        </script>
+        <script src="TestTabSlider.js"></script>
+    </head>
+    <body>
+        <div id="leftSide" style="width:240px">
+            <div class="leftFrame" style="float:left">
+                <div class="hiddenCard" id="sleeve">Sleeve:</div>
+                <div id="cheatingItemTab">
+                    <div class="cheatingItemAction" id="tabs-1-act" style="display:none">
+                        <p>Sly McGuffin's Ace Pusher (5,000)</p>
+                        <input id="tabs-1-submit" type="submit" onclick="cheatAcePusher()" value="Apply">
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-2-act" style="display:none">
+                        <p>Miss Molly McSneaky's Heart Marker (10,000)</p>
+                        <input id ="tabs-2-submit" type="submit" onclick="cheatHeartMarker()" value="Apply">
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-3-act" style="display:none">
+                        <p>Old Man Chalmers Reliable Card Pusher (50,000)</p>
+                        <input id="tabs-3-submit" type="submit" onclick="cheatUseCardOnSleeve()" value="Use">
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-4-act" style="display:none">
+                        <p>Young Quick Draw Charlie's Club Thumb (15,000)</p>
+                        <input id ="tabs-4-select" type="submit" onclick="cheatClubMarker()" value="Apply" />
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-5-act" style="display:none">
+                        <p>Dotty's Diamond Detector (20,000)</p>
+                        <input id ="tabs-5-select" type="submit" onclick="cheatDiamondMarker()" value="Apply"/>
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-6-act" style="display:none">
+                        <p>Shelvin's Shuffler (100,000)</p>
+                        <input id ="tabs-6-look" type="submit" onclick="cheatLookRiverCard()" value="Look"/>
+                        <input id ="tabs-6-swap" type="submit" onclick="cheatSwapRiverCard()" value="Swap"/>
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-7-act" style="display:none">
+                        <p>Peter Peester's Poker Peeker (150,000)</p>
+                        <input id ="tabs-6-select" type="submit" onclick="cheatPeekOpponent()" value="Apply"/>
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-8-act" style="display:none">
+                        <p>Tommy's Table Tucker (200,000)</p>
+                        <p><strong>Coming Soon</strong></p>
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-9-act" style="display:none">
+                        <p>Sally's Social Spotters (250,000)</p>
+                        <p><strong>Coming Soon</strong></p>
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-10-act" style="display:none">
+                        <p>Young Doc McSneaky Jr's Snake Oil Markers (750,000)</p>
+                        <p><strong>Coming Soon</strong></p>
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-11-act" style="display:none">
+                        <p>Old Doc McSneaky Snake Liver Crazy Maker (1,000,000)</p>
+                        <p><strong>Coming Soon</strong></p>
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-12-act" style="display:none">
+                        <p>Old Fashioned Face Melter (1,250,000)</p>
+                        <p><strong>Coming Soon</strong></p>
+                    </div>
+                    <div class="cheatingItemAction"  id="tabs-13-act" style="display:none">
+                        <p>Riverbend Redo (1,500,000)</p>
+                        <p><strong>Coming Soon</strong></p>
+                    </div>
+                </div>
+                <div id="cheatingItemDescription">
+                    <div class="cheatingItemDesc" id="tabs-1" style="display:none">
+                        <p><strong>Sly McGuffin's Ace Pusher (5,000)</strong></p>
+                        <p>Can drop an ace into a player's hand, random suit, removing an old card into a hidden sleeve. Warning: TWO ACES MAY APPEAR IN THE SAME HAND!</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-2" style="display:none">
+                        <p><strong>Miss Molly McSneaky's Heart Marker (10,0000)</strong></p>
+                        <p>The heart Marker has a symbol on the corner of all hearts in play. Can be used to determine what suite people have. Usable every 5 minutes.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-3" style="display:none">
+                        <p><strong>Old Man Chalmers Reliable Card Pusher (50,000)</strong></p>
+                        <p>Players can load one card into their sleeve (their choice) for every seven levels of player. Must be done before sitting down at the table, players must leave the table to reload the Card Pusher.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-4" style="display:none">
+                        <p><strong>Young Quick Draw Charlie's Club Thumb (15,000)</strong></p>
+                        <p>Knows which cards are Clubs. Can be used once every minute.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-5" style="display:none">
+                        <p><strong>Dotty's Diamond Detector (20,000)</strong></p>
+                        <p>Knows which cards are Diamonds. Can be used once every 3 minutes.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-6" style="display:none">
+                        <p><strong>Shelvin's Shuffler (100,000)</strong></p>
+                        <p>Can look at the river card, and swap the river card with the next card in the deck once every 10 minutes.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-7" style="display:none">
+                        <p><strong>Peter Peester's Poker Peeker (150,000)</strong></p>
+                        <p>Puffs a gentle draft of air to reveal an opponent's card to a spotter behind your opponent. Usable once every 15 minutes.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-8" style="display:none">
+                        <p><strong>Tommy's Table Tucker (200,000) Coming Soon</strong></p>
+                        <p>Tommy's Table Tucker lets the player slide cards into and out of the groove under the table. One card every 10 levels. WARNING: CARD DUPLICATES CAN APPEAR.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-9" style="display:none">
+                        <p><strong>Sally's Social Spotters (250,000) Coming Soon</strong></p>
+                        <p>Each card that has been seen by the player gets marked. It is usable once an hour, and lasts for 45 minutes.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-10" style="display:none">
+                        <p><strong>Young Doc McSneaky Jr's Snake Oil Markers (750,000) Coming Soon</strong></p>
+                        <p>Marks all the cards with dots that are nearly imperceptible, showing what all the cards are in the game. Players can substitute this marked deck with the dealer once every 30 minutes until leaving the table.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-11" style="display:none">
+                        <p><strong>Old Doc McSneaky Snake Liver Crazy Maker (1,000,000) Coming Soon</strong></p>
+                        <p>Randomizes someone else's Snake Oil Markers on 50% of the cards. Usable once every hour and it makes Snake Oil Markers impossible to detect. NOTE: CAN BE USED ON SELF!</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-12" style="display:none">
+                        <p><strong>Old Fashioned Face Melter (1,250,000) Coming Soon</strong></p>
+                        <p>Can be used to push a face card down in the deck when cards are being dealt and replace them with other cards that are not face cards. Can choose to prevent other players from getting face cards, and keep stacked into player's own hand.</p>
+                    </div>
+                    <div class="cheatingItemDesc" id="tabs-13" style="display:none">
+                        <p><strong>Riverbend Redo (1,500,000) Coming Soon</strong></p>
+                        <p>Will know what the card is that will be on the river, and also can push the next card down to the top of the stack, once every 10 minutes.</p>
+                    </div>
+                </div>
+                <div class="hiddenCard" id="nextCard" >Next card:</div>
+            </div>
+            <div id="tabs" style="float:right">
+                <ul id="mycarousel" class="jcarousel jcarousel-skin-tango">
+                    <li onmouseover="showDescription(1)"
+                        onclick="showAction(1)">
+                        <img class="cheatImg" src="../../../images/cheatItem1.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(2)"
+                        onclick="showAction(2)">
+                        <img class="cheatImg" src="../../../images/cheatItem2.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(3)"
+                        onclick="showAction(3)">
+                        <img class="cheatImg" src="../../../images/cheatItem3.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(4)"
+                        onclick="showAction(4)">
+                        <img class="cheatImg" src="../../../images/cheatItem4.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(5)"
+                        onclick="showAction(5)">
+                        <img class="cheatImg" src="../../../images/cheatItem5.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(6)"
+                        onclick="showAction(6)">
+                        <img class="cheatImg" src="../../../images/cheatItem6.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(7)"
+                        onclick="showAction(7)">
+                        <img class="cheatImg" src="../../../images/cheatItem7.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(8)"
+                        onclick="showAction(8)">
+                        <img class="cheatImg" src="../../../images/cheatItem8.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(9)"
+                        onclick="showAction(9)">
+                        <img class="cheatImg" src="../../../images/cheatItem9.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(10)"
+                        onclick="showAction(10)">
+                        <img class="cheatImg" src="../../../images/cheatItem10.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(11)"
+                        onclick="showAction(11)">
+                        <img class="cheatImg" src="../../../images/cheatItem11.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(12)"
+                        onclick="showAction(12)">
+                        <img class="cheatImg" src="../../../images/cheatItem12.png" width="80" height="35" alt="" /></li>
+                    <li onmouseover="showDescription(13)"
+                        onclick="showAction(13)">
+                        <img class="cheatImg" src="../../../images/cheatItem13.png" width="80" height="35" alt="" /></li>
+                </ul>
+
+            </div>
+        </div>
+    </body>
+</html>
+
