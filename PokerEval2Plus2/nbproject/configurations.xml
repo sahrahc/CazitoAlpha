@@ -2,6 +2,10 @@
 <configurationDescriptor version="69">
   <logicalFolder name="root" displayName="root" projectFiles="true">
     <df name="PokerEval2Plus2" root=".">
+      <df name="nbproject">
+      </df>
+      <df name="PokerEval2Plus2">
+      </df>
       <in>arrays.h</in>
       <in>evaluator.cpp</in>
       <in>evaluator.h</in>
@@ -9,7 +13,6 @@
       <in>generate_table.cpp</in>
       <in>generate_table.h</in>
       <in>main.cpp</in>
-      <in>mtrand.cpp</in>
       <in>mtrand.h</in>
       <in>poke_eval.cpp</in>
       <in>poker.h</in>

@@ -18,22 +18,15 @@ if (!isset($_SESSION['myusername'])) {
         <link rel="Stylesheet" type="text/css" href="../../Libraries/jQuery/css/ui-lightness/jquery-ui-1.8.22.custom.css"/>
         <script src="../../Libraries/jQuery/js/jquery-1.7.2.min.js" type="text/javascript"></script>
         <script src="../../Libraries/jQuery/js/jquery-ui-1.8.22.custom.min.js" type="text/javascript"></script>
-        <script src="../../Libraries/jQuery/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
+        <script src="../../Libraries/jQuery/js/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
         <link rel="stylesheet" type="text/css" href="../../Libraries/jcarousel/skins/tango/cheatingItems-skin.css" />
         <script src="../../Libraries/jcarousel/lib/jquery.jcarousel.min.js" type="text/javascript"></script>
-        <script src="http://cdn.sockjs.org/sockjs-0.3.min.js" type="text/javascript"></script>
+        <!--<script src="http://cdn.sockjs.org/sockjs-0.3.min.js" type="text/javascript"></script>-->
+        <script src="../../Libraries/Messaging/sockjs-0.3.min.js" type="text/javascript"></script>
         <script src="../../Libraries/Messaging/Stomp.js" type="text/javascript"></script>
     </head>
     <body >
-        <!-- dialogs -->
-        <div id="dialog-modal" title="Enter your player name">
-            <p>Enter your player name, so we can match your past play or leave blank to enter as guest.</p>
-            <form id="PlayerNameForm">
-                <input type="text" id="playerNameText" value="Guest" />
-            </form>
-        </div>
-
-        <div id="dialog-modal-follow-up" title="Select your game">
+        <div id="dialog-modal" title="Select your game">
             <p>Start a practice game against three other players.</p>
             <br />
             <p>To play against other people, enter the table number you want to join. If the table does not exist or you leave this field blank, a new table will be started.</p>
@@ -58,169 +51,178 @@ if (!isset($_SESSION['myusername'])) {
                     <li id="nextPlayerId"></li>
                     <li id="nextCommunityCardPosition"></li>
                 </ul>
-                <h1 id="casinoTableHeader" >
+                <p id="casinoTableHeader" >
                     Casino Table
-                </h1>
+                </p>
+                <div id="loginInfo"> <p>
+                        You are logged in as
+                    </p></div>
+                <div id="nav">
+                    <input type="submit" onclick="logout()" value="Logout" />
+                </div>
             </div>
             <!-- cheaters tools and information on the left -->
             <div id="cheatersFrame">
                 <!-- carousel has the list of cheating items the user can view or select -->
                 <div id="cheatersList" >
                     <ul id="mycarousel" class="jcarousel-list jcarousel-skin-tango">
-                        <li onmouseover="showDescription(1)"
-                            onclick="showAction(1)">
+                        <li onmouseover="showDescription('AcePusher')"
+                            onclick="showAction('AcePusher')">
                             <img class="cheatImg" src="../../../images/cheatItem1.png" alt="Ace Pusher" /></li>
-                        <li onmouseover="showDescription(2)"
-                            onclick="showAction(2)">
+                        <li onmouseover="showDescription('HeartMarker')"
+                            onclick="showAction('HeartMarker')">
                             <img class="cheatImg" src="../../../images/cheatItem2.png" alt="Heart Marker" /></li>
-                        <li onmouseover="showDescription(3)"
+                        <!--<li onmouseover="showDescription('')"
                             onclick="showAction(3)">
-                            <img class="cheatImg" src="../../../images/cheatItem3.png" alt="Card Pusher" /></li>
-                        <li onmouseover="showDescription(4)"
-                            onclick="showAction(4)">
+                            <img class="cheatImg" src="../../../images/cheatItem3.png" alt="Card Pusher" /></li>-->
+                        <li onmouseover="showDescription('ClubMarker')"
+                            onclick="showAction('ClubMarker')">
                             <img class="cheatImg" src="../../../images/cheatItem4.png" alt="Club Thumb" /></li>
-                        <li onmouseover="showDescription(5)"
-                            onclick="showAction(5)">
+                        <li onmouseover="showDescription('DiamondMarker')"
+                            onclick="showAction('DiamondMarker')">
                             <img class="cheatImg" src="../../../images/cheatItem5.png" alt="Diamond Detector" /></li>
-                        <li onmouseover="showDescription(6)"
-                            onclick="showAction(6)">
+                        <li onmouseover="showDescription('LookRiverCard')"
+                            onclick="showAction('LookRiverCard')">
                             <img class="cheatImg" src="../../../images/cheatItem6.png" alt="River Shuffler" /></li>
-                        <li onmouseover="showDescription(7)"
-                            onclick="showAction(7)">
+                        <li onmouseover="showDescription('PokerPeeker')"
+                            onclick="showAction('PokerPeeker')">
                             <img class="cheatImg" src="../../../images/cheatItem7.png" alt="Peeker" /></li>
-                        <li onmouseover="showDescription(8)"
-                            onclick="showAction(8)">
+                        <li onmouseover="showDescription('TableTucker')"
+                            onclick="showAction('TableTucker')">
                             <img class="cheatImg" src="../../../images/cheatItem8.png" alt="Table Tucker" /></li>
-                        <li onmouseover="showDescription(9)"
-                            onclick="showAction(9)">
+                        <li onmouseover="showDescription('SocialSpotter')"
+                            onclick="showAction('SocialSpotter')">
                             <img class="cheatImg" src="../../../images/cheatItem9.png" alt="Social Spotters" /></li>
-                        <li onmouseover="showDescription(10)"
-                            onclick="showAction(10)">
+                        <li onmouseover="showDescription('SnakeOilMarker')"
+                            onclick="showAction('SnakeOilMarker')">
                             <img class="cheatImg" src="../../../images/cheatItem10.png" alt="Snake Oil Markers" /></li>
-                        <li onmouseover="showDescription(11)"
-                            onclick="showAction(11)">
+                        <li onmouseover="showDescription('AntiOilMarker')"
+                            onclick="showAction('AntiOilMarker')">
                             <img class="cheatImg" src="../../../images/cheatItem11.png" alt="Liver Crazy Marker" /></li>
-                        <li onmouseover="showDescription(12)"
-                            onclick="showAction(12)">
+                        <li onmouseover="showDescription('FaceMelter')"
+                            onclick="showAction('FaceMelter')">
                             <img class="cheatImg" src="../../../images/cheatItem12.png" alt="Face Melter" /></li>
-                        <li onmouseover="showDescription(13)"
-                            onclick="showAction(13)">
+                        <li onmouseover="showDescription('RiverbendRedo')"
+                            onclick="showAction('RiverbendRedo')">
                             <img class="cheatImg" src="../../../images/cheatItem13.png" alt="Riverbend Redo" /></li>
                     </ul>
                 </div>
                 <!-- details for how to cheat including hidden cards and descriptive and actionable info -->
                 <div id="cheaterDetails">
-                    <div class="hiddenCard" id="sleeve">Sleeve:</div>
-                    <!-- the item actiosn are in a div to allow vertical centering -->
+                    <div class="hiddenCard" id="sleeve"><p>Sleeve:</p></div>
+                    <!-- the item actions are in a div to allow vertical centering -->
                     <div id="cheatingItemActionList">
-                        <div class="cheatingItemAction" id="tabs-1-act" onclick="hideAction(1)">
+                        <div class="cheatingItemAction" id="AcePusher-Act" onclick="hideAction('AcePusher')">
                             <p>Sly McGuffin's Ace Pusher (5,000)</p>
-                            <input id="tabs-1-submit" type="submit" onclick="cheatAcePusher()" value="Apply">
+                            <input id="AcePusher-submit1" type="submit" onclick="cheatAcePusher(1)" value="Card 1"/>
+                            <input id="AcePusher-submit2" type="submit" onclick="cheatAcePusher(2)" value="Card 2"/>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-2-act" onclick="hideAction(2)">
+                        <div class="cheatingItemAction"  id="HeartMarker-Act" onclick="hideAction('HeartMarker')">
                             <p>Miss Molly McSneaky's Heart Marker (10,000)</p>
-                            <input id ="tabs-2-submit" type="submit" onclick="cheatHeartMarker()" value="Apply">
+                            <input id ="HeartMarker-submit" type="submit" onclick="cheatHeartMarker()" value="Apply">
                         </div>
+                        <!--
                         <div class="cheatingItemAction"  id="tabs-3-act" onclick="hideAction(3)">
                             <p>Old Man Chalmers Reliable Card Pusher (50,000)</p>
                             <input id="tabs-3-submit" type="submit" onclick="cheatUseCardOnSleeve()" value="Use">
-                        </div>
-                        <div class="cheatingItemAction"  id="tabs-4-act" onclick="hideAction(4)">
+                        </div>-->
+                        <div class="cheatingItemAction"  id="ClubMarker-Act" onclick="hideAction('ClubMarker')">
                             <p>Young Quick Draw Charlie's Club Thumb (15,000)</p>
-                            <input id ="tabs-4-submit" type="submit" onclick="cheatClubsMarker()" value="Apply" />
+                            <input id ="ClubMarker-submit" type="submit" onclick="cheatClubsMarker()" value="Apply" />
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-5-act" onclick="hideAction(5)">
+                        <div class="cheatingItemAction"  id="DiamondMarker-Act" onclick="hideAction('DiamondMarker')">
                             <p>Dotty's Diamond Detector (20,000)</p>
-                            <input id ="tabs-5-select" type="submit" onclick="cheatDiamondMarker()" value="Apply"/>
+                            <input id ="DiamondMarker-select" type="submit" onclick="cheatDiamondMarker()" value="Apply"/>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-6-act" onclick="hideAction(6)">
+                        <div class="cheatingItemAction"  id="LookRiverCard-Act" onclick="hideAction('LookRiverCard')">
                             <p>Shelvin's Shuffler (100,000)</p>
-                            <input id ="tabs-6-look" type="submit" onclick="cheatLookRiverCard()" value="Look"/>
-                            <input id ="tabs-6-swap" type="submit" onclick="cheatSwapRiverCard()" value="Swap"/>
+                            <input id ="LookRiverCard-look" type="submit" onclick="cheatLookRiverCard()" value="Look"/>
+                            <input id ="LookRiverCard-swap" type="submit" onclick="cheatSwapRiverCard()" value="Swap"/>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-7-act" onclick="hideAction(7)">
+                        <div class="cheatingItemAction"  id="PokerPeeker-Act" onclick="hideAction('PokerPeeker')">
                             <p>Peter Peester's Poker Peeker (150,000)</p>
-                            <input id ="tabs-7-select" type="submit" onclick="cheatPeekOpponent()" value="Apply"/>
+                            <input id ="PokerPeeker-select" type="submit" onclick="cheatPeekOpponent()" value="Apply"/>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-8-act" onclick="hideAction(8)">
+                        <div class="cheatingItemAction"  id="TableTucker-Act" onclick="hideAction('TableTucker')">
                             <p>Tommy's Table Tucker (200,000)</p>
                             <p><strong>Coming Soon</strong></p>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-9-act" onclick="hideAction(9)">
+                        <div class="cheatingItemAction"  id="SocialSpotter-Act" onclick="hideAction('SocialSpotter')">
                             <p>Sally's Social Spotters (250,000)</p>
-                            <p><strong>Coming Soon</strong></p>
+                            <input id ="SocialSpotter-select" type="submit" onclick="cheatSocialSpotter()" value="Apply"/>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-10-act" onclick="hideAction(10)">
+                        <div class="cheatingItemAction"  id="SnakeOilMarker-Act" onclick="hideAction('SnakeOilMarker')">
                             <p>Young Doc McSneaky Jr's Snake Oil Markers (750,000)</p>
                             <p><strong>Coming Soon</strong></p>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-11-act" onclick="hideAction(11)">
+                        <div class="cheatingItemAction"  id="AntiOilMarker-Act" onclick="hideAction('AntiOilMarker')">
                             <p>Old Doc McSneaky Snake Liver Crazy Maker (1,000,000)</p>
                             <p><strong>Coming Soon</strong></p>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-12-act" onclick="hideAction(12)">
+                        <div class="cheatingItemAction"  id="FaceMelter-Act" onclick="hideAction('FaceMelter')">
                             <p>Old Fashioned Face Melter (1,250,000)</p>
                             <p><strong>Coming Soon</strong></p>
                         </div>
-                        <div class="cheatingItemAction"  id="tabs-13-act" onclick="hideAction(12)">
+                        <div class="cheatingItemAction"  id="RiverbendRedo-Act" onclick="hideAction('RiverbendRedo')">
                             <p>Riverbend Redo (1,500,000)</p>
                             <p><strong>Coming Soon</strong></p>
                         </div>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-1" onclick="hideDescription(1)">
+                    <div class="cheatingItemDesc" id="AcePusher-Desc" onclick="hideDescription('AcePusher')">
                         <p><strong>Sly McGuffin's Ace Pusher (5,000)</strong></p>
                         <p>Can drop an ace into a player's hand, random suit, removing an old card into a hidden sleeve. Warning: TWO ACES MAY APPEAR IN THE SAME HAND!</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-2" onclick="hideDescription(2)">
+                    <div class="cheatingItemDesc" id="HeartMarker-Desc" onclick="hideDescription('HeartMarker')">
                         <p><strong>Miss Molly McSneaky's Heart Marker (10,0000)</strong></p>
                         <p>The heart Marker has a symbol on the corner of all hearts in play. Can be used to determine what suite people have. Usable every 5 minutes.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-3" onclick="hideDescription(3)">
+                    <!--<div class="cheatingItemDesc" id="tabs-3" onclick="hideDescription(3)">
                         <p><strong>Old Man Chalmers Reliable Card Pusher (50,000)</strong></p>
                         <p>Players can load one card into their sleeve (their choice) for every seven levels of player. Must be done before sitting down at the table, players must leave the table to reload the Card Pusher.</p>
-                    </div>
-                    <div class="cheatingItemDesc" id="tabs-4" onclick="hideDescription(4)">
+                    </div>-->
+                    <div class="cheatingItemDesc" id="ClubMarker-Desc" onclick="hideDescription('ClubMarker')">
                         <p><strong>Young Quick Draw Charlie's Club Thumb (15,000)</strong></p>
                         <p>Knows which cards are Clubs. Can be used once every minute.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-5" onclick="hideDescription(5)">
+                    <div class="cheatingItemDesc" id="DiamondMarker-Desc" onclick="hideDescription('DiamondMarker')">
                         <p><strong>Dotty's Diamond Detector (20,000)</strong></p>
                         <p>Knows which cards are Diamonds. Can be used once every 3 minutes.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-6" onclick="hideDescription(6)">
+                    <div class="cheatingItemDesc" id="LookRiverCard-Desc" onclick="hideDescription('LookRiverCard')">
                         <p><strong>Shelvin's Shuffler (100,000)</strong></p>
                         <p>Can look at the river card, and swap the river card with the next card in the deck once every 10 minutes.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-7" onclick="hideDescription(7)">
+                    <div class="cheatingItemDesc" id="PokerPeeker-Desc" onclick="hideDescription('PokerPeeker')">
                         <p><strong>Peter Peester's Poker Peeker (150,000)</strong></p>
                         <p>Puffs a gentle draft of air to reveal an opponent's card to a spotter behind your opponent. Usable once every 15 minutes.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-8" onclick="hideDescription(8)">
+                    <div class="cheatingItemDesc" id="TableTucker-Desc" onclick="hideDescription('TableTucker')">
                         <p><strong>Tommy's Table Tucker (200,000) Coming Soon</strong></p>
                         <p>Tommy's Table Tucker lets the player slide cards into and out of the groove under the table. One card every 10 levels. WARNING: CARD DUPLICATES CAN APPEAR.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-9" onclick="hideDescription(9)">
-                        <p><strong>Sally's Social Spotters (250,000) Coming Soon</strong></p>
+                    <div class="cheatingItemDesc" id="SocialSpotter-Desc" onclick="hideDescription('SocialSpotter')">
+                        <p><strong>Sally's Social Spotters (250,000)</strong></p>
                         <p>Each card that has been seen by the player gets marked. It is usable once an hour, and lasts for 45 minutes.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-10" onclick="hideDescription(10)">
+                    <div class="cheatingItemDesc" id="SnakeOilMarker-Desc" onclick="hideDescription('SnakeOilMarker')">
                         <p><strong>Young Doc McSneaky Jr's Snake Oil Markers (750,000) Coming Soon</strong></p>
                         <p>Marks all the cards with dots that are nearly imperceptible, showing what all the cards are in the game. Players can substitute this marked deck with the dealer once every 30 minutes until leaving the table.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-11" onclick="hideDescription(11)">
+                    <div class="cheatingItemDesc" id="AntiOilMarker-Desc" onclick="hideDescription('AntiOilMarker')">
                         <p><strong>Old Doc McSneaky Snake Liver Crazy Maker (1,000,000) Coming Soon</strong></p>
                         <p>Randomizes someone else's Snake Oil Markers on 50% of the cards. Usable once every hour and it makes Snake Oil Markers impossible to detect. NOTE: CAN BE USED ON SELF!</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-12" onclick="hideDescription(12)">
+                    <div class="cheatingItemDesc" id="FaceMelter-Desc" onclick="hideDescription('FaceMelter')">
                         <p><strong>Old Fashioned Face Melter (1,250,000) Coming Soon</strong></p>
                         <p>Can be used to push a face card down in the deck when cards are being dealt and replace them with other cards that are not face cards. Can choose to prevent other players from getting face cards, and keep stacked into player's own hand.</p>
                     </div>
-                    <div class="cheatingItemDesc" id="tabs-13" onclick="hideDescription(13)">
+                    <div class="cheatingItemDesc" id="RiverbendRedo-Desc" onclick="hideDescription('RiverbendRedo')">
                         <p><strong>Riverbend Redo (1,500,000) Coming Soon</strong></p>
                         <p>Will know what the card is that will be on the river, and also can push the next card down to the top of the stack, once every 10 minutes.</p>
                     </div>
                     <div class="hiddenCard" id="nextCard" >Next card:</div>
                 </div>
+
             </div>
 
             <!-- the game board also includes buttons to start game, leave the session and other players tools -->
@@ -299,8 +301,8 @@ if (!isset($_SESSION['myusername'])) {
 
                     <!--  user buttons; the default position is user at seat 0 -->
                     <label id="userCallAmount" style="position:absolute;display:none" ></label>
-					<label id="userRaiseAmount" style="position:absolute;display:none" ></label>
-					<input type="submit" id="userRaiseButton" class="userButton player0Raise" onclick="clickRaise()"
+                    <label id="userRaiseAmount" style="position:absolute;display:none" ></label>
+                    <input type="submit" id="userRaiseButton" class="userButton player0Raise" onclick="clickRaise()"
                            value="Raise" />
                     <input type="submit" id="userCheckButton" class="userButton player0Check" onclick="clickCheck()"
                            value="Check" />
@@ -341,6 +343,7 @@ if (!isset($_SESSION['myusername'])) {
                     </form>
                 </div>
             </div>
+            <div id="logFrame"></div>
             <div id="footer">
                 Copyright © cazito.com</div>
         </div>

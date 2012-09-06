@@ -80,7 +80,7 @@ $pCards[6] = findDeckIndex(4, 0x8000, $DECK); //clubs 6
 $pCards[1] = findDeckIndex(5, 0x8000, $DECK); // clubs 7
 $pCards[0] = findDeckIndex(1, 0x8000, $DECK); //clubs 3
 */
-$pokerCards = EvalHelper::dealAllCards(1);
+$pokerCards = EvalHelper::shuffleDeck(1);
 for ($i = 0; $i< count($pokerCards); $i++) {
     $p[$i] = $pokerCards[$i]->cardIndex;
     echo "Hand " . $pokerCards[$i]->cardName . " has index: " . $pokerCards[$i]->cardIndex . '<br />';

@@ -47,15 +47,15 @@ class GameInstanceSetup {
                 : Error setting next poker moves to deleted for session $this->gameSessionId");
         $this->log->warn(__FUNCTION__ . " - Set " . mysql_affected_rows() . " next poker moves
                 to deleted for game session $this->gameSessionId.");
-
+        /* FIXME: must reset queues?
         executeSQL("UPDATE EventMessage SET IsDeleted = 1
                 WHERE GameSessionId = $this->gameSessionId", __FUNCTION__ . "
                 : Error setting next event msgs to deleted for session $this->gameSessionId");
         $this->log->warn(__FUNCTION__ . " - Set " . mysql_affected_rows() . " event messages
                 to deleted for game session $this->gameSessionId.");
-
+        */
         // synch up player states first but ignore stakes and turn numbers are set later
-        if ($cTable != null) {
+        if (!is_null($cTable)) {
         //-------------------------------------------------------------
         // 1. delete players who left
         // FIXME: verify logic after implementing leaving tables
@@ -95,7 +95,7 @@ class GameInstanceSetup {
                 ps.LastPlayAmount = 0,
                 ps.PlayerPlayNumber = 0,
                 ps.NumberTimeOuts = 0,
-                ps.Card1Label = null, ps.Card2Label = null,
+                ps.Card1Code = null, ps.Card2Code = null,
                 ps.HandType = null, ps.HandInfo = null, ps.HandCategory = null,
                 ps.HandRankWithinCategory = null
                 WHERE GameSessionId = $this->gameSessionId AND p.CurrentSeatNumber is not null
@@ -125,52 +125,75 @@ class GameInstanceSetup {
      * Restrictions: Must be called after game reset.
      * @param array($pokerCard) $pokerCards: list of cards, randomly shuffled, for all players + 5 community cards
      * @param type $userPlayerId
-     * @return PlayerHand
+     * @return PlayerHandDto
      */
-    function saveGameCardsGetUserHand($pokerCards, $userPlayerId) {
-        // 1. community cards
-        for ($i = 0; $i < 5; $i++) {
-            // store community cards database
-            $cardNumber = $i + 1;
-            ;
-            $cardIndex = $pokerCards[$i]->cardIndex;
-            $CardName = $pokerCards[$i]->cardName;
-            executeSQL("INSERT INTO GameCard (GameInstanceId, PlayerId, CardNumber, CardIndex, 
-                    CardName) VALUES ($this->id, -1, $cardNumber, $cardIndex, '$CardName')", __FUNCTION__ . ": Error inserting GameCard instance ID $this->id");
-        }
-
-        // 2. player cards
+    function saveGameCardsGetUserHandDto($pokerCards, $userPlayerId) {
+        // NOTE: the hands don't get saved on the player state until all the hands are known.
+        // 1. player cards; no need to worry about player status
+        $leftStatus = PlayerStatusType::LEFT;
         $result = executeSQL("SELECT * FROM PlayerState WHERE GameInstanceId = $this->id
-                ORDER BY TurnNumber", __FUNCTION__ . ": Error selecting PlayerState instance id $this->id");
+                AND Status != '$leftStatus' ORDER BY TurnNumber", __FUNCTION__ . "
+                : Error selecting PlayerState instance id $this->id");
 
-        $cardCounter = 5; // player cards start at #5 because the first 5 are community cards
         $numberRows = mysql_num_rows($result);
+        $cardCounter = 1;
         $this->log->debug(__FUNCTION__ . " - number players in db: $numberRows");
-        $playerHand = null;
+        $userHandDto = null;
         while ($row = mysql_fetch_array($result)) {
             $playerId = $row['PlayerId'];
 
             // assign and store player cards
             $card1Index = $pokerCards[$cardCounter]->cardIndex;
-            $card1Label = $pokerCards[$cardCounter]->cardName;
+            $card1Code = $pokerCards[$cardCounter]->cardCode;
+            $card1DeckIndex = $pokerCards[$cardCounter]->deckPosition;
             $cardCounter++;
-            executeSQL("INSERT INTO GameCard (GameInstanceId, PlayerId, CardNumber, CardIndex,
-                    CardName) VALUES ($this->id, $playerId, 1, $card1Index, '$card1Label')", __FUNCTION__ . ": Error inserting player game cards player id $playerId");
+            executeSQL("INSERT INTO GameCard (GameInstanceId, PlayerId, PlayerCardNumber,
+                    DeckPosition, CardCode, CardIndex) VALUES ($this->id, $playerId, 1,
+                    $card1DeckIndex, '$card1Code', $card1Index)", __FUNCTION__ . "
+                    : Error inserting player game cards player id $playerId");
 
             $card2Index = $pokerCards[$cardCounter]->cardIndex;
-            $card2Label = $pokerCards[$cardCounter]->cardName;
+            $card2Code = $pokerCards[$cardCounter]->cardCode;
+            $card2DeckIndex = $pokerCards[$cardCounter]->deckPosition;
             $cardCounter++;
-            executeSQL("INSERT INTO GameCard (GameInstanceId, PlayerId, CardNumber, CardIndex,
-                    CardName) VALUES ($this->id, $playerId, 2, $card2Index, '$card2Label')", __FUNCTION__ . ": Error inserting player game cards player id $playerId");
+            executeSQL("INSERT INTO GameCard (GameInstanceId, PlayerId, PlayerCardNumber,
+                    DeckPosition, CardCode, CardIndex) VALUES ($this->id, $playerId, 2,
+                    $card2DeckIndex, '$card2Code', $card2Index)", __FUNCTION__ . "
+                    : Error inserting player game cards player id $playerId");
 
             // 3. send back the requesting player cards only
             if ($userPlayerId == $playerId) {
-                $playerHand = new PlayerHand($playerId,
-                                new PokerCard(1, $card1Index, $card1Label),
-                                new PokerCard(2, $card2Index, $card2Label));
+                $userCard1Dto = new PokerCardDto(1, $card1Code);
+                $userCard2Dto = new PokerCardDto(2, $card2Code);
+                
+                $userHandDto = new PlayerHandDto($playerId, $userCard1Dto, $userCard2Dto);
             }
         }
-        return $playerHand;
+        // 2. pick the next 10 to be community cards
+        for ($i = 0; $i < 5; $i++) {
+            // store community cards database
+            $cardNumber = $i + 1;
+            
+            $cardIndex = $pokerCards[$cardCounter]->cardIndex;
+            $cardCode = $pokerCards[$cardCounter]->cardCode;
+            $deckPosition = $pokerCards[$cardCounter]->deckPosition;
+            executeSQL("INSERT INTO GameCard (GameInstanceId, PlayerId, PlayerCardNumber, 
+                    DeckPosition, CardCode, CardIndex) VALUES ($this->id, -1, $cardNumber,
+                    $deckPosition, '$cardCode', $cardIndex)", __FUNCTION__ . "
+                    : Error inserting GameCard instance ID $this->id");
+            $cardCounter++;
+        }
+        /* save the rest without player info */
+        for ($i = $cardCounter; $i<count($pokerCards); $i++){
+            $cardIndex = $pokerCards[$i]->cardIndex;
+            $cardCode = $pokerCards[$i]->cardCode;
+            $deckPosition = $pokerCards[$i]->deckPosition;
+            executeSQL("INSERT INTO GameCard (GameInstanceId, PlayerId, PlayerCardNumber,
+                    DeckPosition, CardCode, CardIndex) VALUES ($this->id, null, null,
+                    $deckPosition, '$cardCode', $cardIndex)", __FUNCTION__ . "
+                    : Error inserting unassigned GameCard instance ID $this->id");
+        }
+        return $userHandDto;
     }
 
     /**
@@ -180,7 +203,6 @@ class GameInstanceSetup {
      * @global type $practiceExpiration
      * @param type $firstPlayerId
      * @param type $tableMin
-     * @param type $isPractice 
      */
     function saveFirstExpectedMove($firstPlayerId, $tableMin) {
         global $dateTimeFormat;

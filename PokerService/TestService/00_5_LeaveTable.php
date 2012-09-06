@@ -27,7 +27,7 @@ leaveSaloon($par); // no output
 // TODO: offer seat to table who is not reserved and table is full
 // TODO: take seat not offered but empty seats available
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players after $playerName leaves: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .

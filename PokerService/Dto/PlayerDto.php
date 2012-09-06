@@ -19,12 +19,11 @@ class PlayerDto {
     /* the initial stake when joining the table */
     public $buyin;
 
-    function __construct($id, $name, $imageUrl, $curSeat, $buyin) {
+    function __construct($id, $name, $imageUrl, $isVirtual) {
         $this->playerId = $id;
         $this->playerName = $name;
         $this->playerImageUrl = $imageUrl;
-        $this->currentSeatNumber = $curSeat;
-        $this->buyin = $buyin;
+        $this->isVirtual = $isVirtual;
     }
 
 }

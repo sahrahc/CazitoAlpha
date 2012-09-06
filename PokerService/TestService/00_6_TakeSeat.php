@@ -23,7 +23,7 @@ $par = json_encode(array("gameSessionId"=>$gameSessionId,
 takeSeat($par); // no output
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players after $playerName takes seat: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .

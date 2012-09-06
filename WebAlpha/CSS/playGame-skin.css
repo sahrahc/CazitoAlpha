@@ -15,14 +15,14 @@ strong {
     background-repeat:no-repeat;
 	z-index:-1;
 	width: 1024px;
-	height: 514px;
+	height: 768px;
 	padding: 5px 5px;
 }
 #topFrame {
 	width:1014px; /* must = width of cheaters + messaging (220 + 144 + 642 = 1006)*/
     background-color: #9EB8F0;
 	opacity: 0.6;
-	height:30px;
+	height:40px;
 	clear:both;
 	padding: 5px 5px;
 	border-radius: 3px;
@@ -102,6 +102,19 @@ strong {
 	width: 35px;
 	font-size: 0.6em;
 }
+#logFrame{
+    width:1014px;
+	height: 80px;
+    background-color: white;
+    text-align:left;
+    color:blue;
+	clear: both;
+	opacity: 0.6;
+    border-radius: 3px;
+	padding: 5px 5px;
+    margin-bottom: 5px;
+    overflow: auto;
+}
 #footer
 {
 	width:1014px;
@@ -113,7 +126,23 @@ strong {
 	border-radius: 3px;
 	padding: 0px 5px;
 }
-#casinoTableHeader
+/*#casinoTableHeader
 {
 margin-bottom: 0;
+}
+*/
+#casinoTableHeader {width: 500px; font-size: 1.5em; font-color:white}
+#loginInfo {float:left;}
+#nav{
+    vertical-align: middle;
+    float:right;
+}
+#nav > ul {
+    list-style-type:none;
+    margin:0;
+    padding:0;
+}
+#nav li
+{
+    display:inline;
 }

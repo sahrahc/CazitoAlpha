@@ -7,8 +7,8 @@ include_once(dirname(__FILE__) . '/../../Libraries/log4php/Logger.php');
 // Include Application Scripts
 require_once('Config.php');
 include_once('Components/EvalHelper.php');
-include_once('Components/CheatingHelper.php');
-include_once('Data/AllInclude.php');
+include_once('DomainHelper/AllInclude.php');
+include_once('DomainEnhanced/AllInclude.php');
 include_once('DomainModel/AllInclude.php');
 include_once('Dto/AllInclude.php');
 
@@ -33,7 +33,7 @@ function startPracticeSession($par) {
     global $defaultTableMin;
     global $numberSeats;
     $decodedPar = json_decode($par, true);
-    $playerName = $decodedPar["playerName"];
+    $playerId = $decodedPar["userPlayerId"];
 
     /* --------------------------------------------------------------------- */
     $con = connectToStateDB();
@@ -43,7 +43,8 @@ function startPracticeSession($par) {
 
     // Logic -----------------------------------------------------------------
     // get or create the user
-    $playerDto = EntityHelper::getOrCreatePlayer(null, 0, $playerName, 0, $statusDateTime);
+    $playerDto = EntityHelper::getPlayerDto($playerId);
+
     $gameInstanceStatus = EntityHelper::createPracticeInstance(null, $playerDto->playerId, $statusDateTime);
     $practiceSession = new PracticeSession($gameInstanceStatus->gameInstanceSetup->gameSessionId,
                     $gameInstanceStatus->id, $statusDateTime);
@@ -53,7 +54,7 @@ function startPracticeSession($par) {
 
     // player states - requires a logical practice session objecct in order to call the metods
     // the saves are in the database directly
-    $practiceSession->savePracticePlayer(0, $playerDto->playerId, $playerName, $statusDateTime);
+    $practiceSession->savePracticePlayer(0, $playerDto->playerId, $playerDto->playerName, $statusDateTime);
     $practiceSession->addDummyPlayersAndBlindBets($statusDateTime);
 
     $gameInstanceSetupDto->userPlayerId = $playerDto->playerId;
@@ -67,9 +68,9 @@ function startPracticeSession($par) {
             NextPlayerId=$gameInstanceSetupDto->firstPlayerId, NumberPlayers = $numberSeats
             WHERE id = $gameInstanceStatus->id", __FUNCTION__ . ":
                 Error updating practice game instance $gameInstanceStatus->id");
-    $pokerCards = EvalHelper::dealAllCards(count($practiceSession->playerStatusDtos));
-    $gameInstanceSetupDto->userPlayerHand = $gameInstanceStatus->gameInstanceSetup->
-                    saveGameCardsGetUserHand($pokerCards, $playerDto->playerId);
+    $pokerCards = EvalHelper::shuffleDeck();
+    $gameInstanceSetupDto->userPlayerHandDto = $gameInstanceStatus->gameInstanceSetup->
+                    saveGameCardsGetUserHandDto($pokerCards, $playerDto->playerId);
 
     $gameInstanceStatus->gameInstanceSetup->saveFirstExpectedMove($gameInstanceSetupDto->firstPlayerId, $defaultTableMin);
 
@@ -95,7 +96,7 @@ function addUserToCasinoTable($par) {
     global $log;
     $decodedPar = json_decode($par, true);
     $casinoTableId = $decodedPar["casinoTableId"];
-    $playerName = $decodedPar["playerName"];
+    $playerId = $decodedPar["userPlayerId"];
     $tableSize = $decodedPar["tableSize"];
     if (is_null($tableSize)) {
         $tableSize = $defaultTableMin;
@@ -144,21 +145,27 @@ function addUserToCasinoTable($par) {
         // if none, don't send one back
         $mustUpdateInstance = true;
     }
-    $playerDtos = $casinoTable->loadPlayers();
+    $playerDtos = $casinoTable->getCasinoPlayerDtos();
     // a user who accidentally left the browser may come back; see if that's the case
     $found = false;
-    for ($i=0, $l=count($playerDtos); $i<$l; $i++) {
-        if ($playerDtos[$i]->playerName == $playerName) {
+    for ($i = 0, $l = count($playerDtos); $i < $l; $i++) {
+        if ($playerDtos[$i]->playerId == $playerId) {
             $found = true;
-            $log->debug(__FUNCTION__ . ": Player $playerName came back to casino id $casinoTableId");
+            $log->debug(__FUNCTION__ . ": Player " . $playerDtos[$i]->playerName . "
+                    came back to casino id $casinoTableId");
             break;
         }
     }
-    if (!$found){
+    if (!$found) {
         $seatNumber = $casinoTable->findAvailableSeat($playerDtos);
     }
-    // 1. get, update or create the player first, so it can be added to the response player list
-    $playerDto = EntityHelper::getOrCreatePlayer($casinoTable, $seatNumber, $playerName, 0, $statusDateTime);
+    // 1. get the player first, so it can be added to the response player list
+    $playerDto = EntityHelper::getPlayerDto($playerId);
+    if ($playerDto == null) {
+        throw new Exception("Invalid user id");
+    }
+    // 2. update the player's casino
+    $playerDto = $casinoTable->addUser($seatNumber, $playerDto, $statusDateTime);
     $gameStatusDto->userPlayerId = $playerDto->playerId;
     $gameStatusDto->userSeatNumber = $seatNumber;
 
@@ -167,9 +174,9 @@ function addUserToCasinoTable($par) {
     if ($mustUpdateInstance) {
         // get the game status, player states and community cards
         $gameStatusDto->updateInstanceData($gameInstance);
-        $gameStatusDto->communityCards = CardHelper::getCommunityCards($gameInstance->id, $gameInstance->numberCommunityCardsShown);
+        $gameStatusDto->communityCards = CardHelper::getCommunityCardDtos($gameInstance->id, $gameInstance->numberCommunityCardsShown);
         if (!is_null($gameInstance->winningPlayerId)) {
-            $gameInstance->playerHands = $gameInstance->getGameInstanceHands();
+            $gameInstance->playerHands = $gameInstance->getInstancePlayerHandDtos();
             $gameStatusDto->gameResultDto = $gameInstance->getGameResult();
         }
         $gameStatusDto->playerStatusDtos = EntityHelper::getPlayerStatusDtosForInstance($gameInstance->id);
@@ -179,15 +186,14 @@ function addUserToCasinoTable($par) {
     // need to load players again because added one
     $gameStatusDto->waitingListSize = $casinoTable->getWaitingListSize();
     if (!$found) {
-        $playerDtos = $casinoTable->loadPlayers();
+        $playerDtos = $casinoTable->getCasinoPlayerDtos();
         $gameStatusDto->playerStatusDtos = PlayerStatusDto::mapPlayerDtos($playerDtos, PlayerStatusType::WAITING);
         $casinoTable->communicateUserJoined($playerDto, $playerDtos, $gameStatusDto->waitingListSize);
-    }
-    else {
+    } else {
         $gameStatusDto->userSeatNumber = $playerDto->currentSeatNumber;
-        if ($gameInstance != null) {
-        $gameStatusDto->userPlayerHand = EntityHelper::getUserHand($playerDto->playerId, $gameInstance->id);
-        $gameStatusDto->nextMoveDto = EntityHelper::getNextMoveForInstance($gameInstance->id);
+        if (!is_null($gameInstance)) {
+            $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerDto->playerId, $gameInstance->id);
+            $gameStatusDto->nextMoveDto = EntityHelper::getNextMoveForInstance($gameInstance->id);
         }
     }
     // --------------------------------------------------------------------------------------
@@ -252,7 +258,7 @@ function startGame($par) {
         $gameSession = new GameSession($casinoTable->id, $casinoTable->currentGameSessionId);
         // the instance is created now so that the id is available but there is not much info
         // save previous dealer seat
-        $playerDtos = $casinoTable->loadPlayers();
+        $playerDtos = $casinoTable->getCasinoPlayerDtos();
         $gameInstance = $gameSession->startGameInstance($tableSize, $statusDateTime);
     }
     // the player states are saved in the database
@@ -261,8 +267,7 @@ function startGame($par) {
 
     // logic common to practice and real games.
     $playerStatuses = EntityHelper::getPlayerInstancesForGame($gameInstance->id);
-    $numberPlayers = count($playerStatuses);
-    $pokerCards = EvalHelper::dealAllCards($numberPlayers);
+    $pokerCards = EvalHelper::shuffleDeck();
     $log->Debug(__FUNCTION__ . " - number cards: " . count($pokerCards));
 
     $blindBets = $gameInstance->saveInstanceWithDealerAndBlinds($blindBetAmounts, $lastDealerSeatNumber, $playerStatuses, $statusDateTime);
@@ -276,17 +281,21 @@ function startGame($par) {
     //$gameInstance->savePlayerHands();
 
     $gameInstance->gameInstanceSetup->saveFirstExpectedMove($gameInstanceSetupDto->firstPlayerId, $tableSize);
-    $gameInstanceSetupDto->userPlayerHand = $gameInstance->gameInstanceSetup->saveGameCardsGetUserHand($pokerCards, $requestingPlayerId);
-    $userPlayerHand = unserialize(serialize($gameInstanceSetupDto->userPlayerHand));
-    
-    if (!is_null($casinoTable)) {
-        // communicate to all playing and waiting players
-        $casinoTable->communicateGameStarted($gameInstanceSetupDto, $casinoTable->loadPlayers());
+    $gameInstanceSetupDto->userPlayerHandDto = $gameInstance->gameInstanceSetup->saveGameCardsGetUserHandDto($pokerCards, $requestingPlayerId);
+    $userPlayerHand = unserialize(serialize($gameInstanceSetupDto->userPlayerHandDto));
+
+    // communicate to all playing and waiting players
+    if (is_null($casinoTable)) {
+        $gameSession->communicateGameStarted($gameInstanceSetupDto, $statusDateTime);
+    } else {
+        $gameSession->communicateGameStarted($gameInstanceSetupDto, $casinoTable->getCasinoPlayerDtos(), $statusDateTime);
     }
+    CheatingHelper::revealMarkedCards($gameInstance);
+
     // restore user play hand which got overwritten.
-    $gameInstanceSetupDto->userPlayerHand = $userPlayerHand;
+    $gameInstanceSetupDto->userPlayerHandDto = $userPlayerHand;
     // --------------------------------------------------------------------------------------
-    // json-ize
+    // testing only! MUST ENABLE QUEUES in PHP
     return json_encode($gameInstanceSetupDto);
 }
 
@@ -310,7 +319,7 @@ function sendPlayerAction($par) {
 
     // Logic --------------------------------------------------------------------------------
     $gameInstance = EntityHelper::getGameInstance($playerAction->gameInstanceId);
-    if ($gameInstance->winningPlayerId != null) {
+    if (!is_null($gameInstance->winningPlayerId)) {
         throw new Exception("Game is ended");
     }
 
@@ -348,11 +357,11 @@ function takeSeat($par) {
     /* --------------------------------------------------------------------- */
     $casinoTable = EntityHelper::getCasinoTableForSession($gameSessionId);
     $waitingListSize = $casinoTable->getWaitingListSize();
-    $playerDtos = $casinoTable->loadPlayers();
+    $playerDtos = $casinoTable->getCasinoPlayerDtos();
     $playerDto = $casinoTable->takeSeat($seatNumber, $playerId, $playerDtos, $statusDateTime);
     if (!is_null($playerDto)) {
         // taking a seat affects the player dtos'
-        $playerDtos = $casinoTable->loadPlayers();
+        $playerDtos = $casinoTable->getCasinoPlayerDtos();
         $casinoTable->communicateSeatTaken($playerDto, $playerDtos, $waitingListSize);
     }
     return json_encode($playerDto);
@@ -363,7 +372,7 @@ function takeSeat($par) {
 function leaveSaloon($par) {
     global $log;
     global $defaultAvatarUrl;
-    
+
     $decodedPar = json_decode($par, true);
     $gameSessionId = $decodedPar["gameSessionId"];
     $playerId = $decodedPar["playerId"];
@@ -378,28 +387,70 @@ function leaveSaloon($par) {
     $casinoTable = EntityHelper::getCasinoTableForSession($gameSessionId);
     if (is_null($casinoTable)) {
         // leaving practice session
-        return "{\"page\":\"SafeSaloon\"}";
+        return "{\"page\":\"SeedySaloon\"}";
     }
 
     $vacatedSeat = $casinoTable->leaveCurrentTable($playerId, $statusDateTime);
 
     if (is_null($vacatedSeat)) {
-        return "{\"page\":\"SafeSaloon\"}";
+        return "{\"page\":\"SeedySaloon\"}";
     }
 
     $waitingPlayerId = $casinoTable->findNextWaitingPlayer();
     if ($waitingPlayerId) {
         $casinoTable->reserveAndOfferSeat($vacatedSeat, $waitingPlayerId, $statusDateTime);
     }
-    $playerDtos = $casinoTable->loadPlayers();
-    $leftPlayerDto = new PlayerDto($playerId, null, $defaultAvatarUrl, $vacatedSeat, null);
+    // reset sleeves and visible cards
+    CheatingHelper::resetSleeve($playerId);
+
+    // ******************************
+    $playerDtos = $casinoTable->getCasinoPlayerDtos();
+    // FIXME: should this be playerstatusdto?
+    $leftPlayerDto = new PlayerDto($playerId, null, $defaultAvatarUrl, null);
+    $leftPlayerDto->currentSeatNumber = $vacatedSeat;
     $leftPlayerDto->status = PlayerStatusType::LEFT;
     $leftPlayerDto->stake = null;
     $waitingListSize = $casinoTable->getWaitingListSize();
     $casinoTable->communicateUserLeft($leftPlayerDto, $playerDtos, $waitingListSize);
-    return "{\"page\":\"SafeSaloon\"}";
+    return "{\"page\":\"SeedySaloon\"}";
 }
 
+/* * ************************************************************************************** */
+
+/**
+ * Given a player name, return the user id
+ */
+function logout($par) {
+    $decodedPar = json_decode($par, true);
+    $playerId = $decodedPar["userPlayerId"];
+
+    // --------------------------------------------------------------------------------------
+    $con = connectToStateDB();
+    global $dateTimeFormat;
+    $statusDateTime = date($dateTimeFormat);
+
+    // 1. get, update or create the player first, so it can be added to the response player list
+    CheatingHelper::resetSleeve($playerId);
+    CheatingHelper::resetSleeve($playerId);
+
+    $status = 'OK';
+    return json_encode($status);
+}
+
+function login($par) {
+    $decodedPar = json_decode($par, true);
+    $playerName = $decodedPar["playerName"];
+
+    // --------------------------------------------------------------------------------------
+    $con = connectToStateDB();
+    global $dateTimeFormat;
+    $statusDateTime = date($dateTimeFormat);
+
+    // 1. get, update or create the player first, so it can be added to the response player list
+    $playerDto = EntityHelper::getOrCreatePlayer($playerName, $statusDateTime);
+    $player = array("userPlayerId" => $playerDto->playerId, "playerName" => $playerDto->playerName);
+    return json_encode($player);
+}
 /* * ************************************************************************************** */
 
 function cheat($par) {
@@ -413,32 +464,69 @@ function cheat($par) {
     global $dateTimeFormat;
     $statusDateTime = date($dateTimeFormat);
 
-    $gameInstance = EntityHelper::getSessionLastInstance($cheatRequestDto->gameSessionId);
+    $playerId = $cheatRequestDto->userPlayerId;
+    // cheating items before user enters session
+    switch ($cheatRequestDto->itemType) {
+        case ItemType::LOAD_CARD_ON_SLEEVE:
+            $cardNameList = $cheatRequestDto->cardNameList;
+            $returnDto = CheatingHelper::addHiddenCards($playerId, $cardNameList);
+            return json_encode($returnDto);
+        case ItemType::SOCIAL_SPOTTER:
+            $sessionId = $cheatRequestDto->gameSessionId;
+            $returnDto = CheatingHelper::startCardMarking($playerId, $sessionId, $statusDateTime);
+            $returnDto = 'OK';
+            return json_encode($returnDto);
+    }
+
+    $gameInstance = EntityHelper::getGameInstance($cheatRequestDto->gameInstanceId);
+    if (is_null($gameInstance)) {
+        $gameInstance = EntityHelper::getSessionLastInstance($cheatRequestDto->gameSessionId);
+    }
     if (is_null($gameInstance)) {
         return null;
     }
     // convenience vars
-    $gameInstanceId = $cheatRequestDto->gameInstanceId;
-    $playerId = $cheatRequestDto->userPlayerId;
+    $gameInstanceId = $gameInstance->id;
     // Logic -----------------------------------------------------------------
     $returnDto = null;
-    switch($cheatRequestDto->itemType) {
+    switch ($cheatRequestDto->itemType) {
         case ItemType::ACE_PUSHER:
-            $cardNumber = $cheatRequestDto->cardNumber;
-            $returnDto = CheatingHelper::pushRandomAce($gameInstanceId, $playerId, $cardNumber);
+            $playerCardNumber = $cheatRequestDto->playerCardNumber;
+            $returnDto = CheatingHelper::pushRandomAce($playerId, $gameInstance, $playerCardNumber, $statusDateTime);
             break;
         case ItemType::HEART_MARKER:
-            $returnDto = CheatingHelper::getSuitForAllGameCards($gameInstance, 'hearts');
+            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'hearts', $statusDateTime);
             break;
         case ItemType::CLUB_MARKER:
-            $returnDto = CheatingHelper::getSuitForAllGameCards($gameInstance, 'clubs');
+            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'clubs', $statusDateTime);
             break;
         case ItemType::DIAMOND_MARKER:
-            $returnDto = CheatingHelper::getSuitForAllGameCards($gameInstance, 'diamonds');
+            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'diamonds', $statusDateTime);
+            break;
+        case ItemType::RIVER_SHUFFLER:
+            $returnDto = CheatingHelper::cheatLookRiverCard($playerId, $gameInstance, $statusDateTime);
+            break;
+        case ItemType::RIVER_SHUFFLER_USE:
+            $returnDto = CheatingHelper::cheatSwapRiverCard($playerId, $gameInstance);
             break;
         default:
             break;
     }
+    if (is_null($returnDto)){
+        $returnDto = 'OK';
+    }
+    return json_encode($returnDto);
+}
+
+/**
+ * FE must call for this. Cannot automatically send info because FE may not be ready.
+ */
+function cheatLoadSleeve($par) {
+    $decodedPar = json_decode($par, true);
+    $playerId = $decodedPar["userPlayerId"];
+
+    $con = connectToStateDB();
+    $returnDto = CheatingHelper::getHiddenCards($playerId);
     return json_encode($returnDto);
 }
 
@@ -450,11 +538,13 @@ $server->register("sendPlayerAction");
 $server->register("takeSeat");
 $server->register("leaveSaloon");
 $server->register("cheat");
+$server->register("login");
+$server->register("logout");
+$server->register("cheatLoadSleeve");
 
-// fixme: convert to POST
-$method = $_GET["method"];
-$param = $_GET["param"];
-$server->serve($method, $param);
-
+  // fixme: convert to POST
+  $method = $_GET["method"];
+  $param = $_GET["param"];
+  $server->serve($method, $param);
 
 ?>

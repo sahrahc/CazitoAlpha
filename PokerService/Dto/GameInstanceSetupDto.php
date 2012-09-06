@@ -13,7 +13,7 @@ class GameInstanceSetupDto {
     // additional data ----------------------
     public $blindBets;
     public $playerStatusDtos;
-    public $userPlayerHand;
+    public $userPlayerHandDto;
     
     public function __construct($entity){
         $this->gameSessionId = $entity->gameInstanceSetup->gameSessionId;

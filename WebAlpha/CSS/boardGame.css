@@ -160,6 +160,13 @@
     top: 371px;
     left: 455px;
 }
+.cheatingCard {
+    /* display:none; */
+    height: 42px;
+    width: 30px;
+	z-index: 5;
+    margin: 2px;
+}
 .playerCard {
     position:absolute;
     /* display:none; */
@@ -246,7 +253,7 @@
 /* small markers on the back */
 .cardSmallMarker {
     position:absolute;
-    /* display:none; */
+    display:none;
     height: 21px; /* 42 */
     width: 15px; /* 30 */
 	z-index: 7;
@@ -288,9 +295,13 @@
 /* large cheating marker */
 .cardLargeMarker{
     position:absolute;
-    /* display:none; */
+    display:none;
+    /*
     height: 30px;
     width: 21px;
+    */
+    height: 42px;
+    width: 30px;
 	z-index: 6;
 }
 .player0Card1LargeMarker {
@@ -331,6 +342,7 @@
 /* player cards go off the dealer */
 .cardSmallUserMarker{
     position:absolute;
+    display:none;
     height: 24px;
     width: 17px;
 	z-index: 7;
@@ -374,7 +386,7 @@
 /* player cards go off the dealer */
 .cardLargeUserMarker{
     position:absolute;
-    /* display:none; */
+    display:none;
     height: 50px;
     width: 36px;
 	z-index: 6;

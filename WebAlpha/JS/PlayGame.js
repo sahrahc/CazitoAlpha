@@ -1,7 +1,8 @@
 /** Main game play javascript
  * 
  */
-constServiceUrl = "http://localhost//Sprint7//PokerService//PokerPlayerService.php";
+// FIXME: need to split up cheating and poker playing
+constServiceUrl = "http://localhost//Sprint8//PokerService//PokerPlayerService.php";
 constServer = "http://localhost:55674/stomp";
 
 /*------------------------------------------------------------------------------------------*/
@@ -20,6 +21,15 @@ function S(obj) {
  */
 function getSize(pixel) {
     return Number(pixel.substr(0, pixel.length - 2));
+}
+
+
+function dimItem(id) {
+    $('#' + id).addClass("fade");
+}
+
+function unDimItem(id) {
+    $('#' + id).removeClass("fade");
 }
 
 /********************************************************************************************/
@@ -57,12 +67,12 @@ WSClient.call = function(method, obj, callback) {
         success: function (req) {
             // already parsed
             // var rval = $.parseJSON(req);
-            callback(req);
-        // return new GameSession(rval);
+            if (callback != null) {
+                callback(req);
+            }
         },
         error: function (xhr) {
             alert(xhr.responseText);
-            return;
         }
     });
 }
@@ -100,6 +110,7 @@ function addUserToCasinoTableCallback(gameStatusDto) {
         if (gameStatusDto.playerStatusDtos.length > 1 &&
             gameStatusDto.userSeatNumber != null) {
             O('startGameButton').disabled = false;
+            unDimItem('startGameButton');
             displayCenterMessage('Please press the start button to start play');
         }
     }
@@ -117,10 +128,10 @@ function addUserToCasinoTableCallback(gameStatusDto) {
 }
 
 function addUserToCasinoTable() {
-    var tableSize = $.cookies.get("tableValue") == "" ? null : $.cookies.get("tableValue");
+    var tableSize = $.cookies.get("tableValue").replace("table", "");
     var obj = {
-        playerName:O('playerNameText').value,
-        casinoTableId:O('tableIdText').value,
+        userPlayerId:$.cookies.get("userPlayerId"),
+        casinoTableId: O('tableIdText').value == "" ? null : O('tableIdText').value,
         tableSize:tableSize
     };
 
@@ -151,16 +162,16 @@ function startPracticeSessionCallback(gameInstanceSetupDto) {
 
     resizeUserElements();
     positionUserButtons(0);
-	O('startGameButton').disabled = false;
-            
+    O('startGameButton').disabled = false;
+    unDimItem('startGameButton');
     //startPolling();
     startQueueing();
 }
 
 function startPracticeSession() {
     // TODO: only practice sessions support by FE.
-    obj = {
-        playerName:O('playerNameText').value
+    var obj = {
+        userPlayerId:$.cookies.get("userPlayerId")
     };
 
     // TODO: check if authenticated and pass -1 if not otherwise the currentPlayerId
@@ -173,17 +184,18 @@ function startPracticeSession() {
  * AJAX call: start a new game
  * Automatically place the big and small blind bet, get dealer and deal cards
  */
+/*
 function startGameCallback(gameInstanceSetupDto) {
     initBoardItemsDisplay();
 
     setupTable(gameInstanceSetupDto);
 
     O('gameStatus').innerHTML = 'Active';
-
 }
+*/
 
 function startGame() {
-    var tableSize = $.cookies.get("tableValue") == null ? null : ($.cookies.get("tableValue")).replace("table", "");
+    var tableSize = $.cookies.get("tableValue").replace("table", "");
     var obj = {
         gameSessionId:O('gameSessionId').innerHTML,
         requestingPlayerId:O('userPlayerId').innerHTML,
@@ -193,7 +205,8 @@ function startGame() {
 
     WSClient.call("startGame",
         obj,
-        startGameCallback);
+        //startGameCallback);
+        null);
 }
 
 /*-------------------------------------------------------------------------------------------
@@ -278,20 +291,24 @@ function takeSeat() {
 
 /********************************************************************************************/
 /* cheating AJAX functions */
-function cheatHeartMarkerCallback(cardList) {
+function cheatSuitMarkerCallback(suit, cardList) {
     /* FIXME: same as diamond and heart marker reuse */
-	for (var j=0, m=cardList.length; j<m; j++) {
-		if (cardList[j].suit != null && cardList[j].playerId != O('userPlayerId').innerHTML) {
-			var playerTag = getPlayerPositionTag(cardList[j].playerId);
-			var cardMarkerTag = playerTag + 'Card' + cardList[j].cardNumber + 'Marker';
-			// using the small marker
-			var cardMarkerClassTag = playerTag + 'Card' + cardList[j].cardNumber + 'SmallMarker';
-			S(cardMarkerTag).display = 'block';
-			/* set the class */
-			O(cardMarkerTag).src = "../../../images/PokerCard_hearts_small.png";
-			O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
-		}
-	}
+    for (var j=0, m=cardList.length; j<m; j++) {
+        if (cardList[j].suit != null && cardList[j].playerId != O('userPlayerId').innerHTML) {
+            var playerTag = getPlayerPositionTag(cardList[j].playerId);
+            var cardMarkerTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'Marker';
+            // using the small marker
+            var cardMarkerClassTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'SmallMarker';
+            S(cardMarkerTag).display = 'block';
+            /* set the class */
+            O(cardMarkerTag).src = "../../../images/PokerCard_" + suit + "_small.png";
+            O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
+        }
+    }
+}
+
+function cheatHeartMarkerCallback(cardList) {
+    //cheatSuitMarkerCallback('hearts', cardList);
 }
 
 function cheatHeartMarker() {
@@ -304,23 +321,12 @@ function cheatHeartMarker() {
 
     WSClient.call("cheat",
         obj,
-        cheatHeartMarkerCallback);
+        //cheatHeartMarkerCallback);
+        null);
 }
 
 function cheatClubsMarkerCallback(cardList) {
-    /* FIXME: same as diamond and heart marker reuse */
-	for (var j=0, m=cardList.length; j<m; j++) {
-		if (cardList[j].suit != null && cardList[j].playerId != O('userPlayerId').innerHTML) {
-			var playerTag = getPlayerPositionTag(cardList[j].playerId);
-			var cardMarkerTag = playerTag + 'Card' + cardList[j].cardNumber + 'Marker';
-			// using the small marker
-			var cardMarkerClassTag = playerTag + 'Card' + cardList[j].cardNumber + 'SmallMarker';
-			S(cardMarkerTag).display = 'block';
-			/* set the class */
-			O(cardMarkerTag).src = "../../../images/PokerCard_clubs_small.png";
-			O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
-		}
-	}
+    //cheatSuitMarkerCallback('clubs', cardList);
 }
 
 function cheatClubsMarker() {
@@ -337,19 +343,7 @@ function cheatClubsMarker() {
 }
 
 function cheatDiamondMarkerCallback(cardList) {
-    /* for the player id player0Card1Marker */
-	for (var j=0, m=cardList.length; j<m; j++) {
-		if (cardList[j].suit != null && cardList[j].playerId != O('userPlayerId').innerHTML) {
-			var playerTag = getPlayerPositionTag(cardList[j].playerId);
-			var cardMarkerTag = playerTag + 'Card' + cardList[j].cardNumber + 'Marker';
-			// using the small marker
-			var cardMarkerClassTag = playerTag + 'Card' + cardList[j].cardNumber + 'SmallMarker';
-			S(cardMarkerTag).display = 'block';
-			/* set the class */
-			O(cardMarkerTag).src = "../../../images/PokerCard_diamonds_small.png";
-			O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
-		}
-	}
+    //cheatSuitMarkerCallback('diamonds', cardList);
 }
 
 function cheatDiamondMarker() {
@@ -366,25 +360,265 @@ function cheatDiamondMarker() {
 }
 
 function cheatAcePusherCallback(returnDto) {
-    // FIXME: hard coded 
+// FIXME: hard coded 
+/*
 	var playerElement = getPlayerPositionTag(returnDto.playerId);
-        O(playerElement + 'Card1').innerHTML = returnDto.cardName;
-    showPlayerCard(playerElement, 1, returnDto.cardName);
+        O(playerElement + 'Card' + returnDto.playerCardNumber).innerHTML = returnDto.cardName;
+    showPlayerCard(playerElement, 1, returnDto.cardName); */
 }
 
-function cheatAcePusher() {
+function cheatAcePusher(cardNumber) {
     var obj = {
         itemType: 'AcePusher',
         userPlayerId: O('userPlayerId').innerHTML,
         gameSessionId: O('gameSessionId').innerHTML,
         gameInstanceId: O('gameInstanceId').innerHTML,
-        cardNumber: 1
+        playerCardNumber: cardNumber
     };
 
     WSClient.call("cheat",
         obj,
-        cheatAcePusherCallback);
+        //cheatAcePusherCallback);
+        null);
 }
+
+function cheatSocialSpotterCallback(cardList) {
+    //cheatMarkOthersCardsMarks(cardList);
+}
+function cheatSocialSpotter() {
+    var obj = {
+        itemType: 'SocialSpotter',
+        userPlayerId: O('userPlayerId').innerHTML,
+        gameSessionId: O('gameSessionId').innerHTML,
+        gameInstanceId: O('gameInstanceId').innerHTML
+    };
+
+    WSClient.call("cheat",
+        obj,
+        null);
+}
+
+function cheatLookRiverCardCallback(cardList) {
+    // FIXME: should be an event
+    //cheatUpdateNextCards(cardList, 'This is the next river card');
+    O('LookRiverCard-swap').disabled = false;
+    O('LookRiverCard-look').disabled = true;
+}
+function cheatLookRiverCard() {
+    var instanceId = O('gameInstanceId').innerHTML;
+    if (instanceId == null) {
+        alert('There is no active game');
+        return;
+    }
+    var obj = {
+        itemType: 'LookRiverCard',
+        userPlayerId: O('userPlayerId').innerHTML,
+        gameSessionId: O('gameSessionId').innerHTML,
+        gameInstanceId: O('gameInstanceId').innerHTML
+    };
+    WSClient.call("cheat",
+        obj,
+        cheatLookRiverCardCallback);
+}
+
+function cheatSwapRiverCardCallback(playerHandDtos) {
+//cheatUpdateUserHands(playerHandDtos);
+    O('LookRiverCard-swap').disabled = true;
+    O('LookRiverCard-look').disabled = false;
+}
+
+function cheatSwapRiverCard() {
+    var obj = {
+        itemType: 'SwapRiverCard',
+        userPlayerId: O('userPlayerId').innerHTML,
+        gameSessionId: O('gameSessionId').innerHTML,
+        gameInstanceId: O('gameInstanceId').innerHTML
+    };
+    WSClient.call("cheat",
+        obj,
+        cheatSwapRiverCardCallback);
+}
+
+function cheatLoadSleeve() {
+    var obj = {
+        userPlayerId: $.cookies.get("userPlayerId")
+    };
+    
+    WSClient.call("cheatLoadSleeve",
+        obj,
+        cheatUpdateHiddenCards);
+}
+
+/********************************************************************************************/
+// Table Management event call backs
+/** 
+ * User got added
+ */
+function addUserToTable(playerStatusDto) {
+    if (playerStatusDto.seatNumber != null) {
+        processStatusChange(playerStatusDto);
+    }
+    // if no seat number, user went to waiting list.
+    else {
+        O('waitingMessageId').innerHTML = 'There are ' + playerStatusDto.waitingListSize +
+        ' players waiting for a seat';
+    }
+    O('startGameButton').disabled = false;
+	unDimItem('startGameButton');
+	
+    if (O('gameStatus').innerHTML == 'Inactive') {
+        displayCenterMessage('Please press the start button to start play');
+    }
+}
+/**
+ * User left or took a seat at table
+ */
+function updateUserTableStatus(playerStatusDto) {
+    processStatusChange(playerStatusDto);
+    // FIXME:
+    if (playerStatusDto.waitingListSize > 0) {
+        O('waitingMessageId').innerHTML = 'There are ' + playerStatusDto.waitingListSize +
+        ' players waiting for a seat';
+    }
+}
+/**
+ * Game started
+ */
+function processGameStarted(gameInstanceSetupDto) {
+    var previouslyWaiting = false;
+    if (O('seatNumber').innerHTML == "") {previouslyWaiting = true; }
+    initBoardItemsDisplay();
+
+    setupTable(gameInstanceSetupDto);
+
+    O('gameStatus').innerHTML = 'Active';
+
+    S("centerMessageId").display = 'none';
+    O('startGameButton').disabled = false;
+	unDimItem('startGameButton');
+	
+    // this is in case the player was on waiting list before
+    if (previouslyWaiting && O('seatNumber').innerHTML != "") {
+        O('casinoTableHeader').innerHTML = 'Casino Table ' + O('casinoTableId').innerHTML;
+        if (S('userCallButton').display == 'none') {
+            positionUserButtons(O('seatNumber').innerHTML);
+            resizeUserElements();
+        }
+    }
+    $("#nextCard").empty();
+    $("#nextCard").append("<p>Next Card:</ p>");
+    O('LookRiverCard-look').disabled = false;
+    O('LookRiverCard-swap').disabled = true;
+}
+/********************************************************************************************/
+// cheating events
+function updateCheatingInfo(eventData, eventType) {
+    // player is cheating by updating own hands
+    if (eventType == 'CheatedHands') {
+        cheatUpdateUserHands(eventData);
+    }
+    // player is cheating by knowing other players' cards value or suits
+    else if (eventType == 'CheatedCards') {
+        cheatUpdateOthersCardsMarks(eventData);
+    }
+    // player is cheating by knowing other players' cards value or suits
+    else if (eventType == 'CheatedHidden') {
+        cheatUpdateHiddenCards(eventData);
+    }
+    // player is cheating by knowing other players' cards value or suits
+    else if (eventType == 'CheatedNext') {
+        cheatUpdateNextCards(eventData);
+    }
+}
+function updateCheatingEvent(eventData, eventType, eventDateTime) {
+    if (eventType == 'ItemUnlock') {
+        O(eventType + '-Act').disabled = false;
+        unDimItem(eventType + '-Act');
+		O('logFrame').innerHTML = eventDateTime + ' - ' + eventData.itemType + 'is now available. <br />' + O('logFrame').innerHTML;
+    }
+    else if (eventType == 'ItemLog') {
+        O('logFrame').innerHTML = eventDateTime + ' - ' + eventData + '<br />' + O('logFrame').innerHTML;
+    }
+    else if (eventType == 'ItemEnd') {
+        O(eventType + '-Act').disabled = true;
+		dimItem(eventType + '-Act');
+        O('logFrame').innerHTML = eventDateTime + ' - ' + eventData.itemType + 'has now ended. <br />' + O('logFrame').innerHTML;
+    }
+}
+/**
+ * Display player hands updated via cheating
+ */
+function cheatUpdateUserHands(playerHandDto) {
+    var userPlayerId = O('userPlayerId').innerHTML;
+    if (userPlayerId != playerHandDto.playerId) {
+        return;
+    }
+    playerElement = getPlayerPositionTag(userPlayerId);
+    var cardNumber = playerHandDto.playerCardNumber;
+    O(playerElement + 'Card' + cardNumber).innerHTML = playerHandDto.cardName;
+    // FIXME: the status return is null, so it's set in the UI but
+    showPlayerCard(playerElement, cardNumber, playerHandDto.cardName);
+}
+
+/**
+ * Display other players card value or suit.
+ */
+function cheatUpdateOthersCardsMarks(cardList) {
+    for (var j=0, m=cardList.length; j<m; j++) {
+        // no need to update the user
+        if (cardList[j].playerId != O('userPlayerId').innerHTML) {
+            var playerTag = getPlayerPositionTag(cardList[j].playerId);
+            var cardMarkerTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'Marker';
+            S(cardMarkerTag).display = 'block';
+            /* reveal to player by setting the class attribute */
+            if (cardList[j].cardName != null) {
+                var cardMarkerClassTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'LargeMarker';
+                O(cardMarkerTag).src = "../../../images/PokerCard_" + cardList[j].cardName + "_small.png";
+                O(cardMarkerTag).setAttribute("class", 'cardLargeMarker ' + cardMarkerClassTag);
+            }
+            /* suit only information shows up on back of card, small size (1/3 of card) */
+            else if (cardList[j].suit != null) {
+                cardMarkerClassTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'SmallMarker';
+                O(cardMarkerTag).src = "../../../images/PokerCard_" + cardList[j].suit + "_small.png";
+                O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
+            }
+        }
+    }
+}
+
+/**
+
+ * Display list of hidden cards the player maintains. Refresh the entire list.
+ * Incremental updates later - more performant with very large number of users but far more complex
+ */
+function cheatUpdateHiddenCards(cardNameListDto) {
+    if (cardNameListDto == null) {return;}
+    $("#sleeve").empty();
+    $("#sleeve").append("<p>Sleeve:</ p>");
+    for (i=0; i<cardNameListDto.length; i++)
+    {
+        var card = cardNameListDto[i];
+        $("#sleeve").append("<img class='cheatingCard' src='../../../images/PokerCard_" + card
+            + "_small.png' title='" + card + "' alt='" + card + "' />")
+    }
+}
+
+/**
+ * Display the lsit of upcoming cards off the deck.
+ * Incremental updates later - more performant with very large number of users but far more complex
+ */
+function cheatUpdateNextCards(cardNameListDto, altMessage) {
+    $("#nextCard").empty();
+    $("#nextCard").append("<p>Next Card:</ p>");
+    for (i=0; i<cardNameListDto.length; i++)
+    {
+        var card = cardNameListDto[i];
+        alt = altMessage == null ? card : altMessage;
+        $("#nextCard").append("<img class='cheatingCard' src='../../../images/PokerCard_" + card
+            + "_small.png' title='" + card + "' alt='" + alt + "' />")
+    }
+}
+
 /********************************************************************************************/
 /*
  * Callback for polling function. Sets the next poll.
@@ -392,45 +626,26 @@ function cheatAcePusher() {
 function getEventMessageCallback(event) {
     var resp = jQuery.parseJSON(event.body);
     var message = resp.eventData;
+    if (resp.eventType.substr(0, 7) == "Cheated") {
+        updateCheatingInfo(message, resp.eventType);
+        return;
+    }
+    if (resp.eventType.substr(0, 4) == "Item") {
+        updateCheatingEvent(message, resp.eventType, resp.eventDateTime);
+        return;
+    }
     if (resp.eventType == "UserJoined") {
-		// FIXME: a user may a seat number but still not be in game
-        if (message[0].seatNumber != null) {
-            processStatusChange(message[0]);
-        }
-        else {
-            O('waitingMessageId').innerHTML = 'There are ' + message[0].waitingListSize +
-            ' players waiting for a seat';
-        }
-        O('startGameButton').disabled = false;
-        if (O('gameStatus').innerHTML == 'Inactive') {
-            displayCenterMessage('Please press the start button to start play');
-        }
+        // array of player status dto's but only one value; could batch in the future
+        addUserToTable(message[0]);
         return;
     }
     if (resp.eventType == "UserLeft" || resp.eventType == "SeatTaken") {
-        processStatusChange(message[0]);
-        // FIXME:
-        if (message[0].waitingListSize > 0) {
-            O('waitingMessageId').innerHTML = 'There are ' + message[0].waitingListSize +
-            ' players waiting for a seat';
-        }
+        // array of player status dto's but only one value; could batch in the future
+        updateUserTableStatus(message[0]);
         return;
     }
     if (resp.eventType == 'GameStarted'){
-        initBoardItemsDisplay();
-        setupTable(message);
-        S("centerMessageId").display = 'none';
-        O('gameStatus').innerHTML = 'Active';
-        O('startGameButton').disabled = false;
-
-        // this is in case the player was on waiting list before
-        if (O('seatNumber').innerHTML != "") {
-            O('casinoTableHeader').innerHTML = 'Casino Table ' + O('casinoTableId').innerHTML;
-            if (S('userCallButton').display == 'none') {
-                positionUserButtons(O('seatNumber').innerHTML);
-                resizeUserElements();
-            }
-        }
+        processGameStarted(message);
         return;
     }
     if (resp.eventType == 'SeatOffer') {
@@ -459,7 +674,7 @@ function getEventMessageCallback(event) {
             var communityCards = message.cardsToSend;
             // 2.1 Update community card
             for (var j=0, m=communityCards.length; j<m; j++) {
-                showCommunityCard(communityCards[j].cardNumber-1, communityCards[j].cardName);
+                showCommunityCard(communityCards[j].playerCardNumber-1, communityCards[j].cardName);
             }
         }
         if (message.playerStatusDto.status == "Skipped") {
@@ -475,48 +690,31 @@ function getEventMessageCallback(event) {
 /* player status and cards */
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /**
- * Show the back of game cards for all players.
+ * Show the back of game cards for only the players who are actively in the game
  */
-function initPlayersCardsDisplay() {
-    S('player0Card1Image').display = 'block';
-    S('player0Card2Image').display = 'block';
-
-    S('player1Card1Image').display = 'block';
-    S('player1Card2Image').display = 'block';
-
-    S('player2Card1Image').display = 'block';
-    S('player2Card2Image').display = 'block';
-
-    S('player3Card1Image').display = 'block';
-    S('player3Card2Image').display = 'block';
-
-    O('player0Card1Image').src="../../../images/PokerCard_back_small.png";
-    O('player0Card2Image').src="../../../images/PokerCard_back_small.png";
-
-    O('player1Card1Image').src="../../../images/PokerCard_back_small.png";
-    O('player1Card2Image').src="../../../images/PokerCard_back_small.png";
-
-    O('player2Card1Image').src="../../../images/PokerCard_back_small.png";
-    O('player2Card2Image').src="../../../images/PokerCard_back_small.png";
-
-    O('player3Card1Image').src="../../../images/PokerCard_back_small.png";
-    O('player3Card2Image').src="../../../images/PokerCard_back_small.png";
-	
-	hideCardMarkers();	
+function initPlayersCardsDisplay(playerStatusDtos) {
+    for(var i=0, l=playerStatusDtos.length; i<l; i++) {
+        var seatNumber = playerStatusDtos[i].seatNumber;
+        S('player' + seatNumber + 'Card1Image').display = 'block';
+        S('player' + seatNumber + 'Card2Image').display = 'block';
+        O('player' + seatNumber + 'Card1Image').src="../../../images/PokerCard_back_small.png";
+        O('player' + seatNumber + 'Card2Image').src="../../../images/PokerCard_back_small.png";
+    }
+    hideCardMarkers();
 }
 
 function hideCardMarkers() {
-	S('player0Card1Marker').display = 'none';
-	S('player0Card2Marker').display = 'none';
+    S('player0Card1Marker').display = 'none';
+    S('player0Card2Marker').display = 'none';
 
-	S('player1Card1Marker').display = 'none';
-	S('player1Card2Marker').display = 'none';
+    S('player1Card1Marker').display = 'none';
+    S('player1Card2Marker').display = 'none';
 
-	S('player2Card1Marker').display = 'none';
-	S('player2Card2Marker').display = 'none';
+    S('player2Card1Marker').display = 'none';
+    S('player2Card2Marker').display = 'none';
 
-	S('player3Card1Marker').display = 'none';
-	S('player3Card2Marker').display = 'none';
+    S('player3Card1Marker').display = 'none';
+    S('player3Card2Marker').display = 'none';
 	
 }
 
@@ -730,19 +928,19 @@ function processNextPlayer(nextMove, skipped) {
  */
 function processGameResult(gameResultDto) {
     // show everyone's hands
-    for(var i=0, l=gameResultDto.playerHands.length; i<l; i++) {
-        var playerElement = getPlayerPositionTag(gameResultDto.playerHands[i].playerId);
-        showPlayerCard(playerElement, 1, gameResultDto.playerHands[i].pokerCard1.cardName)
-        showPlayerCard(playerElement, 2, gameResultDto.playerHands[i].pokerCard2.cardName);
-        if (gameResultDto.playerHands[i].playerId == gameResultDto.winningPlayerId) {
-            O(playerElement + 'Status').innerHTML = 'Won - ' + gameResultDto.playerHands[i].pokerHandType;
+    for(var i=0, l=gameResultDto.playerHandDtos.length; i<l; i++) {
+        var playerElement = getPlayerPositionTag(gameResultDto.playerHandDtos[i].playerId);
+        showPlayerCard(playerElement, 1, gameResultDto.playerHandDtos[i].pokerCard1Dto.cardName)
+        showPlayerCard(playerElement, 2, gameResultDto.playerHandDtos[i].pokerCard2Dto.cardName);
+        if (gameResultDto.playerHandDtos[i].playerId == gameResultDto.winningPlayerId) {
+            O(playerElement + 'Status').innerHTML = 'Won - ' + gameResultDto.playerHandDtos[i].pokerHandType;
         }
         else {
-            O(playerElement + 'Status').innerHTML = 'Lost - ' + gameResultDto.playerHands[i].pokerHandType;
+            O(playerElement + 'Status').innerHTML = 'Lost - ' + gameResultDto.playerHandDtos[i].pokerHandType;
         }
     }
-	// hide markers
-	hideCardMarkers();
+    // hide markers
+    hideCardMarkers();
     // update stakes
     for (var j=0, m=gameResultDto.playerStatusDtos.length; j<m; j++) {
         playerElement = getPlayerPositionTag(gameResultDto.playerStatusDtos[j].playerId);
@@ -753,6 +951,9 @@ function processGameResult(gameResultDto) {
     // FIXME: find previous
     updateWinnerDisplay(winnerElement);
     O('startGameButton').disabled = false;
+    unDimItem('startGameButton');
+    
+    disableInstanceItems(false);
 }
 
 /*-------------------------------------------------------------------------------------------
@@ -769,11 +970,11 @@ function processFoldOrLeft(playerId, status) {
  * Update the player statuses data on the browser; used both when there is an ongoing game or
  * when a user joins a table.
  */
-function setupPlayerStatuses(playerStatuses) {
-    var playerCount = playerStatuses.length;
+function setupPlayerStatuses(playerStatusDtos) {
+    var playerCount = playerStatusDtos.length;
     for (var i=0; i<playerCount; i++) {
-        if (playerStatuses[i].seatNumber != null) {
-            processStatusChange(playerStatuses[i]);
+        if (playerStatusDtos[i].seatNumber != null) {
+            processStatusChange(playerStatusDtos[i]);
         }
     }
 }
@@ -784,13 +985,13 @@ function setupPlayerStatuses(playerStatuses) {
  * 1) start practice session
  * 2) user joins a table and there is no game in session (blinds, hands and dealer skipped)
  * 3) user starts new game
- * 4) polled message for new game
+ * 4) polled message returns new game
  */
 function setupTable(gameInstanceSetupDto) {
     O('gameInstanceId').innerHTML = gameInstanceSetupDto.gameInstanceId;
 
     // update everyone's statuses
-    initPlayersCardsDisplay();
+    initPlayersCardsDisplay(gameInstanceSetupDto.playerStatusDtos);
     setupPlayerStatuses(gameInstanceSetupDto.playerStatusDtos);
 
     // put blind bets
@@ -802,12 +1003,15 @@ function setupTable(gameInstanceSetupDto) {
     // get the user's hands'
     var playerElement;
     playerElement = getPlayerPositionTag(O('userPlayerId').innerHTML);
-    if (gameInstanceSetupDto.userPlayerHand != null) {
+    if (gameInstanceSetupDto.userPlayerHandDto != null) {
         // null if user is in waiting list
-        O(playerElement + 'Card1').innerHTML = gameInstanceSetupDto.userPlayerHand.pokerCard1.cardName;
-        O(playerElement + 'Card2').innerHTML = gameInstanceSetupDto.userPlayerHand.pokerCard2.cardName;
-        showPlayerCard(playerElement, 1, gameInstanceSetupDto.userPlayerHand.pokerCard1.cardName);
-        showPlayerCard(playerElement, 2, gameInstanceSetupDto.userPlayerHand.pokerCard2.cardName);
+        O(playerElement + 'Card1').innerHTML = gameInstanceSetupDto.userPlayerHandDto.pokerCard1Dto.cardName;
+        O(playerElement + 'Card2').innerHTML = gameInstanceSetupDto.userPlayerHandDto.pokerCard2Dto.cardName;
+        showPlayerCard(playerElement, 1, gameInstanceSetupDto.userPlayerHandDto.pokerCard1Dto.cardName);
+        showPlayerCard(playerElement, 2, gameInstanceSetupDto.userPlayerHandDto.pokerCard2Dto.cardName);
+
+        // enable items
+        disableInstanceItems(true);
     }
     // next player
     O('nextPlayerId').innerHTML = gameInstanceSetupDto.firstPlayerId;
@@ -833,8 +1037,44 @@ function setupTable(gameInstanceSetupDto) {
         // check is disabled when a game first starts
         enableUserButtons(null);
     }
+
 }
 
+function disableInstanceItems(boolValue) {
+	if (boolValue) {
+			dimItem('AcePusher-Act');
+			dimItem('HeartMarker-Act');
+			dimItem('ClubMarker-Act');
+			dimItem('DiamondMarker-Act');
+			dimItem('LookRiverCard-Act');
+			dimItem('PokerPeeker-Act');
+			dimItem('RiverbendRedo-Act');
+	}
+	else {
+		unDimItem('AcePusher-Act');
+		unDimItem('HeartMarker-Act');
+		unDimItem('ClubMarker-Act');
+		unDimItem('DiamondMarker-Act');
+		unDimItem('LookRiverCard-Act');
+		unDimItem('PokerPeeker-Act');
+		unDimItem('RiverbendRedo-Act');
+	}
+    O('AcePusher-Act').disabled = boolValue;
+    O('HeartMarker-Act').disabled = boolValue;
+    O('ClubMarker-Act').disabled = boolValue;
+    O('DiamondMarker-Act').disabled = boolValue;
+    O('LookRiverCard-Act').disabled = boolValue;
+    O('PokerPeeker-Act').disabled = boolValue;
+    /* session level
+    O('TableTucker-Act').disabled = false;
+    O('SocialSpotter-Act').disabled = false;
+    O('SnakeOilMarker-Act').disabled = false;
+    O('AntiOilMarker-Act').disabled = false;
+    O('FaceMelter-Act').disabled = false;
+    */
+    O('RiverbendRedo-Act').disabled = boolValue;
+
+}
 /** ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  * Show ongoing game after user joins a table
  */
@@ -842,12 +1082,12 @@ function showGameInProgress(gameStatusDto) {
     O('gameInstanceId').innerHTML = gameStatusDto.gameInstanceId;
 
     // update everyone's statuses
-    initPlayersCardsDisplay();
+    initPlayersCardsDisplay(gameStatusDto.playerStatusDtos);
 
     if (gameStatusDto.communityCards != null ) {
         var m=gameStatusDto.communityCards.length;
         for (var j=0; j<m; j++) {
-            showCommunityCard(gameStatusDto.communityCards[j].cardNumber-1, gameStatusDto.communityCards[j].cardName);
+            showCommunityCard(gameStatusDto.communityCards[j].playerCardNumber-1, gameStatusDto.communityCards[j].cardName);
         }
     }
     if (gameStatusDto.gameResultDto != null) {
@@ -855,16 +1095,16 @@ function showGameInProgress(gameStatusDto) {
     }
     // the user may have a seat if this operationi s called because re-opened the browser
     // in the middle of the game
-    if (gameStatusDto.userPlayerHand != null) {
+    if (gameStatusDto.userPlayerHandDto != null) {
         var playerElement
         playerElement = getPlayerPositionTag(O('userPlayerId').innerHTML);
-        O(playerElement + 'Card1').innerHTML = gameStatusDto.userPlayerHand.pokerCard1.cardName;
-        O(playerElement + 'Card2').innerHTML = gameStatusDto.userPlayerHand.pokerCard2.cardName;
+        O(playerElement + 'Card1').innerHTML = gameStatusDto.userPlayerHandDto.pokerCard1Dto.cardName;
+        O(playerElement + 'Card2').innerHTML = gameStatusDto.userPlayerHandDto.pokerCard2Dto.cardName;
         // FIXME: the status return is null, so it's set in the UI but
         // should come from the back-end
         O(playerElement + 'Status').innerHTML = 'Ready';
-        showPlayerCard(playerElement, 1, gameStatusDto.userPlayerHand.pokerCard1.cardName);
-        showPlayerCard(playerElement, 2, gameStatusDto.userPlayerHand.pokerCard2.cardName);
+        showPlayerCard(playerElement, 1, gameStatusDto.userPlayerHandDto.pokerCard1Dto.cardName);
+        showPlayerCard(playerElement, 2, gameStatusDto.userPlayerHandDto.pokerCard2Dto.cardName);
 
         // game has not started if player hands are null
         // next player
@@ -1042,8 +1282,9 @@ function initBoardItemsDisplay() {
     S('communityCard3').display = 'none';
     S('communityCard4').display = 'none';
 
-	hideCardMarkers();
+    hideCardMarkers();
 }
+
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /**
@@ -1059,6 +1300,18 @@ function displayCenterMessage(msg) {
 
 /********************************************************************************************/
 /* display and positioning */
+function logout() {
+    var obj = {
+        userPlayerId: $.cookies.get("userPlayerId")
+    };
+    WSClient.call("logout",
+        obj,
+        null);
+
+    $.cookies.del("userPlayerId");
+    window.location = 'SeedySaloon.php';
+}
+
 /*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  * processing: set positions for all HTML elements dynamically in case of sizing
  * dynamically position player status boxes, which are shown
@@ -1068,14 +1321,35 @@ function displayCenterMessage(msg) {
  * 2) community cards
  */
 window.onload = function() {
+    // check if there is a user id; if not redirect to the saloon
+    var userPlayerId = $.cookies.get("userPlayerId");
+    if (userPlayerId == null) {
+        // FIXME: seedy salon is hard coded, there should be another login page.
+        window.location = 'SeedySaloon.php';
+    }
+    O('loginInfo').innerHTML = "You are logged in as " + $.cookies.get("playerName");
     $('#dialog-modal').dialog('open');
-    document.getElementById('playerNameText').select();
-    
+
+    // load sleeve. This is the only cheating option that is activated before going to a table
+    cheatLoadSleeve();
+	
     var widthToHeight = 4 / 3;
     var newWidth = window.innerWidth;
     var newHeight = window.innerHeight;
     
     animateCard();
+
+    // some cheating items are disabled because of dependencies
+    O('LookRiverCard-swap').disabled = true;
+    O('LookRiverCard-look').disabled = false;
+
+    disableInstanceItems(false);
+    
+    O('TableTucker-Act').disabled = false;
+    O('SocialSpotter-Act').disabled = false;
+    O('SnakeOilMarker-Act').disabled = false;
+    O('AntiOilMarker-Act').disabled = false;
+    O('FaceMelter-Act').disabled = false;
 
 }
 

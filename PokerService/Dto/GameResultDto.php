@@ -7,12 +7,12 @@
 
 class GameResultDto {
 
-    public $playerHands;
+    public $playerHandDtos;
     public $winningPlayerId;
     public $playerStatusDtos;
 
     function __construct($playerHands, $winningPlayerId, $gInstId) {
-        $this->playerHands = $playerHands;
+        $this->playerHandDtos = $playerHands;
         //$this->potSize = $potSize;
         $this->winningPlayerId = $winningPlayerId;
 

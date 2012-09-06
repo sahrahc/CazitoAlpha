@@ -33,11 +33,11 @@ class PlayerTurn {
     }
 
     /*     * ****************************************************************************** */
-    /* private methods */
 
     /**
-     * Validates the move is valid. Returns the move id (so it can be deleted if successfully processed),otherwise throws exception.
-     * @return int Move identifier
+     * Validates the move is valid. Returns the move id (so it can be deleted if successfully
+     * @global type $log
+     * @return int: next move identifier
      */
     private function validateMove() {
         global $log;
@@ -96,17 +96,18 @@ class PlayerTurn {
 
     /**
      * Get the player id and turn that should make the next play after current. This method updates the game instance status.
+     * @param type $curTurnNum current turn number
      */
-    private function updateNextPlayerIdAndTurn($curTurn) {
-        if (is_null($curTurn)) {
-            $curTurn = -1;
+    private function findNextPlayerIdAndTurn($curTurnNum) {
+        if (is_null($curTurnNum)) {
+            $curTurnNum = -1;
         }
         $instanceId = $this->gameInstanceStatus->id;
         $result = executeSQL("SELECT PlayerId, TurnNumber, Status, IsVirtual FROM PlayerState
-                WHERE GameInstanceId = $instanceId AND TurnNumber > $curTurn
+                WHERE GameInstanceId = $instanceId AND TurnNumber > $curTurnNum
                 ORDER BY TurnNumber LIMIT 1", __FUNCTION__ . "
                 : Error selecting from PlayerState instance id $instanceId and
-                turn greater than $curTurn");
+                turn greater than $curTurnNum");
         if (mysql_num_rows($result) == 0) {
             $result = executeSQL("SELECT PlayerId, TurnNumber, Status, IsVirtual
                     FROM PlayerState WHERE GameInstanceId = $instanceId AND TurnNumber >= 0
@@ -115,7 +116,7 @@ class PlayerTurn {
         }
         if (mysql_num_rows($result) == 0) {
             throw new Exception(__FUNCTION__ . ": ERROR - Next PlayerState not found for 
-                    instance id $instanceId AND current seat $curTurn");
+                    instance id $instanceId AND current seat $curTurnNum");
         }
         $row = mysql_fetch_array($result);
         // recursively find the next player
@@ -131,10 +132,14 @@ class PlayerTurn {
             // increment play counters
             $this->playerInstanceStatus->playerPlayNumber +=1;
             $this->gameInstanceStatus->lastInstancePlayNumber +=1;
-            $this->updateNextPlayerIdAndTurn($nextTurn);
+            $this->findNextPlayerIdAndTurn($nextTurn);
         }
     }
 
+    /**
+     * Checks whether the end of the game was reached.
+     * @return bool
+     */
     private function checkGameEnd() {
         // convenience variables
         $gameInstanceId = $this->gameInstanceStatus->id;
@@ -240,7 +245,7 @@ class PlayerTurn {
      * 2) Update the player state: status, stake, playerPlayNumber, lastPlayAmount
      * 3) Update game instance: nextPlayerId and nextTurnNumber, potSize, lastBetSize, lastInstancePlayNumber
      * 4) Find next move, increase player # and community cards shown
-     * @return PlayerActionResultDto
+     * @return NextPokerMove 
      */
     function applyPlayerAction() {
         $currentMoveId = $this->validateMove();
@@ -284,7 +289,7 @@ class PlayerTurn {
         }
         // update the next player id and turn number
         $curTurn = $this->playerInstanceStatus->playerInstanceSetup->turnNumber;
-        $this->updateNextPlayerIdAndTurn($curTurn);
+        $this->findNextPlayerIdAndTurn($curTurn);
 
         return $this->findNextMove();
     }
@@ -328,7 +333,7 @@ class PlayerTurn {
         }
         // update the next player id and turn number
         $curTurn = $this->playerInstanceStatus->playerInstanceSetup->turnNumber;
-        $this->updateNextPlayerIdAndTurn($curTurn);
+        $this->findNextPlayerIdAndTurn($curTurn);
 
         // get the next move (sets the game result if game end also)
         return $this->findNextMove();

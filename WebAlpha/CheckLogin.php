@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 // username and password sent from form
 $myusername = $_POST['myusername'];
@@ -15,7 +16,11 @@ if (strtolower($myusername) == 'john' && strtolower($mypassword) == 'mofactor824
     $_SESSION['myusername'] = $myusername;
     $_SESSION['mypassword'] = $mypassword;
     //header("location:login_success.php?phpSESsid='" . session_id() . "'");
-    header("location:PlayGame.php");
+    if (!isset($_SESSION['srcLocation'])) {
+        header("location:SeedySaloon.php");
+    } else {
+        header($_SESSION['srcLocation']);
+    }
     //exit();
 } else {
     echo "Wrong Username or Password";

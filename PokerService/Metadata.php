@@ -1,63 +1,66 @@
 <?php
 
-/* custom data types (enums in Java)
- * 
+/* 
+ * game card codes to numbers
  */
 
-class Enum {
-
-    // private static $enum = array();
-    // returnDto::toDataValue("11"); 
-    public function toDtoValue($name) {
-        return array_search($name, self::$enum);
-    }
-
-    // evalValue::toEvaluatorType(1);
-    public function toEvaluatorType($ordinal) {
-        return self::$enum[$ordinal];
-    }
-
-}
-
-/* poker card values - convert poker.h values to image files so that
- * the image can be correctly retrieved
- * FIXME: may want to rename files instead 
- * need to use pokerlib C++
- * 	int* deck = new int[52];
- *  init_deck(deck);
- *  find_card(int rank, int suit, int *deck);
- *  	the reverse is deck[index] 
- *  FIXME: call it once and keep it */
-
-// the array values are what is returned by the service	
-class PokerCardSuitType extends Enum {
-
-    // the mapping from evaluator value to displayable value
-    private static $enum = array(0x8000 => "clubs",
-        0x4000 => "diamonds",
-        0x2000 => "hearts",
-        0x1000 => "spades");
-
-}
-
-// the array values are what is returned by the service	
-class PokerCardRankType {
-
-    private static $enum = array(
-        0 => "2", // deuce
-        1 => "3", // trey
-        2 => "4", // four
-        3 => "5", // five
-        4 => "6", // six
-        5 => "7", // seven
-        6 => "8", // eight
-        7 => "9", // nine
-        8 => "10", // ten
-        9 => "J", // jack
-        10 => "Q", // queen
-        11 => "K"); //king
-
-}
+$pokerCardName = array(
+    '2h'=>'hearts_2',
+    '3h'=>'hearts_3',
+    '4h'=>'hearts_4',
+    '5h'=>'hearts_5',
+    '6h'=>'hearts_6',
+    '7h'=>'hearts_7',
+    '8h'=>'hearts_8',
+    '9h'=>'hearts_9',
+    'Th'=>'hearts_10',
+    'Jh'=>'hearts_J',
+    'Qh'=>'hearts_Q',
+    'Kh'=>'hearts_K',
+    'Ah'=>'hearts_A',
+    // diamonds
+    '2d'=>'diamonds_2',
+    '3d'=>'diamonds_3',
+    '4d'=>'diamonds_4',
+    '5d'=>'diamonds_5',
+    '6d'=>'diamonds_6',
+    '7d'=>'diamonds_7',
+    '8d'=>'diamonds_8',
+    '9d'=>'diamonds_9',
+    'Td'=>'diamonds_10',
+    'Jd'=>'diamonds_J',
+    'Qd'=>'diamonds_Q',
+    'Kd'=>'diamonds_K',
+    'Ad'=>'diamonds_A',
+    // clubs
+    '2c'=>'clubs_2',
+    '3c'=>'clubs_3',
+    '4c'=>'clubs_4',
+    '5c'=>'clubs_5',
+    '6c'=>'clubs_6',
+    '7c'=>'clubs_7',
+    '8c'=>'clubs_8',
+    '9c'=>'clubs_9',
+    'Tc'=>'clubs_10',
+    'Jc'=>'clubs_J',
+    'Qc'=>'clubs_Q',
+    'Kc'=>'clubs_K',
+    'Ac'=>'clubs_A',
+    //spades
+    '2s'=>'spades_2',
+    '3s'=>'spades_3',
+    '4s'=>'spades_4',
+    '5s'=>'spades_5',
+    '6s'=>'spades_6',
+    '7s'=>'spades_7',
+    '8s'=>'spades_8',
+    '9s'=>'spades_9',
+    'Ts'=>'spades_10',
+    'Js'=>'spades_J',
+    'Qs'=>'spades_Q',
+    'Ks'=>'spades_K',
+    'As'=>'spades_A',
+);
 
 // the array values are what is returned by the service	
 class PokerHandType {
@@ -113,6 +116,10 @@ final class EventType {
 	const USER_JOINED = 'UserJoined';
     const USER_LEFT = 'UserLeft';
 	const GAME_STARTED = 'GameStarted';
+    const CHEATED_HANDS = 'CheatedHands';
+    const CHEATED_CARDS = 'CheatedCards';
+    const CHEATED_HIDDEN = 'CheatedHidden';
+    const CHEATED_NEXT = 'CheatedNext';
 }
 
 final class GameStatus {
@@ -130,12 +137,19 @@ final class ItemType {
     const SOCIAL_SPOTTER = 'SocialSpotter';
     const SNAKE_OIL_MARKER = 'SnakeOilMarker';
     const ACE_PUSHER = 'AcePusher';
-    const LOOK_RIVER_CARD = 'LookRiverCard';
-    const SWAP_RIVER_CARD = 'SwapRiverCard';
-    const ACTIVATE_TUCKER_TABLE = 'ActivateTuckerTable';
+    const RIVER_SHUFFLER = 'LookRiverCard';
+    const RIVER_SHUFFLER_USE = 'SwapRiverCard';
+    const ACTIVATE_TUCKER_TABLE = 'TableTucker';
     const SLIDE_UNDER_TABLE = 'SlideUnderTable';
     const SLIDE_OUT_OF_TABLE = 'SlideOutOfTable';
-    const KEEP_FACE_CARDS = 'KeepFaceCards';
+    const KEEP_FACE_CARDS = 'FaceMelter';
     const ANTI_OIL_MARKER = 'AntiOilMarker';
+}
+/* code passed to front-end */
+final class CheatInfoType {
+    const HANDS  = 'CheatedHands';
+    const CARDS  = 'CheatedCards';
+    const HIDDEN = 'CheatedHidden';
+    const NEXT   = 'CheatedNext';
 }
 ?>

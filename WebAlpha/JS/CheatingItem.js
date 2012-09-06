@@ -8,32 +8,31 @@ function O(obj) {
     else return document.getElementById(obj);
 }
 
-function cheatClubMarker(){
-    alert("You clicked on Young Quick Draw CHarlie's Club Thumb!");
-}
-
-function showAction(curIndex) {
-    for (j=1, l=document.getElementsByClassName('cheatingItemAction').length; j<=l; j++) {
-        var t = O('tabs-' + j + '-act');
-        if (j == curIndex) {
-            t.style.display = 'block';}
-        else {t.style.display = 'none';}
+function showAction(itemType) {
+    var elements = document.getElementsByClassName('cheatingItemAction');
+    for (var j=0, l=elements.length; j<l; j++) {
+        var t = O(itemType + '-Act');
+        if (t.id == elements[j].id) {
+            elements[j].style.display = 'block';}
+        else {elements[j].style.display = 'none';}
     }
 }
 
-function showDescription(curIndex) {
-    for (j=1, l=document.getElementsByClassName('cheatingItemDesc').length; j<=l; j++) {
-        var t = O('tabs-' + j);
-        if (j == curIndex) {
-            t.style.display = 'block';}
-        else {t.style.display = 'none';}
+function showDescription(itemType) {
+    var elements = document.getElementsByClassName('cheatingItemDesc');
+    var t = O(itemType + '-Desc');
+    for (var j=0, l=elements.length; j<l; j++) {
+        if (t.id == elements[j].id) {
+            elements[j].style.display = 'block';}
+        else {elements[j].style.display = 'none';}
     }
 }
 
-function hideDescription(curIndex) {
-    O('tabs-' + curIndex).style.display = 'none';
+function hideDescription(itemType) {
+    O(itemType + '-Desc').style.display = 'none';
 }
 
-function hideAction(curIndex) {
-    O('tabs-' + curIndex + '-act').style.display = 'none';
+function hideAction(itemType) {
+    O(itemType + '-Act').style.display = 'none';
 }
+

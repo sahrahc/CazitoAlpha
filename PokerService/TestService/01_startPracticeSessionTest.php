@@ -15,6 +15,14 @@ echo '******************************************************<br />';
 
 echo 'TEST CASE 1.1: unknown player JP <br />';
 $par = json_encode(array("playerName"=>"JP"));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+echo "     Login encoded return: $userIdEncoded <br />";
+echo "     User player id: $user->userPlayerId <br /><br />";
+echo "     User player name: $user->playerName <br /><br />";
+
+$par = json_encode(array("userPlayerId"=>$userPlayerId));
 $gameInstanceSetupDto = startPracticeSession($par);
 showGameInstanceSetupValues($par, $gameInstanceSetupDto);
 
