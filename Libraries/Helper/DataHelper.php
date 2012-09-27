@@ -5,12 +5,13 @@
  */
 
 function connectToStateDB() {
+	global $dbName;
     // connect
-    $con = mysql_connect('localhost', 'jb', 'worms');
+    $con = mysql_connect('localhost', 'cazito5_jb', 'worms');
     if (!$con) {
         die('Could not connnect: ' . mysql_error());
     }
-    mysql_select_db("cazito", $con);
+    mysql_select_db($dbName, $con);
     return $con;
 }
 
