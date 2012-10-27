@@ -1,6 +1,6 @@
 <?php
 
-include_once(dirname(__FILE__) . '/../../Libraries/Helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/../../libraries/helper/DataHelper.php');
 
 /* Create the MySQL database
  * Schema currently has five tables that track transient data:

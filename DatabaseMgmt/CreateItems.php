@@ -1,6 +1,6 @@
 <?php
 
-include_once(dirname(__FILE__) . '/../../Libraries/Helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/../../libraries/helper/DataHelper.php');
 
 function CreateItems() {
     global $dbName;

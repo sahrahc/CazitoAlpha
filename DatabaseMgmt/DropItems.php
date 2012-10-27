@@ -1,5 +1,5 @@
 <?php
-include_once(dirname(__FILE__) . '/../../Libraries/Helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/../../libraries/helper/DataHelper.php');
 
 $conT = connectToStateDB();
 mysql_query("Drop table PlayerActiveItem");
