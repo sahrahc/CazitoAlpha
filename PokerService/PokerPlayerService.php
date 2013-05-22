@@ -1,16 +1,17 @@
 <?php
 
 // Include Libraries
-include_once(dirname(__FILE__) . '/../../Libraries/Helper/WebServiceDecoder.php');
-include_once(dirname(__FILE__) . '/../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../libraries/helper/WebServiceDecoder.php');
+include_once(dirname(__FILE__) . '/../../libraries/log4php/Logger.php');
 
 // Include Application Scripts
 require_once('Config.php');
-include_once('Components/EvalHelper.php');
-include_once('DomainHelper/AllInclude.php');
-include_once('DomainEnhanced/AllInclude.php');
-include_once('DomainModel/AllInclude.php');
-include_once('Dto/AllInclude.php');
+require_once('Components/EvalHelper.php');
+require_once('Components/QueueManager.php');
+require_once('DomainHelper/AllInclude.php');
+require_once('DomainEnhanced/AllInclude.php');
+require_once('DomainModel/AllInclude.php');
+require_once('Dto/AllInclude.php');
 
 // configure logging
 Logger::configure(dirname(__FILE__) . '/log4php.xml');
@@ -40,6 +41,10 @@ function startPracticeSession($par) {
     global $dateTimeFormat;
     $statusDateTime = date($dateTimeFormat);
 
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
 
     // Logic -----------------------------------------------------------------
     // get or create the user
@@ -48,7 +53,7 @@ function startPracticeSession($par) {
     $gameInstanceStatus = EntityHelper::createPracticeInstance(null, $playerDto->playerId, $statusDateTime);
     $practiceSession = new PracticeSession($gameInstanceStatus->gameInstanceSetup->gameSessionId,
                     $gameInstanceStatus->id, $statusDateTime);
-
+    $practiceSession->ex = $ex;
     // populate the DTO with instance information
     $gameInstanceSetupDto = new GameInstanceSetupDto($gameInstanceStatus);
 
@@ -75,6 +80,8 @@ function startPracticeSession($par) {
     $gameInstanceStatus->gameInstanceSetup->saveFirstExpectedMove($gameInstanceSetupDto->firstPlayerId, $defaultTableMin);
 
     /* --------------------------------------------------------------------- */
+    QueueManager::disconnect($qConn);
+    /* --------------------------------------------------------------------- */
     // json-ize
     return json_encode($gameInstanceSetupDto);
 }
@@ -85,6 +92,8 @@ function startPracticeSession($par) {
  * Add a user to a casino table. Create the user and table if they do not exist.
  * TODO: validate requesting player with cookie with active sessions
  * FIXME: enforce max number of players
+ * This and the login service call are REST services, the queue
+ * is set up after this service call.
  * @global Logger $log
  * @global timestamp $dateTimeFormat
  * @param json $par = { playerId : 2, isPractice : 0, casinoTableId : 5}
@@ -115,6 +124,11 @@ function addUserToCasinoTable($par) {
     global $dateTimeFormat;
     $statusDateTime = date($dateTimeFormat);
 
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
+
     // setup return dto
     $gameStatusDto = new GameStatusDto();
 
@@ -123,6 +137,7 @@ function addUserToCasinoTable($par) {
     $mustUpdateInstance = false;
     $seatNumber = null;
     $casinoTable = entityHelper::getOrCreateCasinoTable($casinoTableId, $tableSize, $statusDateTime);
+    $casinoTable->ex = $ex; // enable communications
     $gameSession = new GameSession($casinoTable->id, $casinoTable->currentGameSessionId);
     $gameInstance = null;
     /* Business rules for stale session:
@@ -196,6 +211,9 @@ function addUserToCasinoTable($par) {
             $gameStatusDto->nextMoveDto = EntityHelper::getNextMoveForInstance($gameInstance->id);
         }
     }
+    
+    /* --------------------------------------------------------------------- */
+    QueueManager::disconnect($qConn);
     // --------------------------------------------------------------------------------------
     // json-ize
     return json_encode($gameStatusDto);
@@ -228,6 +246,10 @@ function startGame($par) {
     global $dateTimeFormat;
     $statusDateTime = date($dateTimeFormat);
 
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    // queue must have already been declared
     // Logic -----------------------------------------------------------------
     // find the previous dealer if any
     $gameInstance = null;
@@ -261,6 +283,7 @@ function startGame($par) {
         $playerDtos = $casinoTable->getCasinoPlayerDtos();
         $gameInstance = $gameSession->startGameInstance($tableSize, $statusDateTime);
     }
+    $gameSession->ex = $ex;
     // the player states are saved in the database
     $gameInstance->gameInstanceSetup->resetPlayerStatesAndTurns($casinoTable, $statusDateTime, $lastDealerSeatNumber);
     $gameInstanceSetupDto = new GameInstanceSetupDto($gameInstance);
@@ -290,10 +313,18 @@ function startGame($par) {
     } else {
         $gameSession->communicateGameStarted($gameInstanceSetupDto, $casinoTable->getCasinoPlayerDtos(), $statusDateTime);
     }
-    CheatingHelper::revealMarkedCards($gameInstance);
+    $msg = CheatingHelper::revealMarkedCards($gameInstance);
+    if (!is_null($msg)) {
+        QueueManager::communicateCheatingEvent($ex, $playerId, $gameSessionId, $msg->eventType, $msg->log);
+        if (!is_null($msg->eventType)) {
+            QueueManager::communicateCheatingInfo($ex, $playerId, $gameSessionId, $msg->logType, $msg->eventData);
+        }
+    }
 
     // restore user play hand which got overwritten.
     $gameInstanceSetupDto->userPlayerHandDto = $userPlayerHand;
+    /* --------------------------------------------------------------------- */
+    QueueManager::disconnect($qConn);
     // --------------------------------------------------------------------------------------
     // testing only! MUST ENABLE QUEUES in PHP
     return json_encode($gameInstanceSetupDto);
@@ -317,8 +348,14 @@ function sendPlayerAction($par) {
     $statusDateTime = date($dateTimeFormat);
     $con = connectToStateDB();
 
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    // queue must have already been declared
+    
     // Logic --------------------------------------------------------------------------------
     $gameInstance = EntityHelper::getGameInstance($playerAction->gameInstanceId);
+    $gameInstance->ex = $ex;
     if (!is_null($gameInstance->winningPlayerId)) {
         throw new Exception("Game is ended");
     }
@@ -326,7 +363,7 @@ function sendPlayerAction($par) {
     $casinoTable = EntityHelper::getCasinoTableForSession($gameInstance->gameInstanceSetup->gameSessionId);
 
     $playerTurn = new PlayerTurn($playerAction, $gameInstance, $statusDateTime);
-    $gameInstance = $playerTurn->gameInstanceStatus; // convenience
+    //$gameInstance = $playerTurn->gameInstanceStatus; // convenience
 
     $nextPokerMove = $playerTurn->applyPlayerAction(); // updates the next player id
     // follow player status update with instance level follow-up
@@ -335,6 +372,8 @@ function sendPlayerAction($par) {
 
     $gameInstance->communicateMoveResult($playerActionResultDto, 0);
 
+    /* --------------------------------------------------------------------- */
+    QueueManager::disconnect($qConn);
     // --------------------------------------------------------------------------------------
     // json-ize
     return json_encode($playerActionResultDto);
@@ -354,8 +393,14 @@ function takeSeat($par) {
     $statusDateTime = date($dateTimeFormat);
     $con = connectToStateDB();
 
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    // queue must have already been declared
+
     /* --------------------------------------------------------------------- */
     $casinoTable = EntityHelper::getCasinoTableForSession($gameSessionId);
+    $casinoTable->ex = $ex;
     $waitingListSize = $casinoTable->getWaitingListSize();
     $playerDtos = $casinoTable->getCasinoPlayerDtos();
     $playerDto = $casinoTable->takeSeat($seatNumber, $playerId, $playerDtos, $statusDateTime);
@@ -364,6 +409,9 @@ function takeSeat($par) {
         $playerDtos = $casinoTable->getCasinoPlayerDtos();
         $casinoTable->communicateSeatTaken($playerDto, $playerDtos, $waitingListSize);
     }
+    /* --------------------------------------------------------------------- */
+    QueueManager::disconnect($qConn);
+    /* --------------------------------------------------------------------- */
     return json_encode($playerDto);
 }
 
@@ -382,6 +430,11 @@ function leaveSaloon($par) {
     global $dateTimeFormat;
     $statusDateTime = date($dateTimeFormat);
 
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    // queue must have already been declared
+ 
     // Logic -----------------------------------------------------------------
     // same logic as eject player on casinotable, call that instead?
     $casinoTable = EntityHelper::getCasinoTableForSession($gameSessionId);
@@ -389,6 +442,7 @@ function leaveSaloon($par) {
         // leaving practice session
         return "{\"page\":\"SeedySaloon\"}";
     }
+    $casinoTable->ex = $ex;
 
     $vacatedSeat = $casinoTable->leaveCurrentTable($playerId, $statusDateTime);
 
@@ -402,7 +456,7 @@ function leaveSaloon($par) {
     }
     // reset sleeves and visible cards
     CheatingHelper::resetSleeve($playerId);
-
+    // no need to send messages, user leaving table.
     // ******************************
     $playerDtos = $casinoTable->getCasinoPlayerDtos();
     // FIXME: should this be playerstatusdto?
@@ -412,13 +466,17 @@ function leaveSaloon($par) {
     $leftPlayerDto->stake = null;
     $waitingListSize = $casinoTable->getWaitingListSize();
     $casinoTable->communicateUserLeft($leftPlayerDto, $playerDtos, $waitingListSize);
+
+    /* --------------------------------------------------------------------- */
+    QueueManager::disconnect($qConn);
+    /* --------------------------------------------------------------------- */
     return "{\"page\":\"SeedySaloon\"}";
 }
 
 /* * ************************************************************************************** */
 
 /**
- * Given a player name, return the user id
+ * Nothing returned, no need for queues.
  */
 function logout($par) {
     $decodedPar = json_decode($par, true);
@@ -431,12 +489,19 @@ function logout($par) {
 
     // 1. get, update or create the player first, so it can be added to the response player list
     CheatingHelper::resetSleeve($playerId);
-    CheatingHelper::resetSleeve($playerId);
-
+    CheatingHelper::resetVisible($playerId);
+    // no need to send messages, user logging out.
     $status = 'OK';
     return json_encode($status);
 }
 
+/**
+ * Does not use queues; queues established for poker playing only
+ * @global timestamp $dateTimeFormat
+ * @param type $par
+ * @return custom object 
+ */
+// TODO: separate sign up from login.
 function login($par) {
     $decodedPar = json_decode($par, true);
     $playerName = $decodedPar["playerName"];
@@ -462,8 +527,15 @@ function cheat($par) {
     /* --------------------------------------------------------------------- */
     $con = connectToStateDB();
     global $dateTimeFormat;
-    $statusDateTime = date($dateTimeFormat);
+    $currentDate = new DateTime();
+        
+    $dateString = $currentDate->format($dateTimeFormat);
 
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    // queue must have already been declared
+    
     $playerId = $cheatRequestDto->userPlayerId;
     // cheating items before user enters session
     switch ($cheatRequestDto->itemType) {
@@ -473,9 +545,11 @@ function cheat($par) {
             return json_encode($returnDto);
         case ItemType::SOCIAL_SPOTTER:
             $sessionId = $cheatRequestDto->gameSessionId;
-            $returnDto = CheatingHelper::startCardMarking($playerId, $sessionId, $statusDateTime);
-            $returnDto = 'OK';
-            return json_encode($returnDto);
+            $msg = CheatingHelper::startCardMarking($playerId, $sessionId, $dateString);
+            $msg->eventData = 'OK';
+        QueueManager::communicateCheatingEvent($ex, $playerId, $sessionId, $msg->logType, $msg->log);
+            return json_encode($msg->eventData);
+            // remove when queue used by client, only sent because response needed for REST call
     }
 
     $gameInstance = EntityHelper::getGameInstance($cheatRequestDto->gameInstanceId);
@@ -487,24 +561,26 @@ function cheat($par) {
     }
     // convenience vars
     $gameInstanceId = $gameInstance->id;
+    $gameSessionId = $gameInstance->gameInstanceSetup->gameSessionId;
     // Logic -----------------------------------------------------------------
     $returnDto = null;
+    
     switch ($cheatRequestDto->itemType) {
         case ItemType::ACE_PUSHER:
             $playerCardNumber = $cheatRequestDto->playerCardNumber;
-            $returnDto = CheatingHelper::pushRandomAce($playerId, $gameInstance, $playerCardNumber, $statusDateTime);
+            $returnDto = CheatingHelper::pushRandomAce($playerId, $gameInstance, $playerCardNumber, $currentDate);
             break;
         case ItemType::HEART_MARKER:
-            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'hearts', $statusDateTime);
+            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'hearts', $currentDate);
             break;
         case ItemType::CLUB_MARKER:
-            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'clubs', $statusDateTime);
+            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'clubs', $currentDate);
             break;
         case ItemType::DIAMOND_MARKER:
-            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'diamonds', $statusDateTime);
+            $returnDto = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'diamonds', $currentDate);
             break;
         case ItemType::RIVER_SHUFFLER:
-            $returnDto = CheatingHelper::cheatLookRiverCard($playerId, $gameInstance, $statusDateTime);
+            $returnDto = CheatingHelper::cheatLookRiverCard($playerId, $gameInstance, $dateString);
             break;
         case ItemType::RIVER_SHUFFLER_USE:
             $returnDto = CheatingHelper::cheatSwapRiverCard($playerId, $gameInstance);
@@ -512,6 +588,16 @@ function cheat($par) {
         default:
             break;
     }
+    /* --------------------------------------------------------------------- */
+    if (!is_null($msg)) {
+        QueueManager::communicateCheatingEvent($ex, $playerId, $gameSessionId, $msg->eventType, $msg->log);
+        if (!is_null($msg->eventType)) {
+            // optional for RIVER_SHUFFLER, none for RIVER_SHUFFLER_USE
+            QueueManager::communicateCheatingInfo($ex, $playerId, $gameSessionId, $msg->logType, $msg->eventData);
+        }
+    }
+    QueueManager::disconnect($qConn);
+    /* --------------------------------------------------------------------- */
     if (is_null($returnDto)){
         $returnDto = 'OK';
     }
@@ -526,8 +612,20 @@ function cheatLoadSleeve($par) {
     $playerId = $decodedPar["userPlayerId"];
 
     $con = connectToStateDB();
-    $returnDto = CheatingHelper::getHiddenCards($playerId);
-    return json_encode($returnDto);
+    
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    // queue must have already been declared
+
+    $msg = CheatingHelper::getHiddenCards($playerId);
+
+    QueueManager::communicateCheatingInfo($ex, $playerId, $gameSessionId, $msg->logType, $msg->eventData);// message?
+    /* --------------------------------------------------------------------- */
+    QueueManager::disconnect($qConn);
+    /* --------------------------------------------------------------------- */
+    return json_encode($msg->eventData);
+    // TODO: use queue?
 }
 
 /* * ************************************************************************************** */
@@ -541,10 +639,10 @@ $server->register("cheat");
 $server->register("login");
 $server->register("logout");
 $server->register("cheatLoadSleeve");
-
+/*
   // fixme: convert to POST
   $method = $_GET["method"];
   $param = $_GET["param"];
   $server->serve($method, $param);
-
+co*/
 ?>

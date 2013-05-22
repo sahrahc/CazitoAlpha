@@ -1,5 +1,11 @@
 <?php
 
+echo __FILE__ . "<br />";
+
+//////////////////////////
+$name = 'Test0';
+//////////////////////////
+
 include(dirname(__FILE__) . '/../TimerService.php');
 include_once(dirname(__FILE__) . '/../Metadata.php');
 include('showObject.php');

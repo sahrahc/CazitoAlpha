@@ -1,8 +1,10 @@
 <?php
 
 // Configure logging
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');
+
+require_once(dirname(__FILE__) . '/../Components/QueueManager.php');
 
 /* * ************************************************************************************* */
 
@@ -14,6 +16,7 @@ class GameSession {
     public $id;
     public $casinoTableId;
     public $gameInstance;
+    public $ex;
     private $log;
 
     public function __construct($cTableId, $gSessionId) {
@@ -61,6 +64,7 @@ class GameSession {
         $instanceId = $instanceSetupDto->gameInstanceId;
 
         for ($i = 0; $i < count($playerDtos); $i++) {
+            // no need to check if user left, playerDtos already returns that
             $playerId = $playerDtos[$i]->playerId;
             //if ($playerId != $instanceSetupDto->userPlayerId) {
                 $instanceSetupDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $instanceId);
@@ -69,7 +73,7 @@ class GameSession {
                                 $playerId, $eventType, $statusDT,
                                 $instanceSetupDto);
                 //$message->eventData = $instanceSetupDto;
-                queueMessage($playerId, json_encode($message));
+                QueueManager::queueMessage($this->ex, $playerId, json_encode($message));
             //}
         }
     }

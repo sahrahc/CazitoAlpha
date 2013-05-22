@@ -1,6 +1,6 @@
 <?php
 
-$dbName = 'cazito5_sprint8';
+$dbName = 'cazito5_sprint9';
 /* * ***************************************************************************************************** */
 /** poker playing defaults */
 $defaultTableMin = 10000; // practice
@@ -38,8 +38,14 @@ $cAntiOilMarkerTimeOut = 'PT60M';
 
 /* * ***************************************************************************************************** */
 /* messaging - centralized config parmeters helps with deployment */
-$rabbitmq_default_port = 61613;
-$rabbitmq_default_host = 'localhost';
-$rabbitmq_default_exchange = 'direct';
-$rabbitmq_default_vhost = '/';
+$stomp_port = 61613;
+$stomp_host = 'localhost';
+$stomp_exchange = 'direct';// 'player';
+$stomp_vhost = '/';
+/* * ***************************************************************************************************** */
+$amqp_port = 5672;
+$amqp_host = 'localhost';
+$amqp_exchange = 'player';
+$qmap_vhost = '/';
+
 ?>

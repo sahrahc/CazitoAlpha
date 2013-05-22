@@ -4,7 +4,7 @@ include_once(dirname(__FILE__) . '/../DomainHelper/EntityHelper.php');
 include_once(dirname(__FILE__) . '/../Metadata.php');
 
 // Configure logging
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');
 
 /* * ************************************************************************************* */
@@ -20,6 +20,7 @@ class PracticeSession {
     public $playerStatusDtos = array();
     public $blindBets;
     private $log;
+    public $ex;
 
     public function __construct($gSessionId, $curInstId, $statusDT) {
         $this->log = Logger::getLogger(__CLASS__);
@@ -179,7 +180,8 @@ class PracticeSession {
         $message = new EventMessage($this->id,
                         $playerId, $eventType, $localTime,
                         $instanceSetupDto);
-        queueMessage($playerId, json_encode($message));
+        //queueMessage($playerId, json_encode($message));
+        QueueManager::queueMessage($this->ex, $playerId, json_encode($message));
     }
 
 }

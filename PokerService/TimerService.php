@@ -1,14 +1,17 @@
 <?php
 
 // Include Libraries
-include_once(dirname(__FILE__) . '/../../Libraries/log4php/Logger.php');
-include_once(dirname(__FILE__) . '/../../Libraries/Helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/../../libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../libraries/helper/DataHelper.php');
 
+// TODO: too much business logic here.
 // Include Application Scripts
-require_once(dirname(__FILE__) . 'Config.php');
-include_once(dirname(__FILE__) . 'DomainHelper/AllInclude.php');
-include_once(dirname(__FILE__) . 'DomainModel/AllInclude.php');
-include_once(dirname(__FILE__) . 'Dto/AllInclude.php');
+require_once(dirname(__FILE__) . '/Config.php');
+require_once(dirname(__FILE__) . '/Components/QueueManager.php');
+require_once(dirname(__FILE__) . '/Components/CheatingHelper.php');
+include_once(dirname(__FILE__) . '/DomainHelper/AllInclude.php');
+include_once(dirname(__FILE__) . '/DomainModel/AllInclude.php');
+include_once(dirname(__FILE__) . '/Dto/AllInclude.php');
 
 // configure logging
 Logger::configure(dirname(__FILE__) . '/log4php.xml');
@@ -51,7 +54,13 @@ function checkExpiration() {
 
     $con = connectToStateDB();
 
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    // queue must have already been declared
+
     $statusDateTime = date($dateTimeFormat);
+
     //$currentTimeString = $statusDateTime->format($dateTimeFormat);
     // check if expiration
     $result = executeSQL("SELECT m.*, s.IsVirtual
@@ -68,6 +77,7 @@ function checkExpiration() {
         // get instance data
         $gameInstanceId = $row["GameInstanceId"];
         $gameInstance = EntityHelper::getGameInstance($gameInstanceId);
+        $gameInstance->ex = $ex;
         $previousNumberCards = $gameInstance->numberCommunityCardsShown;
 
         // Validate instance
@@ -122,6 +132,8 @@ function checkExpiration() {
 
         $gameInstance->communicateMoveResult($resultDto, $isExpired);
     }
+    QueueManager::disconnect($qConn);
+    
     return $counter;
 }
 
@@ -159,6 +171,29 @@ function ejectInactivePlayer(){
    }
 }
 
+function updateTimedCheatingItems() {
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+
+    $returnList = CheatingHelper::updateEndedItems();
+    foreach($returnList as $return) {
+        QueueManager::communicateCheatingEvent($ex, 
+                $return->playerId, 
+                $return->gameSessionId, 
+                $return->msg->eventType, 
+                $return->msg->log);
+    }
+    $returnList = CheatingHelper::updateUnlockedItems();
+    foreach($returnList as $return) {
+        QueueManager::communicateCheatingInfo($ex, 
+                $return->playerId, 
+                $return->gameSessionId, 
+                $return->msg->eventType, 
+                $return->msg->eventData);
+    }
+    QueueManager::disconnect($qConn);
+}
 /* * ***************************************************************************************************** */
 /*
   checkExpiration();

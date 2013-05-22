@@ -146,10 +146,16 @@ final class ItemType {
     const ANTI_OIL_MARKER = 'AntiOilMarker';
 }
 /* code passed to front-end */
-final class CheatInfoType {
+final class CheatDtoType {
     const HANDS  = 'CheatedHands';
     const CARDS  = 'CheatedCards';
     const HIDDEN = 'CheatedHidden';
     const NEXT   = 'CheatedNext';
+}
+
+final class CheatLogType {
+    const ItemLog = "ItemLog";
+    const ItemUnlock = "ItemUnlock";
+    const ItemEnd = "ItemEnd";
 }
 ?>

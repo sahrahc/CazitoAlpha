@@ -14,6 +14,10 @@ $playerName = $_POST["playerName"];
 $suitType = $_POST["suitType"];
 $actionType = $_POST["actionType"];
 $gameSessionId = $_POST["gameSessionId"];
+    $qConn = QueueManager::getPlayerConnection();
+    $ch = QueueManager::getPlayerChannel($qConn);
+    $ex = QueueManager::getPlayerExchange($ch);
+    $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
 
 if ($suitType != null && $actionType != null) {
     $playerDto = EntityHelper::getPlayerDtoByName($playerName);
@@ -39,5 +43,6 @@ if ($suitType != null && $actionType != null) {
         CheatingHelper::removeVisibleCardCodes($playerDto->playerId, $gameSessionId, $cardCodes);
         echo "Successfully removed $suitType cards as marked cards for $playerName";
     }
+QueueManager::disconnect($qConn);
 }
 ?>

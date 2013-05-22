@@ -1,12 +1,12 @@
 <?php
 
 // Configure logging
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');
 
 // Include Application Scripts
 require_once(dirname(__FILE__) . '/../Metadata.php');
-
+require_once(dirname(__FILE__) . '/../Components/QueueManager.php');
 /* * ************************************************************************************* */
 
 class HighestHand {
@@ -31,6 +31,7 @@ class GameInstanceStatus {
     public $winningPlayerId;
     public $gameInstanceSetup;
     public $playerHands;
+    public $ex;
     private $log;
 
     public function __construct($id) {
@@ -385,14 +386,15 @@ class GameInstanceStatus {
         }
         for ($i = 0; $i < count($playerInstances); $i++) {
 
-            if ($playerInstances[$i]->isVirtual == 1) {
+            if ($playerInstances[$i]->isVirtual == 1 ||
+                    $playerInstances[$i] == PlayerStatusType::LEFT) {
                 continue;
             }
             $message = new EventMessage($this->gameInstanceSetup->gameSessionId,
                             $playerInstances[$i]->playerId, $actionType, $this->lastUpdateDateTime,
                             $playerActionResultDto);
             //$message->eventData = $playerActionResultDto;
-            queueMessage($playerInstances[$i]->playerId, json_encode($message));
+            QueueManager::queueMessage($this->ex, $playerInstances[$i]->playerId, json_encode($message));
         }
     }
 

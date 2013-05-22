@@ -1,5 +1,5 @@
 // FIXME: need to split up cheating and poker playing
-constServiceUrl = "http://localhost//Sprint8//PokerService//PokerPlayerService.php";
+constServiceUrl = "http://localhost//Sprint9//PokerService//PokerPlayerService.php";
 
 function O(obj) {
     if (typeof obj == 'object') return obj;

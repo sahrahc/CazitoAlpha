@@ -2,7 +2,7 @@
  * 
  */
 // FIXME: need to split up cheating and poker playing
-constServiceUrl = "http://localhost//Sprint8//PokerService//PokerPlayerService.php";
+constServiceUrl = "http://localhost//Sprint9//PokerService//PokerPlayerService.php";
 constServer = "http://localhost:55674/stomp";
 
 /*------------------------------------------------------------------------------------------*/
@@ -1198,7 +1198,7 @@ function startQueueing() {
         alert (error);
     }
 
-    var queue = '/queue/' + O('userPlayerId').innerHTML;
+    var queue = '/queue/p' + O('userPlayerId').innerHTML;
     connect_callback = function(data) {
         client.subscribe(queue, getEventMessageCallback);
     }

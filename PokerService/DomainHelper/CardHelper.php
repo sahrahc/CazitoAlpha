@@ -1,7 +1,7 @@
 <?php
 
 // Configure logging
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');
 
 include_once(dirname(__FILE__) . '/../Components/EvalHelper.php');
@@ -166,11 +166,11 @@ class CardHelper {
     public static function getCardCodesForInstance($gInstId, $unassigned) {
         $error_msg = __FUNCTION__ . ": Error selecting GameCard for instance $gInstId";
         if ($unassigned) {
-            $result = executeSQL("SELECT * FROM GAMECARD WHERE GameInstanceId = $gInstId
+            $result = executeSQL("SELECT * FROM GameCard WHERE GameInstanceId = $gInstId
                     AND PlayerId IS NULL
                 ORDER BY DeckPosition", $error_msg);
         } else {
-            $result = executeSQL("SELECT * FROM GAMECARD WHERE GameInstanceId = $gInstId
+            $result = executeSQL("SELECT * FROM GameCard WHERE GameInstanceId = $gInstId
                 AND PlayerId IS NOT NULL
                 ORDER BY PlayerId, PlayerCardNumber", $error_msg);
         }

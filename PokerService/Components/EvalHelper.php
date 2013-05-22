@@ -1,10 +1,10 @@
 <?php
 
 // Include Libraries
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 
 // Include Application Scripts
-include_once(dirname(__FILE__) . '/../../../Libraries/Helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/../../../libraries/helper/DataHelper.php');
 
 // configure logging
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');

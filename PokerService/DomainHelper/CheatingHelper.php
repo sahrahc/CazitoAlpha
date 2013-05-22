@@ -1,7 +1,7 @@
 <?php
 
 // Configure logging
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');
 
 // Include Application Scripts
@@ -9,25 +9,29 @@ require_once(dirname(__FILE__) . '/../Metadata.php');
 
 /* * ************************************************************************************* */
 
+/**
+ * FIXME:
+ * PlayerActiveItem = key/value
+ */
 class CheatingHelper {
 
     private static $log = null;
-
+    
     public static function log() {
         if (is_null(self::$log))
             self::$log = Logger::getLogger(__CLASS__);
         return self::$log;
     }
-
+    
     /**
      * Gets the list of all players cards and flags the cards that match the suit
      * @param id playerId
      * @param GameInstanceStatus $gInstStatus
      * @param string $suit
-     * @param date $statusDT
+     * @param DateTime $currentDT
      * @return CheaterCardDto array
      */
-    public static function getSuitForAllGameCards($pId, $gInstStatus, $suit, $statusDT) {
+    public static function getSuitForAllGameCards($pId, $gInstStatus, $suit, $currentDT) {
         global $dateTimeFormat;
         global $cHeartMarkerTimeOut;
         global $cClubMarkerTimeOut;
@@ -59,7 +63,6 @@ class CheatingHelper {
         /* ------------------------------------------------------------------------------ */
         // create record with time out
         $itemType = null;
-        $timeOut = $statusDT;
         switch ($suit) {
             case 'hearts':
                 $itemType = ItemType::HEART_MARKER;
@@ -76,8 +79,7 @@ class CheatingHelper {
             default;
                 throw new Exception("Error in Cheating Item, can only mark clubs, diamonds and hearts, not " . $suit);
         }
-        $currentDate = new DateTime();
-        $lockEndDateTime = clone $currentDate;
+        $lockEndDateTime = clone $currentDT;
         $lockEndDateTime->add(new DateInterval($timeOut));
 
         $sessionId = $gInstStatus->gameInstanceSetup->gameSessionId;
@@ -85,15 +87,18 @@ class CheatingHelper {
         $activeItem->lockEndDateTime = $lockEndDateTime;
         $activeItem->isActive = 0; // instantaneous
         $activeItem->isAvailable = 0; // lock out period
-        $activeItem->endDateTime = $currentDate;
+        $activeItem->endDateTime = $currentDT;
         $activeItem->recordItemUse();
 
+        /* response is immediate, no need to check whether the message
+         * is sent to players who left session
+         */
         /* ------------------------------------------------------------------------------ */
         $log = 'Marked ' . $suit . '. This item is available again at ' . $lockEndDateTime->format($dateTimeFormat) . '.';
-        self::communicateCheatingEvent($pId, $sessionId, 'ItemLog', $log);
-        /* ------------------------------------------------------------------------------ */
-        self::communicateCheatingInfo($pId, $sessionId, 'CheatedCards', $cheaterCardDtos);
+        $msg = new CheaterMessage($log, CheatLogType::ItemLog, CheatDtoType::CARDS, $cheaterCardDtos);
         //return $cheaterCardDtos;
+        return $msg;
+        
     }
 
     /**
@@ -103,7 +108,7 @@ class CheatingHelper {
      * @param type $pCardNum
      * @return CheaterCardDto
      */
-    public static function pushRandomAce($pId, $gInstStatus, $pCardNum, $statusDT) {
+    public static function pushRandomAce($pId, $gInstStatus, $pCardNum, $currentDT) {
         global $pokerCardName;
 
         $pokerCards = CardHelper::getPlayerCard($pId, $gInstStatus->id, $pCardNum);
@@ -120,24 +125,24 @@ class CheatingHelper {
         /* ------------------------------------------------------------------------------ */
         // create record with time out
         $itemType = ItemType::ACE_PUSHER;
-        $currentDate = new DateTime();
-
+        
         $sessionId = $gInstStatus->gameInstanceSetup->gameSessionId;
         $activeItem = new PlayerActiveItem($pId, $sessionId, $itemType, $currentDate);
-        $activeItem->lockEndDateTime = $currentDate; // no lock out period
+        $activeItem->lockEndDateTime = $currentDT; // no lock out period
         $activeItem->isActive = 0;
         $activeItem->isAvailable = 1;
-        $activeItem->endDateTime = $currentDate;
+        $activeItem->endDateTime = $currentDT;
         $activeItem->gameInstanceId = $gInstStatus->id;
         $activeItem->recordItemUse();
 
-        /* ------------------------------------------------------------------------------ */
+        /* response is immediate, no need to check whether the message
+         * is sent to players who left session
+         */
         $log = "Replaced card number $pCardNum with $cardName. You may push an ace again at any time";
-        self::communicateCheatingEvent($pId, $sessionId, 'ItemLog', $log);
-        /* ------------------------------------------------------------------------------ */
         $dto = new CheaterCardDto($pId, $pCardNum, $cardName, $randSuit);
-        self::communicateCheatingInfo($pId, $sessionId, 'CheatedHands', $dto);
+        $msg = new CheaterMessage($log, CheatLogType::ItemLog, CheatDtoType::HANDS, $dto);
         //return new CheaterCardDto($pId, $pCardNum, $cardName, $randSuit);
+        return $msg;
     }
 
     /**
@@ -147,9 +152,9 @@ class CheatingHelper {
      * @global type $cSocialSpotterDuration
      * @param type $pId
      * @param type $gInstStatus
-     * @param type $statusDT 
+     * @param type $currentDT 
      */
-    public static function startCardMarking($pId, $gSessionId, $statusDT) {
+    public static function startCardMarking($pId, $gSessionId, $currentDT) {
         global $cSocialSpotterTimeOut;
         global $cSocialSpotterDuration;
         global $dateTimeFormat;
@@ -157,26 +162,29 @@ class CheatingHelper {
         $itemType = ItemType::SOCIAL_SPOTTER;
 
         // FIXME: should be based on $statusDT for all items
-        $currentDate = new DateTime();
-        $lockEndDateTime = clone $currentDate;
+        $lockEndDateTime = clone $currentDT;
         $lockEndDateTime->add(new DateInterval($cSocialSpotterTimeOut));
-        $endDateTime = clone $currentDate;
+        $endDateTime = clone $currentDT;
         $endDateTime->add(new DateInterval($cSocialSpotterDuration));
 
         $activeItem = new PlayerActiveItem($pId, $gSessionId,
-                        $itemType, $currentDate);
+                        $itemType, $currentDT);
         $activeItem->lockEndDateTime = $lockEndDateTime; // no lock out period
         $activeItem->isActive = 1;
         $activeItem->isAvailable = 0;
         $activeItem->endDateTime = $endDateTime;
         $activeItem->recordItemUse();
 
+        /* response is immediate, no need to check whether the message
+         * is sent to players who left session
+         */
         /* ------------------------------------------------------------------------------ */
-        $dateString = $currentDate->format($dateTimeFormat);
+        $dateString = $currentDT->format($dateTimeFormat);
         $endString = $endDateTime->format($dateTimeFormat);
         $lockEndString = $lockEndDateTime->format($dateTimeFormat);
         $log = "Activated Sally's Social Spotters on $dateString. Cards you see at this tale until $endString will be marked so you know the values in subsequent games. After $endString, this item wil be available again at $lockEndString.";
-        self::communicateCheatingEvent($pId, $gSessionId, 'ItemLog', $log);
+        $msg = new CheaterMessage($log, CheatLogType::ItemLog, null, null);
+        return $msg;
     }
 
     /**
@@ -187,8 +195,12 @@ class CheatingHelper {
     public static function getPlayersActivelyMarking($gSessionId) {
         /* returns a list of player ids */
         /* possible for an item to expire in the future but set to inactive before that time */
+        $leftStatus = PlayerStatusType::LEFT;
         $itemType = ItemType::SOCIAL_SPOTTER;
-        $result = executeSQL("SELECT PlayerId FROM PlayerActiveItem WHERE GameSessionId =
+        $result = executeSQL("SELECT i.PlayerId FROM PlayerActiveItem i 
+                INNER JOIN PlayerState ps on i.PlayerId = ps.PlayerId 
+                AND i.GameSessionId = ps.GameSessionId
+                WHERE ps.status != '$leftStatus' AND i.GameSessionId =
             $gSessionId AND ItemType = '$itemType' AND EndDateTime > now() AND IsActive = 1
                 ", __FUNCTION__ . "
                 : Error selecting active items for session $gSessionId");
@@ -237,14 +249,14 @@ class CheatingHelper {
             return null;
         }
         foreach ($playerIdList as $playerId) {
-            $playerCardList = self::getVisibleCardCodes($playerId, $gameSessionId);
-            if (is_null($playerCardList)) {
+            $playerCardCodes = self::getVisibleCardCodes($playerId, $gameSessionId);
+            if (is_null($playerCardCodes)) {
                 $newCards = $instanceCardList;
             } else {
-                $newCards = array_diff($instanceCardList, $playerCardList);
+                $newCards = array_diff($instanceCardList, $playerCardCodes);
             }
             // insert
-            $counter = count($playerCardList);
+            $counter = count($playerCardCodes);
             foreach ($newCards as $cardCode) {
                 executeSQL("INSERT INTO PlayerVisibleCard (PlayerId, CardCode, GameSessionId)
                     VALUES ($playerId, '$cardCode', $gameSessionId)", __FUNCTION__ . ": Error
@@ -274,8 +286,8 @@ class CheatingHelper {
         $gameCards = $gInstStatus->getInstanceGameCards($gInstStatus->id);
         $playerHands = $gameCards->playerHands;
         foreach ($playerIdList as $playerId) {
-            $playerCards = self::getVisibleCardCodes($playerId, $gameSessionId);
-            if (is_null($playerCards)) {
+            $playerCardCodes = self::getVisibleCardCodes($playerId, $gameSessionId);
+            if (is_null($playerCardCodes)) {
                 continue;
             }
             // go through everyone's hands
@@ -284,22 +296,24 @@ class CheatingHelper {
             // match card with PlayerVisibleCard and add to return list if match
             foreach ($playerHands as $pH) {
                 $code1 = $pH->pokerCard1->cardCode;
-                if (in_array($code1, $playerCards)) {
+                if (in_array($code1, $playerCardCodes)) {
                     $cheaterListDto[$counter++] = new CheaterCardDto($pH->playerId, 1, $pokerCardName[$code1], null);
                 }
                 $code2 = $pH->pokerCard2->cardCode;
-                if (in_array($code2, $playerCards)) {
+                if (in_array($code2, $playerCardCodes)) {
                     $cheaterListDto[$counter++] = new CheaterCardDto($pH->playerId, 2, $pokerCardName[$code2], null);
                 }
             }
+            // no need to check whether the player should receive message, getPlayersActivelyMarking does it
             $encodedDto = is_null($cheaterListDto) ? 'null' : json_encode($cheaterListDto);
             if (!is_null($cheaterListDto)) {
-                self::communicateCheatingInfo($playerId, $gameSessionId, CheatInfoType::CARDS, $cheaterListDto);
+                $eventType = CheatDtoType::CARDS;
                 self::log()->Debug(__FUNCTION__ . " - Matched list: " . $encodedDto);
             }
             $count = is_null($cheaterListDto) ? 0 : count($cheaterListDto);
             $log = "Looked for marked cards (Shelvin Shuffler's) found " . $count;
-            self::communicateCheatingEvent($playerId, $gameSessionId, 'ItemLog', $log);
+            $msg = new CheaterMessage($log, CheatLogType::ItemLog, $eventType, $cheaterListDto);
+            return $msg;
         }
     }
 
@@ -308,10 +322,10 @@ class CheatingHelper {
      * @global type $cRiverShufflerTimeOut
      * @param type $pId
      * @param type $gameInstance
-     * @param type $statusDT
+     * @param type $currentDT
      * @return string (array of 1)
      */
-    public static function cheatLookRiverCard($pId, $gameInstance, $statusDT) {
+    public static function cheatLookRiverCard($pId, $gameInstance, $currentDT) {
         global $cRiverShufflerTimeOut;
         global $dateTimeFormat;
         global $pokerCardName;
@@ -326,21 +340,20 @@ class CheatingHelper {
         $curDeckPosition = $row['DeckPosition'];
 
         $cardCode = $row['CardCode'];
-        self::log()->Debug(__FUNCTION__ . " - River card for instance $gInstId is " . $cardCode);
+        self::$log()->Debug(__FUNCTION__ . " - River card for instance $gInstId is " . $cardCode);
         $cardNameListCode = null;
         if (!is_null($cardCode)) {
             $cardNameListCode[0] = $pokerCardName[$cardCode];
         }
         self::log()->Debug(__FUNCTION__ . " - River card name for instance $gInstId is " . json_encode($cardNameListCode));
         // FIXME: should be based on $statusDT for all items
-        $currentDate = new DateTime();
-        $lockEndDateTime = clone $currentDate;
+        $lockEndDateTime = clone $currentDT;
         $lockEndDateTime->add(new DateInterval($cRiverShufflerTimeOut));
         $endDateTime = clone $lockEndDateTime;
 
         $sessionId = $gameInstance->gameInstanceSetup->gameSessionId;
         $activeItem = new PlayerActiveItem($pId, $sessionId,
-                        $itemType, $currentDate);
+                        $itemType, $currentDT);
         $activeItem->lockEndDateTime = $lockEndDateTime; // no lock out period
         $activeItem->isActive = 1;
         $activeItem->isAvailable = 0;
@@ -348,14 +361,18 @@ class CheatingHelper {
         $activeItem->gameInstanceId = $gameInstance->id;
         $activeItem->recordItemUse();
 
+        /* response is immediate, no need to check whether the message
+         * is sent to players who left session
+         */
         /* ------------------------------------------------------------------------------ */
-        $dateString = $currentDate->format($dateTimeFormat);
+        $dateString = $currentDT->format($dateTimeFormat);
         $lockEndString = $lockEndDateTime->format($dateTimeFormat);
         $log = "Activated Shelvin's Shuffler on $dateString. You may swap the river card for the current game for the next card in the deck. The river card may not the one you see on the 'Next' section if another player used an item. This item wil be available again at $lockEndString.";
-        self::communicateCheatingEvent($pId, $sessionId, 'ItemLog', $log);
         if ($cardNameListCode != null) {
-            self::communicateCheatingInfo($pId, $sessionId, CheatInfoType::NEXT, $cardNameListCode);
+            $eventType = CheatDtoType::NEXT;
+            $eventData = $cardNameListCode;
         }
+        $msg = new CheaterMessage($log, CheatLogType::ItemLog, $eventType, $eventData);
         /* ------------------------------------------------------------------------------ */
         return $cardNameListCode;
     }
@@ -406,41 +423,15 @@ class CheatingHelper {
         $newActiveItem->itemType = ItemType::RIVER_SHUFFLER_USE;
         $newActiveItem->recordItemUse();
 
+        /* response is immediate, no need to check whether the message
+         * is sent to players who left session
+         */
         /* ------------------------------------------------------------------------------ */
         $endString = $newActiveItem->lockEndDateTime->format($dateTimeFormat);
         $log = "Replaced $curCardCode with $availCardCode. You may use this option again after " .
                 $endString;
-        self::communicateCheatingEvent($pId, $sessionId, 'ItemLog', $log);
-    }
-
-    /**
-     * Communicates the result of a cheating action.
-     * @param type $targetPId
-     * @param type $gSessionId
-     * @param type $infoType
-     * @param type $dto 
-     */
-    public static function communicateCheatingInfo($targetPId, $gSessionId, $infoType, $dto) {
-        global $dateTimeFormat;
-
-        $localTime = date($dateTimeFormat);
-        $message = new EventMessage($gSessionId,
-                        $targetPId, $infoType, date($dateTimeFormat),
-                        $dto);
-        queueMessage($targetPId, json_encode($message));
-    }
-
-    /**
-     * Communicates that a cheating event happened and details such as target player if any,
-     * at what time it expires or at what time the lock expires
-     */
-    public static function communicateCheatingEvent($actionPId, $gSessionId, $eventType, $log) {
-        global $dateTimeFormat;
-
-        $message = new EventMessage($gSessionId,
-                        $actionPId, $eventType, date($dateTimeFormat),
-                        $log);
-        queueMessage($actionPId, json_encode($message));
+        $msg = new CheaterMessage($log, CheatLogType::ItemLog, null, null);
+        return $msg;
     }
 
     /**
@@ -487,7 +478,8 @@ class CheatingHelper {
             $cardName = $pokerCardName[$row['CardCode']];
             $hiddenList[$counter++] = $cardName;
         }
-        return $hiddenList;
+        //return $hiddenList;
+        $msg = new CheaterMessage(null, null, CheatDtoType::HIDDEN, $hiddenlist);
     }
 
     /**
@@ -508,13 +500,21 @@ class CheatingHelper {
     }
 
     public static function resetSleeve($pId) {
+        $itemType = ItemType::LOAD_CARD_ON_SLEEVE;
         executeSQL("DELETE FROM PlayerHiddenCard WHERE PlayerId = $pId", __FUNCTION__ . "
             :Error deleting from PlayerHiddenCard where player is $pId");
+        //if ($sendMessage) {
+        //    $this->communicateCheatingInfo($pId, null, CheatDtoType::HIDDEN, $itemType);
+        //}
     }
 
     public static function resetVisible($pId) {
+        $itemType = ItemType::POKER_PEEKER;
         executeSQL("DELETE FROM PlayerVisibleCard WHERE PlayerId = $pId", __FUNCTION__ . "
             :Error deleting from PlayerVisibleCard where player is $pId");
+        //if ($sendMessage) {
+        //    $this->communicateCheatingInfo($pId, null, CheatDtoType::NEXT, $itemType);
+        //}
     }
 
     public static function addVisibleCardCodes($pId, $gameSessionId, $cardCodes) {
@@ -550,40 +550,71 @@ class CheatingHelper {
      * Any items that are changed generate an queued event for the change only
      * Asynchronous - NEEDS TO COMMUNICATE
      */
-    public static function updateTimedItems() {
+    public static function updateEndedItems() {
         global $dateTimeFormat;
         $statusDateTime = date($dateTimeFormat);
         /* if end datetime reached: set the IsActive to 0 */
-        $result = executeSQL("SELECT * FROM PlayerActiveItem WHERE IsActive = 1 AND
+        $result = executeSQL("SELECT i.*, ps.GameSessionId AS PlayerSessionId, 
+                ps.GameInstanceId AS PlayerInstanceId, ps.status AS Status 
+                FROM PlayerActiveItem i 
+                LEFT JOIN updPlayerState ps ON i.PlayerId = ps.PlayerId 
+                WHERE IsActive = 1 AND
             EndDateTime <= '$statusDateTime'", __FUNCTION__ . ": Error selecting ended
                 active items");
+        $counter = 0;
         while ($row = mysql_fetch_array($result)) {
             // send communication
             $playerId = $row["PlayerId"];
             $itemType = $row["ItemType"];
             $lockEndDate = $row["LockEndDateTime"];
             $sessionId = $row["GameSessionId"];
-            $log = "Item $itemType has ended. You may use this again after $lockEndDate";
-            self::communicateCheatingEvent($playerId, $sessionId, 'ItemEnd', $log);
+            // communicate only if the user is in the same session and not left
+            $playerSessionId = $row["PlayerSessionId"];
+            $status = $row["Status"];
+            if ($playerSessionId == $sessionId && $status != PlayerStatusType::LEFT) {
+                $log = "Item $itemType has ended. You may use this again after $lockEndDate";
+                $msgList[$counter]->msg = new CheaterMessage($log, CheatLogType::ItemEnd, null, null);
+                $msgList[$counter]->playerid = $playerId;
+                $msgList[$counter]->gameSessionId = $playerSessionId;
+                $counter +=1;
+            }
             executeSQL("UPDATE PlayerActiveItem SET IsActive = 0 WHERE IsActive = 1 AND
                 PlayerId = $playerId AND ItemType = '$itemType' AND GameSessionId = $sessionID"
                     , __FUNCTION__ . ": Error updating item to inactive for player $playerId
                     session $gSessionId and item $itemType");
         }
-        /* if locked end reached: delete record          */
+        return $msgList;
+    }
+    /* if locked end reached: delete record          */
+    public static function updateUnlockedItems() {
         // FIXME: should record on log
-        executeSQL("SELECT * FROM PlayerActiveItem WHERE LockEndDateTime <= '$statusDateTime'", __FUNCTION__ . ": Error selecting items past the locked date");
+        executeSQL("SELECT i.*, ps.GameSessionId AS PlayerSessionId, 
+                ps.GameInstanceId AS PlayerInstanceId, ps.status AS Status 
+                FROM PlayerActiveItem i 
+                LEFT JOIN PlayerState ps ON i.PlayerId = ps.PlayerId 
+                WHERE LockEndDateTime <= '$statusDateTime'", __FUNCTION__ . "
+                    : Error selecting items past the locked date");
+        $counter = 0;
         while ($row = mysql_fetch_array($result)) {
             // send communication
             $playerId = $row["PlayerId"];
             $itemType = $row["ItemType"];
             $lockEndDate = $row["LockEndDateTime"];
             $sessionId = $row["GameSessionId"];
-            self::communicateCheatingInfo($playerId, $sessionId, 'ItemUnlock', $itemType);
+            // communicate only if the user is in the same session and not left
+            $playerSessionId = $row["PlayerSessionId"];
+            $status = $row["Status"];
+            if ($playerSessionId == $sessionId && $status != PlayerStatusType::LEFT) {
+                $msgList[$counter]->msg = new CheaterMessage(null, null, CheatLogType::ItemUnlock, $itemType);
+                $msgList[$counter]->playerId = $playerId;
+                $msgList[$counter]->gameSessionId = $playerSessionId;
+                //$this->communicateCheatingInfo($playerId, $sessionId, CheatLogType::ItemUnlock, $itemType);
+            }
             executeSQL("DELETE FROM PlayerActiveItem WHERE PlayerId = $playerId AND
                  $itemType = '$itemType' and GameSessionId = $sessionId", __FUNCTION__ . ": Error deleting (unlocking) item for player $playerId AND
                  $itemType = '$itemType' and GameSessionId = $sessionId");
         }
+        return $msgList;
     }
 
 }

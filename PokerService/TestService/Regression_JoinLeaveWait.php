@@ -1,5 +1,11 @@
 <?php
 
+echo __FILE__ . "<br />";
+
+//////////////////////////
+$name = 'Test0';
+//////////////////////////
+
 /**
  * Add users to table and grow waiting list to three
  * Have second seated player leave
@@ -97,7 +103,7 @@ $player4Id = $gameStatusDto->userPlayerId;
 $casinoTableId = $gameStatusDto->casinoTableId;
 echo "$name created with user id $player4Id on seat number $gameStatusDto->userSeatNumber...<br />";
 
-// start game
+/* start gaming on session with full table but no waiting list */
 $par = json_encode(array("gameSessionId"=>$gameSessionId,
     "requestingPlayerId"=>$player1Id,
     "isPractice"=>0, "tableSize"=>null));
@@ -108,9 +114,18 @@ echo '<br />Game Started... <br /><br />';
 $gameInstanceSetup = json_decode($gameInstanceSetupDtoEncoded);
 $gameInstance1Id = $gameInstanceSetup->gameInstanceId;
 
-echo '******************************************************<br />';
-echo 'TEST 12.1: Add Eric and Fred and verify they are added but on the waiting list <br /><br />';
+/* same as above in a different casino - test starting gaming on a new session with waiting list */
 
+/* test user joining active game */
+
+echo '******************************************************<br />';
+echo 'TEST 14.1: Add Eric and Fred and verify they are added but on the waiting list <br /><br />';
+
+/* add user already added, verify added only once*/
+
+/* move player from casino table to casino table */
+
+/* start game instances after move */
 // Player # 5
 $name = 'Eric';
 $par = json_encode(array("playerName"=>$name));
@@ -146,7 +161,7 @@ $casinoTableId = $gameStatusDto->casinoTableId;
 echo "$name created with user id $player6Id on seat number $gameStatusDto->userSeatNumber...<br />";
 
 echo '******************************************************<br />';
-echo 'Test 12.2 - Bob leaves session <br /><br />';
+echo 'Test 14.3 - Bob leaves session <br /><br />';
 
 $par = json_encode(array("gameSessionId"=>$gameSessionId,
     "playerId"=>$player2Id));
@@ -195,35 +210,22 @@ for ($i=0; $i<count($playerInstanceDtos); $i++) {
             $playerInstanceDtos[$i]->seatNumber . " and status is " . $playerInstanceDtos[$i]->status . "<br />";
 }
 
+/* restart game after one player leaves, after two player leaves, etc. */
+
 echo '******************************************************<br />';
-echo 'Test 12.3 - Restart game, verify seating <br /><br />';
+echo 'TEST CASE 13.1: sendPlayerAction with recycled game session <br />';
 
-// start game
-$par = json_encode(array("gameSessionId"=>$gameSessionId,
-    "requestingPlayerId"=>$player1Id,
-    "isPractice"=>0, "tableSize"=>null));
-    echo "Encoded parameter: $par <br /><br />";
-$gameInstanceSetupDtoEncoded = startGame($par);
-    echo "Encoded return object: $gameInstanceSetupDtoEncoded <br /> <br />";
-echo '<br />Game Started... <br /><br />';
-$gameInstanceSetup = json_decode($gameInstanceSetupDtoEncoded);
-$gameInstance2Id = $gameInstanceSetup->gameInstanceId;
+global $dateTimeFormat;
+$date = date($dateTimeFormat);
+$playerActionDto = new PlayerActionDto($gameInstanceId, $playerId, PokerActionType::CALLED,
+        $date, 10000);
 
-$casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->getCasinoPlayerDtos();
-echo "Casino players: <br />";
-for ($i=0; $i<count($playerDtos); $i++) {
-    echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
-            $playerDtos[$i]->currentSeatNumber . " and reserved seat " . $playerDtos[$i]->reservedSeatNumber . "<br />";
-}
+$par = json_encode($playerActionDto);
+echo "parameter $par <br />";
+$actionResultArray = sendPlayerAction($par);
+showPokerMove($par, $actionResultArray);
 
-$playerInstanceDtos = EntityHelper::getPlayerStatusDtosForInstance($gameInstance2Id);
-echo "<br />Player statuses (Bob's is gone and Eric got added: <br /> ";
-for ($i=0; $i<count($playerInstanceDtos); $i++) {
-    echo " - Player " . $playerInstanceDtos[$i]->playerName . " is on seat " .
-            $playerInstanceDtos[$i]->seatNumber . " and status is " . $playerInstanceDtos[$i]->status . "<br />";
-}
-/*--------------------------------------------------------------------------------------/
+ /*--------------------------------------------------------------------------------------/
  * second player leaves
  */
 echo '******************************************************<br />';
@@ -266,47 +268,46 @@ for ($i=0; $i<count($playerDtos); $i++) {
             $playerDtos[$i]->currentSeatNumber . " and reserved seat " . $playerDtos[$i]->reservedSeatNumber . "<br />";
 }
 
-$playerInstanceDtos = EntityHelper::getPlayerStatusDtosForInstance($gameInstance2Id);
-echo "<br />Player statuses (Anna's status set to left but players should not have been added): <br /> ";
-for ($i=0; $i<count($playerInstanceDtos); $i++) {
-    echo " - Player " . $playerInstanceDtos[$i]->playerName . " is on seat " .
-            $playerInstanceDtos[$i]->seatNumber . " and status is " . $playerInstanceDtos[$i]->status . "<br />";
-}
-
 echo '******************************************************<br />';
-echo 'Test 12.5 - Restart game, verify seating for Fred <br /><br />';
+// Player # 7
+$name = 'Gary';
+$par = json_encode(array("playerName"=>$name));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
 
-// start game
-$par = json_encode(array("gameSessionId"=>$gameSessionId,
-    "requestingPlayerId"=>$player3Id,
-    "isPractice"=>0, "tableSize"=>null));
+$par = json_encode(array("casinoTableId"=>$casinoTableId, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
     echo "Encoded parameter: $par <br /><br />";
-$gameInstanceSetupDtoEncoded = startGame($par);
-    echo "Encoded return object: $gameInstanceSetupDtoEncoded <br /> <br />";
-echo '<br />Game Started... <br /><br />';
-$gameInstanceSetup = json_decode($gameInstanceSetupDtoEncoded);
-$gameInstance2Id = $gameInstanceSetup->gameInstanceId;
+$gameStatusDtoEncoded = addUserToCasinoTable($par);
+    echo "Encoded return object: $gameStatusDtoEncoded <br /> <br />";
+$gameStatusDto = json_decode($gameStatusDtoEncoded);
 
-$casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->getCasinoPlayerDtos();
-echo "Casino players after restarting game: <br />";
-for ($i=0; $i<count($playerDtos); $i++) {
-    echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
-            $playerDtos[$i]->currentSeatNumber . " and reserved seat " . $playerDtos[$i]->reservedSeatNumber . "<br />";
-}
+$player7Id = $gameStatusDto->userPlayerId;
+$casinoTableId = $gameStatusDto->casinoTableId;
+echo "$name created with user id $player7Id on seat number $gameStatusDto->userSeatNumber...<br />";
 
-$playerInstanceDtos = EntityHelper::getPlayerStatusDtosForInstance($gameInstance2Id);
-echo "<br />Player statuses (Anna should be gone and Fred added): <br /> ";
-for ($i=0; $i<count($playerInstanceDtos); $i++) {
-    echo " - Player " . $playerInstanceDtos[$i]->playerName . " is on seat " .
-            $playerInstanceDtos[$i]->seatNumber . " and status is " . $playerInstanceDtos[$i]->status . "<br />";
-}
+// Player # 8
+$name = 'Helen';
+$par = json_encode(array("playerName"=>$name));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>$casinoTableId, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
+    echo "Encoded parameter: $par <br /><br />";
+$gameStatusDtoEncoded = addUserToCasinoTable($par);
+    echo "Encoded return object: $gameStatusDtoEncoded <br /> <br />";
+$gameStatusDto = json_decode($gameStatusDtoEncoded);
+
+$player8Id = $gameStatusDto->userPlayerId;
+$casinoTableId = $gameStatusDto->casinoTableId;
+echo "$name created with user id $player8Id on seat number $gameStatusDto->userSeatNumber...<br />";
 
 /*--------------------------------------------------------------------------------------/
  * third player leaves
  */
 echo '******************************************************<br />';
-echo 'Test 12.6 - Eric leaves session <br /><br />';
+echo 'Test 14.4 - Eric leaves session <br /><br />';
 // TODO: test player leaving every seat, only tested first and second.
 
 $par = json_encode(array("gameSessionId"=>$gameSessionId,
@@ -324,15 +325,8 @@ for ($i=0; $i<count($playerDtos); $i++) {
             $playerDtos[$i]->currentSeatNumber . " and reserved seat " . $playerDtos[$i]->reservedSeatNumber . "<br />";
 }
 
-$playerInstanceDtos = EntityHelper::getPlayerStatusDtosForInstance($gameInstance2Id);
-echo "<br />Player statuses (Eric's status set to left but players did not get added: <br /> ";
-for ($i=0; $i<count($playerInstanceDtos); $i++) {
-    echo " - Player " . $playerInstanceDtos[$i]->playerName . " is on seat " .
-            $playerInstanceDtos[$i]->seatNumber . " and status is " . $playerInstanceDtos[$i]->status . "<br />";
-}
-
 echo '******************************************************<br />';
-echo 'Test 12.7 - Restart game, verify seating for Eric <br /><br />';
+echo 'Test 14.5 - Start game, verify seating for Eric <br /><br />';
 
 // start game
 $par = json_encode(array("gameSessionId"=>$gameSessionId,
@@ -344,7 +338,7 @@ $gameInstanceSetupDtoEncoded = startGame($par);
 $gameInstanceSetupDto = json_decode($gameInstanceSetupDtoEncoded);
 echo '<br />Game Started... <br /><br />';
 $gameInstanceSetup = json_decode($gameInstanceSetupDtoEncoded);
-$gameInstance3Id = $gameInstanceSetup->gameInstanceId;
+$gameInstanceId = $gameInstanceSetup->gameInstanceId;
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
 $playerDtos = $casinoTable->getCasinoPlayerDtos();
@@ -354,7 +348,7 @@ for ($i=0; $i<count($playerDtos); $i++) {
             $playerDtos[$i]->currentSeatNumber . " and reserved seat " . $playerDtos[$i]->reservedSeatNumber . "<br />";
 }
 
-$playerInstanceDtos = EntityHelper::getPlayerStatusDtosForInstance($gameInstance3Id);
+$playerInstanceDtos = EntityHelper::getPlayerStatusDtosForInstance($gameInstanceId);
 echo "<br />Player statuses (Eric is gone and nobody else got added): <br /> ";
 for ($i=0; $i<count($playerInstanceDtos); $i++) {
     echo " - Player " . $playerInstanceDtos[$i]->playerName . " is on seat " .

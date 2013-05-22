@@ -5,7 +5,7 @@
  * Description: all the poker cards in a game, both community and player
  */
 // Configure logging
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');
 
 class PlayerActiveItem {

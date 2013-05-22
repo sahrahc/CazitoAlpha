@@ -1,10 +1,11 @@
 <?php
 
 // Configure logging
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');
 
-include_once(dirname(__FILE__) . '/../Components/EventMessageProducer.php');
+//include_once(dirname(__FILE__) . '/../Components/EventMessageProducer.php');
+include_once(dirname(__FILE__) . '/../Components/QueueManager.php');
 
 /* * ************************************************************************************** */
 
@@ -23,6 +24,7 @@ class CasinoTable {
     public $currentGameSessionId;
     public $sessionStartDateTime;
     public $isSessionStale;
+    public $ex;
     // public $isCheatingAllowed; // what for?
     // log
     private $log;
@@ -68,7 +70,7 @@ class CasinoTable {
         $this->lastUpdateDateTime = $statusDT;
         return new GameSession($this->id, $nextSessionId);
     }
-    
+
     /*     * ***************************************************************************** */
     /* user management */
 
@@ -111,7 +113,6 @@ class CasinoTable {
         $this->log->debug(__FUNCTION__ . ": player $playerDto->playerId at new casino table id
                         $this->id previous " . $playerDto->casinoTableId);
         if ($this->id == $playerDto->casinoTableId) {
-            return $playerDto;
             // if ($seatNum == $playerDto->currentSeatNumber) - don't take available seat
             // user already has one
             return $playerDto;
@@ -131,8 +132,6 @@ class CasinoTable {
             $seatValue = "null";
             $waitingStartDT = $statusDT;
         }
-        $playerDto->casinoTableId = $this->id;
-
         $this->ejectPlayer($playerDto->playerId, $statusDT);
 
         // update player's casino table
@@ -155,6 +154,7 @@ class CasinoTable {
 
     /**
      * Remove a player from a table and vacate his or her seat.
+     * Also purge the queue
      * FIXME: should this go Player entity?
      * @param int $playerId
      * @return int Vacated Seat
@@ -169,6 +169,8 @@ class CasinoTable {
         $result = executeSQL("SELECT * FROM Player WHERE Id = $playerId", __FUNCTION__ . "
                 : Error selecting from player");
         $vacatedSeat = null;
+        //QueueManager::purgeUserQueue($playerId);
+
         if (mysql_num_rows($result) > 0) {
             $row = mysql_fetch_array($result);
             $casinoTableId = $row["CurrentCasinoTableId"];
@@ -290,8 +292,10 @@ class CasinoTable {
         }
         sort($takenSeats);
         // edge case: first seat empty
-        if ($takenSeats[0] != 0) {return 0;}
-        
+        if ($takenSeats[0] != 0) {
+            return 0;
+        }
+
         $previous = 0;
         for ($i = 0; $i < count($takenSeats); $i++) {
             // this is how the gap is detected
@@ -361,7 +365,7 @@ class CasinoTable {
         $message = new EventMessage($this->currentGameSessionId, $pId, $actionType,
                         $statusDT, $actionType, $seatNum);
         //$message->eventData = $seatNumber;
-        queueMessage($pId, json_encode($message));
+        QueueManager::queueMessage($this->ex, $pId, json_encode($message));
 
         return true;
     }
@@ -424,9 +428,10 @@ class CasinoTable {
     }
 
     /*     * ****************************************************************************** */
+
     function communicateUserJoined($dto, $playerDtos, $waitingListSize) {
         global $dateTimeFormat;
-        
+
         $playerStatusDtos = PlayerStatusDto::mapPlayerDtos(array($dto), PlayerStatusType::WAITING);
         $this->log->debug(__FUNCTION__ . ": Waiting list size " . $waitingListSize);
         $playerStatusDtos[0]->waitingListSize = $waitingListSize;
@@ -436,55 +441,61 @@ class CasinoTable {
         $localTime = date($dateTimeFormat, strtotime($this->lastUpdateDateTime));
 
         for ($i = 0; $i < count($playerDtos); $i++) {
+            // FIXME: do not exclude player after fixing REST services
+            // not to return object
+            // no need to exclude players who left because not returned
+            // by getCasinoPlayerDtos, which is used to get playerDtos.
             if ($playerDtos[$i]->playerId != $dto->playerId) {
                 $message = new EventMessage($this->currentGameSessionId,
                                 $playerDtos[$i]->playerId, $eventType, $localTime,
                                 $playerStatusDtos);
                 //$message->eventData = $playerStatusDtos;
-                queueMessage($playerDtos[$i]->playerId, json_encode($message));
+                QueueManager::queueMessage($this->ex, $playerDtos[$i]->playerId, json_encode($message));
             }
         }
     }
 
     function communicateUserLeft($dto, $playerDtos, $waitingListSize) {
         global $dateTimeFormat;
-        
+
         $playerStatusDtos = PlayerStatusDto::mapPlayerDtos(array($dto), PlayerStatusType::LEFT);
         $this->log->debug(__FUNCTION__ . ": Waiting list size " . $waitingListSize);
         $playerStatusDtos[0]->waitingListSize = $waitingListSize;
         $eventType = EventType::USER_LEFT;
-        
+
         $localTime = date($dateTimeFormat, strtotime($this->lastUpdateDateTime));
 
         for ($i = 0; $i < count($playerDtos); $i++) {
+            // no need to exclude players who left because not returned
+            // by getCasinoPlayerDtos, which is used to get playerDtos.
             if ($playerDtos[$i]->playerId != $dto->playerId) {
                 $message = new EventMessage($this->currentGameSessionId,
                                 $playerDtos[$i]->playerId, $eventType, $localTime,
                                 $playerStatusDtos);
                 //$message->eventData = $playerStatusDtos;
-                queueMessage($playerDtos[$i]->playerId, json_encode($message));
+                QueueManager::queueMessage($this->ex, $playerDtos[$i]->playerId, json_encode($message));
             }
         }
     }
 
     function communicateSeatTaken($dto, $playerDtos, $waitingListSize) {
         global $dateTimeFormat;
-        
+
         $playerStatusDtos = PlayerStatusDto::mapPlayerDtos(array($dto), PlayerStatusType::WAITING);
         $this->log->debug(__FUNCTION__ . ": Waiting list size " . $waitingListSize);
         $playerStatusDtos[0]->waitingListSize = $waitingListSize;
         $eventType = EventType::SEAT_TAKEN;
-        
+
         $localTime = date($dateTimeFormat, strtotime($this->lastUpdateDateTime));
 
         for ($i = 0; $i < count($playerDtos); $i++) {
             //if ($playerDtos[$i]->playerId != $dto->playerId) {
-                $message = new EventMessage($this->currentGameSessionId,
-                                $playerDtos[$i]->playerId, $eventType, $localTime,
-                                $playerStatusDtos);
-                //$message->eventData = $playerStatusDtos;
-                queueMessage($playerDtos[$i]->playerId, json_encode($message));
-            //}
+            // no need to exclude players who left because not returned
+            // by getCasinoPlayerDtos, which is used to get playerDtos.
+            $message = new EventMessage($this->currentGameSessionId,
+                            $playerDtos[$i]->playerId, $eventType, $localTime,
+                            $playerStatusDtos);
+            QueueManager::queueMessage($this->ex, $playerDtos[$i]->playerId, json_encode($message));
         }
     }
 

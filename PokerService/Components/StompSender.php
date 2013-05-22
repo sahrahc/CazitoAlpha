@@ -1,10 +1,10 @@
 <?php
 
 // Include Libraries
-include_once(dirname(__FILE__) . '/../../../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
 
 // Include Application Scripts
-include_once(dirname(__FILE__) . '/../../../Libraries/Helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/../../../libraries/Helper/DataHelper.php');
 
 // configure logging
 Logger::configure(dirname(__FILE__) . '/../log4php.xml');
@@ -33,10 +33,10 @@ class StompSender {
      * The following are required for a connection to be established
      */
     public function __construct($host, $login, $passcode, $vhost, $realm){
-        global $rabbitmq_default_port;
+        global $stomp_port;
     //public function __construct($host, $login, $passcode) {
         $this->host = 'tcp://' . $host;
-        $this->port = $rabbitmq_default_port; // default
+        $this->port = $stomp_port; // default
         $this->login = (string) $login;
         $this->passcode = (string) $passcode;
         $this->virtual_host = $vhost;
@@ -112,7 +112,7 @@ class StompSender {
         $writeReturn = fwrite($r, $msg_send);//.$msg_send.$msg_disconnect);
         $log->debug("Message written: " . $msg_send);
 
-        $receipt = fread($r, 99); // skip the session, heartbeat and version info
+        $receipt = fread($r, 1000); // 99 skip the session, heartbeat and version info
         $receipt = fread($r, 13); //13
         $log->debug('receipt: ' . $receipt);
         

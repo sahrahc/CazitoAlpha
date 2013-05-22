@@ -15,21 +15,22 @@ $log = Logger::getLogger(__FILE__);
  * @param type $playerId
  * @param type $msg 
  */
-function queueMessage($playerId, $msg) {
+function queueMessage($ex, $playerId, $msg) {
     global $log;
-    global $rabbitmq_default_host;
-    global $rabbitmq_default_exchange;
-    global $rabbitmq_default_vhost;
+    global $stomp_host;
+    global $stomp_exchange;
+    global $stomp_vhost;
 
-    $HOST = $rabbitmq_default_host;
+    $HOST = $stomp_host;
     $USER = 'guest';
     $PASS = 'guest';
-    $VHOST = $rabbitmq_default_vhost;
-    $EXCHANGE = $rabbitmq_default_exchange;
-    $QUEUE = '/queue/' . $playerId;
+    $VHOST = $stomp_vhost;
+    $EXCHANGE = $stomp_exchange;
+    $QUEUE = '/queue/p' . $playerId;
 
-    $ss = new StompSender($HOST, $USER, $PASS, $VHOST, $EXCHANGE);
-    $ss->send($msg, $QUEUE);
+    //$ss = new StompSender($HOST, $USER, $PASS, $VHOST, $EXCHANGE);
+    //$ss->send($msg, $QUEUE);
+    QueueManager::queueMessage($ex, $playerId, $msg);
     $log->debug("Queued message $msg to $playerId");
 }
 
