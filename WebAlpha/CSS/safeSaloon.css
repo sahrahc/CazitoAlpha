@@ -1,0 +1,40 @@
+/* 
+    Document   : SafeSaloon
+    Created on : Aug 13, 2012, 12:58:20 PM
+    Author     : Sahrah
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+/* 
+   TODO customize this sample style
+   Syntax recommendation http://www.w3.org/TR/REC-CSS2/
+*/
+
+root { 
+    display: block;
+}
+#top {
+    border-style: outset;
+    border-color: green;
+    border-width:2px;
+    height:50px;
+    background-color:khaki;
+    width:642px;
+}
+#lobbyId {
+    position:absolute;
+    height:400px;
+    width:642px;
+    background-image:url('../../../images/SaloonSafe.png');
+    background-repeat:no-repeat;
+    border-style: outset;
+    border-color: green;
+    border-width:2px;
+}
+#tables {
+    position: absolute;
+    top: 100px;
+    left: 20px;
+}
+
