@@ -22,9 +22,9 @@ $playerId = $row['PlayerId'];
 global $dateTimeFormat;
 $statusDT = date($dateTimeFormat);
 
-    $qConn = QueueManager::getPlayerConnection();
-    $ch = QueueManager::getPlayerChannel($qConn);
-    $ex = QueueManager::getPlayerExchange($ch);
+    $qConn = QueueManager::GetQueueConnection();
+    $ch = QueueManager::GetChannel($qConn);
+    $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
 
 /* * ******************************************************************************* */
@@ -34,23 +34,23 @@ echo '***** New Practice Session <br />';
 
 $par = json_encode(array("userPlayerId" => $playerId));
 $dtoEncoded = startPracticeSession($par);
-$gameInstanceSetupDto = json_decode($dtoEncoded);
-$gameSessionId = $gameInstanceSetupDto->gameSessionId;
-$gameInstance = EntityHelper::getGameInstance($gameInstanceSetupDto->gameInstanceId);
+$gameStatusDto = json_decode($dtoEncoded);
+$gameSessionId = $gameStatusDto->gameSessionId;
+$gameInstance = EntityHelper::GetGameInstance($gameStatusDto->gameInstanceId);
 $cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
 echo "Community card before look: " . json_encode($cCards) . "<br /><br />";
 
 echo 'TEST CASE 34.1 swap before looking not allowed<br /><br />';
-$dto = CheatingHelper::cheatLookRiverCard($playerId, $gameInstance, $statusDT);
+$dto = CheatingHelper::CheatLookRiverCard($playerId, $gameInstance, $statusDT);
 $cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
 echo "Community card after looking (no change): " . json_encode($cCards) . "<br /><br />";
 
 echo '******************************************************<br />';
 echo 'TEST CASE 34.2: Look and swap river cards for instance <br /><br />';
 
-$dto = CheatingHelper::cheatSwapRiverCard($playerId, $gameInstance);
+$dto = CheatingHelper::CheatSwapRiverCard($playerId, $gameInstance);
 $cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
 echo "Community card after swapping: " . json_encode($cCards) . "<br /><br />";
 
-QueueManager::disconnect($qConn);
+QueueManager::DisconnectQueue($qConn);
 ?>

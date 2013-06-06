@@ -26,7 +26,7 @@ class CardHelper {
      * Used to retrieve the fold, turn or river cards to the client.
      * @param int $gInstId The game
      * @param int $numCards The number of cards to return
-     * @return array[PokerCardDto]
+     * @return array[string] array of card names
      */
     public static function getCommunityCardDtos($gInstId, $numCards) {
 
@@ -37,19 +37,17 @@ class CardHelper {
         }
 
         $resultCard = executeSQL("SELECT * FROM GameCard WHERE GameInstanceId = $gInstId
-                AND PlayerId = -1 AND PlayerCardNumber <= $numCards", __FUNCTION__ . ":
+                AND PlayerId = -1 AND PlayerCardNumber <= $numCards
+                ORDER BY PlayerId, PlayerCardNumber", __FUNCTION__ . ":
                 Error selecting $numCards cards from GameCard instance id $gInstId");
 
 // populate the return object
         $counter = 0;
         while ($rowCard = mysql_fetch_array($resultCard)) {
-            self::log()->Debug(__FUNCTION__ . " - Card Number " . $rowCard['PlayerCardNumber']);
-
-            $pokerCardDtos[$counter] = new PokerCardDto($rowCard['PlayerCardNumber'],
-                            $rowCard['CardCode']);
+            $cardCodes[$counter] = $rowCard['CardCode'];
             $counter++;
         }
-        return $pokerCardDtos;
+        return $cardCodes;
     }
 
     /**
@@ -96,7 +94,8 @@ class CardHelper {
     }
 
     /**
-     * Get the player hand information. Used on every non virtual player at the beginning of the game.
+     * Get the player hand information. Used on every non virtual player 
+     * at the beginning of the game.
      * @param type $pId: The player whose hand is being sent
      * @param type $gInstId
      * @return PlayerHandDto
@@ -110,13 +109,12 @@ class CardHelper {
             return null;
         }
 
-        $row = mysql_fetch_array($result);
-        $pokerCard1Dto = new PokerCardDto($row["PlayerCardNumber"], $row["CardCode"]);
-        
-        $row = mysql_fetch_array($result);
-        $pokerCard2Dto = new PokerCardDto($row["PlayerCardNumber"], $row["CardCode"]);
-        
-        return new PlayerHandDto($pId, $pokerCard1Dto, $pokerCard2Dto);
+        $i = 0;
+        while ($row = mysql_fetch_array($result)) {
+            $pokerCardCode[$i++] = $row["CardCode"];
+        }
+
+        return new PlayerHandDto($pId, $pokerCardCode[0], $pokerCardCode[1]);
     }
 
     /**
@@ -124,7 +122,7 @@ class CardHelper {
      * @param type $pId
      * @param type $gInstId
      * @param type $cardNum
-     * @return PokerCard 
+     * @return GameCard 
      */
     public static function getPlayerCard($pId, $gInstId, $cardNum) {
         $resultCard = executeSQL("SELECT * FROM GameCard WHERE GameInstanceId = $gInstId
@@ -135,9 +133,7 @@ class CardHelper {
 // populate the return object
         $rowCard = mysql_fetch_array($resultCard);
 
-        $pokerCard = new PokerCard($rowCard['PlayerCardNumber'],
-                        $rowCard['DeckPosition'], $rowCard['CardCode']);
-        $pokerCard->cardIndex = $rowCard['CardIndex'];
+        $pokerCard = GameCard::InitPlayerCard($rowCard['PlayerCardNumber'], $rowCard['DeckPosition'], $rowCard['CardCode']);
         return $pokerCard;
     }
 
@@ -182,5 +178,57 @@ class CardHelper {
         }
         return $pokerCardCodes;
     }
+
+    /**
+     * Only used once, to get all the cards in order to identify the winner and publish everyone's hands at the end of the game.
+     * @return GameInstanceCards 
+     */
+    public static function getGameCardsForInstance($gInstId) {
+        // get all the cards, order with community cards first.
+        $result = executeSQL("SELECT g.*, ps.status AS Status FROM GameCard g 
+                LEFT JOIN PlayerState ps ON g.GameInstanceId = ps.GameInstanceId
+                AND g.PlayerId = ps.PlayerId WHERE g.GameInstanceId = $gInstId
+                AND g.playerId is not null
+                ORDER BY g.PlayerId, PlayerCardNumber", __FUNCTION__ . "
+                : Error selecting all GameCard for instance id $gInstId");
+
+        // initialize
+        $playerIndex = 0; // index on array of players
+        $ccIndex = 0;     // index on array of community cards
+        $playerHands = null;
+        $communityCards = null;
+        $prevPlayerId = null;
+        // this won't work if $result is not sorted by playerid
+        while ($rowCard = mysql_fetch_array($result)) {
+            if ($rowCard["PlayerId"] == -1) {
+                // process community cards
+                $communityCards[$ccIndex] = GameCard::InitPlayerCard($rowCard['PlayerCardNumber'], $rowCard['DeckPosition'], $rowCard['CardCode']);
+                $communityCards[$ccIndex++] = $rowCard["CardIndex"];
+            } else if ($rowCard["Status"] != PlayerStatusType::FOLDED &&
+                    $rowCard["Status"] != PlayerStatusType::LEFT) {
+                // one entity for both cards.
+                if (is_null($prevPlayerId) || $prevPlayerId != $rowCard["PlayerId"]) {
+                    $playerIndex = is_null($prevPlayerId) ? 0 : $playerIndex + 1;
+                    // Not validating playercardnumber, in poker there is only two
+                    // and the insert needs to make sure the values are only 1 and 2 and
+                    // both are present. Anything else is data becoming corrupted.
+                    $gameCard1 = GameCard::InitPlayerCard($rowCard['PlayerCardNumber'], $rowCard['DeckPosition'], $rowCard['CardCode']);
+                    $gameCard1->cardIndex = $rowCard["CardIndex"];
+                    $playerHands[$playerIndex] = new PlayerHand($rowCard['PlayerId'], $gameCard1, null);
+                } else {
+                    $gameCard2 = GameCard::InitPlayerCard(
+                            $rowCard['PlayerCardNumber'], $rowCard['DeckPosition'], $rowCard['CardCode']);
+                    $gameCard2->cardIndex = $rowCard["CardIndex"];
+                    $playerHands[$playerIndex]->pokerCard2 = $gameCard2;
+                    // increase index when second and last card is found
+                }
+                $prevPlayerId = $rowCard["PlayerId"];
+            }
+        }
+
+        return new GameInstanceCards($communityCards, $playerHands);
+    }
+
 }
+
 ?>

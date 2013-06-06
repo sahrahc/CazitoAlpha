@@ -9,22 +9,16 @@ require_once(dirname(__FILE__) . '/../Dto/GameStatusDto.php');
 
 /* * ************************************************************************************* */
 
-class EventMessage {
+/*
+ * Queue messages
+ */
+class QueueMessage {
 
-    public $id;
-    public $gameSessionId;
-    public $targetPlayerId; // FIXME: deleted after migrating to queues
     public $eventType;
-    public $eventDateTime;
     public $eventData;
-    private $log;
     
-    function __construct($gSessionId, $targetPlayerId, $eventType, $eventDT, $eventData) {
-        $this->log = Logger::getLogger(__CLASS__);
-        $this->gameSessionId = $gSessionId;
-        $this->targetPlayerId = $targetPlayerId;
+    function __construct($eventType, $eventData) {
         $this->eventType = $eventType;
-        $this->eventDateTime = $eventDT;
         $this->eventData = $eventData;
     }
 

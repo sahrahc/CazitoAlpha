@@ -12,11 +12,11 @@ echo __FILE__ . "<br />";
 $par = json_encode(array("userPlayerId" => $playerId));
 $dtoEncoded = startPracticeSession($par);
 
-$gameInstanceSetupDto = json_decode($dtoEncoded);
-$gameSessionId = $gameInstanceSetupDto->gameSessionId;
-$gameInstanceId = $gameInstanceSetupDto->gameInstanceId;
+$gameStatusDto = json_decode($dtoEncoded);
+$gameSessionId = $gameStatusDto->gameSessionId;
+$gameInstanceId = $gameStatusDto->gameInstanceId;
 
-$gameInstance = EntityHelper::getGameInstance($gameInstanceId);
+$gameInstance = EntityHelper::GetGameInstance($gameInstanceId);
 $playerHand = CardHelper::getPlayerHandDto($playerId, $gameInstanceId);
 
 echo "Player hand before pushing ace: " . json_encode($playerHand) . "<br />";
@@ -29,9 +29,9 @@ echo "Player hand before pushing ace: " . json_encode($playerHand) . "<br />";
 global $dateTimeFormat;
 $statusDT = date($dateTimeFormat);
 
-    $qConn = QueueManager::getPlayerConnection();
-    $ch = QueueManager::getPlayerChannel($qConn);
-    $ex = QueueManager::getPlayerExchange($ch);
+    $qConn = QueueManager::GetQueueConnection();
+    $ch = QueueManager::GetChannel($qConn);
+    $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
 
 echo "Result: " . $q->get(AMQP_AUTOACK) . "<br /><br />";
@@ -50,7 +50,7 @@ $cCards = CardHelper::getCommunityCardDtos($gameInstanceId, 5);
 echo "Community card after swap: " . json_encode($cCards) . "<br /><br />";
 
 // social spotter test - assume new user
-$activeItems = CheatingHelper::getPlayersActivelyMarking($gameInstance->gameInstanceSetup->gameSessionId);
+$activeItems = CheatingHelper::getPlayersActivelyMarking($gameInstance->gameSessionId);
 echo "Active Player items before test: " . json_encode($activeItems) . "<br /><br />";
 /*
  * 1) cheat operation (
@@ -61,8 +61,8 @@ echo "Active Player items before test: " . json_encode($activeItems) . "<br /><b
  * 6) endGame (reveal new cards only)
  */
 // after start game
-$gameInstance2 = EntityHelper::getGameInstance($gameInstanceSetupDto->gameInstanceId);
-$gameCards = $gameInstance->getInstanceGameCards();
+$gameInstance2 = EntityHelper::GetGameInstance($gameStatusDto->gameInstanceId);
+$gameCards = CardHelper::getGameCardsForInstance($gameInstance2->id);
 echo "visible card are (should be null): " . json_encode($dto) . "<br />";
 echo "... and should match instance's community cards: " . json_encode($gameCards->communityCards) . "<br />";
 echo "... plus the instance's player cards" . json_encode($gameCards->playerHands) . "<br />";

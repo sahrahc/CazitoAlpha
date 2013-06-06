@@ -19,32 +19,32 @@ $result = executeSQL("SELECT g.*, i.GameSessionId as GameSessionId
 $row = mysql_fetch_array($result);
 $gameInstanceId = $row['GameInstanceId'];
 $gameSessionId = $row['GameSessionId'];
-$gameInstance = EntityHelper::getGameInstance($gameInstanceId);
+$gameInstance = EntityHelper::GetGameInstance($gameInstanceId);
 $playerId = $row['PlayerId'];
 echo "Test Data: Instance is $gameInstanceId and playerId $playerId for JP <br /><br />";
 $playerHand = CardHelper::getPlayerCard($playerId, $gameInstanceId, 1);
 global $dateTimeFormat;
 $statusDT = date($dateTimeFormat);
 
-    $qConn = QueueManager::getPlayerConnection();
-    $ch = QueueManager::getPlayerChannel($qConn);
-    $ex = QueueManager::getPlayerExchange($ch);
+    $qConn = QueueManager::GetQueueConnection();
+    $ch = QueueManager::GetChannel($qConn);
+    $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
 
 /**********************************************************************************/
 
 echo '******************************************************<br />';
 echo 'TEST CASE 30.1 suit markers <br /><br />';
-$gameCards = $gameInstance->getInstanceGameCards();
+$gameCards = CardHelper::getGameCardsForInstance($gameInstance->id);
 echo "initial player cards: <br />";
 echo json_encode($gameCards->playerHands) . "<br />";
-$hearts = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'hearts', $statusDT);
+$hearts = CheatingHelper::GetSuitForAllGameCards($playerId, $gameInstance, 'hearts', $statusDT);
 echo "hearts on game: <br />";
 echo json_encode($hearts) . "<br />";
-$clubs = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'clubs', $statusDT);
+$clubs = CheatingHelper::GetSuitForAllGameCards($playerId, $gameInstance, 'clubs', $statusDT);
 echo "clubs on game: <br />";
 echo json_encode($clubs) . "<br />";
-$diamonds = CheatingHelper::getSuitForAllGameCards($playerId, $gameInstance, 'diamonds', $statusDT);
+$diamonds = CheatingHelper::GetSuitForAllGameCards($playerId, $gameInstance, 'diamonds', $statusDT);
 echo "diamonds on game: <br />";
 echo json_encode($diamonds) . "<br />";
 
@@ -81,5 +81,5 @@ $returnDto = cheat($par);
 echo "Parameter: " . $par . "<br />";
 echo "Result: " . $returnDto . "<br /><br />";
 
-QueueManager::disconnect($qConn);
+QueueManager::DisconnectQueue($qConn);
 ?>

@@ -9,43 +9,65 @@
 class PlayerStatusDto {
 
     public $playerId;
-    public $playerName;
-    public $playerImageUrl;
+    public $playerName; // only if returning player status for user first joined
+    public $playerImageUrl; // only if returning player status for user first joined
     public $seatNumber;
     public $status;
-    public $blindBet;
-    public $stake;
-    public $playAmount;
-    public $playerPlayNumber;
+    public $currentStake;
+    public $lastPlayAmount;
+    public $lastPlayInstanceNumber;
 
-    function __construct($entity) {
+    public static function mapPlayerStatus($entity, $addNames) {
+        $playerStatusDto = new PlayerStatusDto();
         if (!is_null($entity)) {
-            $this->playerId = $entity->playerId;
-            $this->playerName = $entity->playerInstanceSetup->playerName;
-            $this->playerImageUrl = $entity->playerInstanceSetup->playerImageUrl;
-            $this->seatNumber = $entity->playerInstanceSetup->seatNumber;
-            $this->status = $entity->status;
-            $this->blindBet = $entity->playerInstanceSetup->blindBet;
-            $this->stake = $entity->stake;
-            $this->playAmount = $entity->lastPlayAmount;
-            $this->playerPlayNumber = $entity->playerPlayNumber;
+            $playerStatusDto->playerId = $entity->playerId;
+            if ($addNames) {
+              $playerDto = EntityHelper::getPlayerDto($this->playerId);
+              $playerStatusDto->playerName = $playerDto->playerName;
+              $playerStatusDto->playerImageUrl = $playerDto->playerImageUrl;
+            }
+            $playerStatusDto->seatNumber = $entity->seatNumber;
+            $playerStatusDto->status = $entity->status;
+            $playerStatusDto->currentStake = $entity->currentStake;
+            $playerStatusDto->lastPlayAmount = $entity->lastPlayAmount;
+            $playerStatusDto->lastPlayInstanceNumber = $entity->lastPlayInstanceNumber;
         }
+        return $playerStatusDto;
     }
 
-    public static function mapPlayerDtos($playerDtos, $status) {
+    public static function MapPlayerStatuses($playerStatuses, $addNames=false) {
         $obj = null;
-        for ($i = 0, $l = count($playerDtos); $i < $l; $i++) {
-            $obj[$i] = new PlayerStatusDto(null);
-            $obj[$i]->playerId = $playerDtos[$i]->playerId;
-            $obj[$i]->playerName = $playerDtos[$i]->playerName;
-            $obj[$i]->playerImageUrl = $playerDtos[$i]->playerImageUrl;
-            $obj[$i]->seatNumber = $playerDtos[$i]->currentSeatNumber;
-            $obj[$i]->stake = $playerDtos[$i]->buyin;
+        for ($i = 0, $l = count($playerStatuses); $i < $l; $i++) {
+            $obj[$i] = self::mapPlayerStatus($playerStatuses[$i], $addNames);
+        }
+        return obj;
+    }
+
+    /**
+     * Maps a list of Players to a list of PlayerStatusDto. Having problems
+     * with array_map.
+     * @param type $players
+     * @param type $status
+     * @return \PlayerStatusDto
+     */
+    public static function mapPlayers($players, $status, $addName=false) {
+        $obj = null;
+        for ($i = 0, $l = count($players); $i < $l; $i++) {
+            $obj[$i] = new PlayerStatusDto();
+            $obj[$i]->playerId = $players[$i]->id;
+            if ($addName) {
+            $obj[$i]->playerName = $players[$i]->name;
+            $obj[$i]->playerImageUrl = $players[$i]->imageUrl;
+            }
+            $obj[$i]->seatNumber = $players[$i]->currentSeatNumber;
+            $obj[$i]->currentStake = $players[$i]->buyIn;
             $obj[$i]->status = $status;
-            $obj[$i]->playAmount = null;
-            $obj[$i]->playerPlayNumber = 0;
+            $obj[$i]->lastPlayAmount = null;
+            $obj[$i]->lastPlayInstanceNumber = 0;
         }
         return $obj;
     }
+
 }
+
 ?>

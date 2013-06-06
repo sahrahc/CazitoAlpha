@@ -8,9 +8,6 @@
 class CheatRequestDto {
 
     public $itemType;
-    public $userPlayerId;
-    public $gameSessionId;
-    public $gameInstanceId;
     // optional data
     public $otherPlayerId;
     public $cardName;

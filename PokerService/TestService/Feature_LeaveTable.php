@@ -35,13 +35,12 @@ $par = json_encode(array(
 echo "Parameter In: $par <br /><br />";
 leaveSaloon($par); // no output
 
-$casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->getCasinoPlayerDtos();
+$players = EntityHelper::GetPlayersForCasinoTable($casinoTableId);
 echo "Parameter Out:<br />";
 echo "Casino players after $playerId leaves: <br />";
-for ($i=0; $i<count($playerDtos); $i++) {
-    echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
-            $playerDtos[$i]->currentSeatNumber . " and reserved seat " . $playerDtos[$i]->reservedSeatNumber . "<br />";
+for ($i=0; $i<count($players); $i++) {
+    echo " - Player " . $players[$i]->name . " is on seat " .
+            $players[$i]->currentSeatNumber . " and reserved seat " . $players[$i]->reservedSeatNumber . "<br />";
 }
 echo "<br />";
 

@@ -44,11 +44,12 @@ function executeSQL($sql, $msg){
 
 function executeDDL($objName, $sql) {
     global $log;
+    global $dbName;
     // Execute query
     if (mysql_query($sql)) {
         echo "Database object $objName created <br />";
     } else {
-        $msg = "Error creating $objName ";
+        $msg = "Error creating $objName on $dbName";
         echo $msg . mysql_error() . '<br />';
         $log->fatal($msg . ': ' . mysql_error());
         $log->warn($sql);

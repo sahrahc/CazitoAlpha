@@ -1,7 +1,11 @@
 <?php
 
-include_once(dirname(__FILE__) . '/../../libraries/helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/../Helper/DataHelper.php');
 
+/**
+ * Cheating items
+ * @global type $dbName
+ */
 function CreateItems() {
     global $dbName;
     $con = connectToStateDB();

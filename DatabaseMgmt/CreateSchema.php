@@ -1,26 +1,11 @@
 <?php
 
-include_once(dirname(__FILE__) . '/../../libraries/helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/../Helper/DataHelper.php');
 
-/* Create the MySQL database
- * Schema currently has five tables that track transient data:
- *  1) CasinoTable - a casino table is opened as users log in and current
- *     tables fill up. Technically there is no limit to the number
- *     of virtual tables that can be opened. Future: improve
- *     matching of users to tables
- *  2) Player - the structure is for active players as kept in memory -
- *     will split into master data vs. historical activity data later.
- *  3) GameState (combines GameSession and GameInstance) - the status of
- *     an actively played game instance. The structure
- *     is as to maintained in memory; will split into historical later.
- *  4) PracticeSession - the status of practice game session/instance
- *  5) PlayerState - the status of a player actively engaged in a game. Subset
- *     of Player because excludes players just joining a table not yet engaged
- *     in a game. Structure is as maintained in memory.
- *  6) PracticePlayerState - same as PlayerState but for PracticeSession
- *  7) GameCard - the cards dealt for a game.
+/*
+ * Tables for data that persist across calls. This data as is to be stored
+ * in memory. See specs for logging and removal from memory.
  */
-
 function CreateSchema() {
     global $dbName;
     $con = connectToStateDB();
@@ -36,8 +21,9 @@ function CreateSchema() {
     $sql = "CREATE TABLE $tableName
         (
             Id int NOT NULL,
-            Name varchar(25),
-            TableMinimum int,
+            Name varchar(100),
+            Description varchar(2000),
+            TableMinimum int not null,
             NumberSeats int,
             LastUpdateDateTime timestamp,
             CurrentGameSessionId int,
@@ -47,7 +33,7 @@ function CreateSchema() {
     executeDDL($tableName, $sql);
     // add index on GameSessionId and table name
     $columnName = "CurrentGameSessionId";
-    $indexName = $tableName . '_' . $columnName . '_Idx';
+    $indexName = $tableName . '_' . $columnName . '_Idx';   
     $sql = "CREATE INDEX $indexName ON $tableName($columnName)";
     executeDDL($indexName, $sql);
 
@@ -60,12 +46,12 @@ function CreateSchema() {
     // Player
     //      Index - CurrentTableCasinoId
     $tableName = "Player";
-    $sql = "CREATE TABLE $tableName
+    $sql = "CREATE TABLE $tableName     
         (
             Id int NOT NULL,
+            Name varchar(100),
+            ImageUrl varchar(100),
             IsVirtual tinyint, 
-            Name varchar(25),
-            ImageUrl varchar(25),
             LastUpdateDateTime timestamp,
             CurrentCasinoTableId int,
             CurrentSeatNumber int,
@@ -87,6 +73,7 @@ function CreateSchema() {
     $sql = "CREATE TABLE $tableName
         (
             Id int NOT NULL,
+            RequestingPlayerId int,
             StartDateTime timestamp,
             TableMinimum int,
             NumberSeats int,
@@ -107,14 +94,13 @@ function CreateSchema() {
             Id int NOT NULL AUTO_INCREMENT,
             PRIMARY KEY (Id),
             GameSessionId int,
-            IsPractice tinyint,
             StartDateTime timestamp,
             LastUpdateDateTime timestamp,
-			NumberPlayers int,
+	    NumberPlayers int,
             DealerPlayerId int,
             FirstPlayerId int,
             NextPlayerId int,
-            PotSize int,
+            CurrentPotSize int,
             LastBetSize int,
             NumberCommunityCardsShown int,
             LastInstancePlayNumber int,
@@ -137,21 +123,20 @@ function CreateSchema() {
     $sql = "CREATE TABLE $tableName
         (
             PlayerId int,
-            IsVirtual int,
-            GameSessionId int,
             GameInstanceId int,
             PRIMARY KEY (GameInstanceId, PlayerId),
+            IsVirtual tinyint,
+            GameSessionId int,
             LastUpdateDateTime timestamp,
             SeatNumber int,
             TurnNumber int,
             Status varchar(25),
-            BlindBet int, 
-            Stake int,
+            CurrentStake int,
             LastPlayAmount int,
-            PlayerPlayNumber int,
+            LastPlayInstanceNumber int,
             NumberTimeOuts int,
-            Card1Code varchar(25),
-            Card2Code varchar(25),
+            Card1Code char(2),
+            Card2Code char(2),
             HandType varchar(25),
             HandInfo int,
             HandCategory int,
@@ -177,8 +162,9 @@ function CreateSchema() {
     $sql = "CREATE TABLE $tableName
         (
             GameInstanceId int,
-            CardCode varchar(25),
             DeckPosition int,
+            PRIMARY KEY (GameInstanceId, PlayerId),
+            CardCode varchar(25),
             PlayerId int,
             PlayerCardNumber int,
             CardIndex int
@@ -214,21 +200,14 @@ function CreateSchema() {
     // NextPokerMove
     //      Index: GameInstanceId and PlayerId
     // auto-increment because 
-    $tableName = "NextPokerMove";
+    $tableName = "ExpectedPokerMove";
     $sql = "CREATE TABLE $tableName
         (
-            Id int NOT NULL AUTO_INCREMENT,
-            PRIMARY KEY (Id),
             GameInstanceId int,
-            IsPractice tinyint,
             PlayerId int,
-            TurnNumber int,
             ExpirationDate timestamp,
-            IsEndGameNext tinyint,
-            CallAmount int,
-            CheckAmount int,
-            RaiseAmount int,
-			IsDeleted tinyint
+            PokerActionType varchar(10),
+            Amount int
         )";
     executeDDL($tableName, $sql);
     // create index on game instace id

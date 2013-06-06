@@ -12,9 +12,9 @@ function showCasinoTableValues($par, $casinoTableDtoEncoded) {
 
 /* * *********************************************************************** */
 
-function showGameInstanceSetupValues($par, $gameInstanceSetupDto) {
+function showGameInstanceSetupValues($par, $gameStatusDto) {
     echo "Encoded parameter: $par <br />";
-    echo "Encoded return object: $gameInstanceSetupDto<br />";
+    echo "Encoded return object: $gameStatusDto<br />";
 }
 
 /* * *********************************************************************** */

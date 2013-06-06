@@ -30,9 +30,9 @@ $player4Id;
 
 session_start();
 
-$qConn = QueueManager::getPlayerConnection();
-$qCh = QueueManager::getPlayerChannel($qConn);
-$qEx = QueueManager::getPlayerExchange($qCh);
+$qConn = QueueManager::GetQueueConnection();
+$qCh = QueueManager::GetChannel($qConn);
+$qEx = QueueManager::GetPlayerExchange($qCh);
 
 /////////////////////////////////////////////////
 // functions used in this test 
@@ -107,19 +107,19 @@ echo 'PHASE 1: 4 players login and join table <br />';
 
 $player1Id = testLogin($player1Name);
 testJoinTable($player1Id, 0, GameStatus::INACTIVE);
-$q1 = QueueManager::getPlayerQueue($player1Id, $qCh);
+$q1 = QueueManager::GetPlayerQueue($player1Id, $qCh);
 verifyQMessage($player1Id, $q1, EventType::USER_JOINED);
 
 $player2Id = testLogin($player2Name);
 testJoinTable($player2Id, 1, GameStatus::INACTIVE);
-$q2 = QueueManager::getPlayerQueue($player2Id, $qCh);
+$q2 = QueueManager::GetPlayerQueue($player2Id, $qCh);
 // Verify player1 received message
 verifyQMessage($player1Id, $q1, EventType::USER_JOINED);
 verifyQMessage($player2Id, $q2, EventType::USER_JOINED);
 
 $player3Id = testLogin($player3Name);
 testJoinTable($player3Id, 2, GameStatus::INACTIVE);
-$q3 = QueueManager::getPlayerQueue($player3Id, $qCh);
+$q3 = QueueManager::GetPlayerQueue($player3Id, $qCh);
 // verify  player1, player2 received UserJoined communication
 verifyQMessage($player1Id, $q1, EventType::USER_JOINED);
 verifyQMessage($player2Id, $q2, EventType::USER_JOINED);
@@ -127,7 +127,7 @@ verifyQMessage($player3Id, $q3, EventType::USER_JOINED);
 
 $player4Id = testLogin($player4Name);
 testJoinTable($player4Id, 3, GameStatus::INACTIVE);
-$q4 = QueueManager::getPlayerQueue($player4Id, $qCh);
+$q4 = QueueManager::GetPlayerQueue($player4Id, $qCh);
 // TODO: verify  player1, player2, player3 received UserJoined communication
 verifyQMessage($player1Id, $q1, EventType::USER_JOINED);
 verifyQMessage($player2Id, $q2, EventType::USER_JOINED);

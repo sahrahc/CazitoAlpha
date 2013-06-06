@@ -19,14 +19,14 @@ $result = executeSQL("SELECT g.*, i.gameSessionId AS GameSessionId
 $row = mysql_fetch_array($result);
 $gameInstanceId = $row['GameInstanceId'];
 $gameSessionId = $row['GameSessionId'];
-$gameInstance = EntityHelper::getGameInstance($gameInstanceId);
+$gameInstance = EntityHelper::GetGameInstance($gameInstanceId);
 $playerId = $row['PlayerId'];
 echo "Test Data: Instance is $gameInstanceId and playerId $playerId for JP <br /><br />";
 //$playerHand = CardHelper::getPlayerCard($playerId, $gameInstanceId, 1);
 
-    $qConn = QueueManager::getPlayerConnection();
-    $ch = QueueManager::getPlayerChannel($qConn);
-    $ex = QueueManager::getPlayerExchange($ch);
+    $qConn = QueueManager::GetQueueConnection();
+    $ch = QueueManager::GetChannel($qConn);
+    $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
 
 /**********************************************************************************/
@@ -36,7 +36,7 @@ echo 'TEST CASE 32.1 add hidden cards <br /><br />';
 $cardNames = array('spades_A', 'clubs_10', 'hearts_2', 'hearts_Q');
 echo "Card to be hidden: " . json_encode($cardNames) . "<br />";
 
-$dto = CheatingHelper::addHiddenCards($playerId, $cardNames);//($gameInstanceId, $playerId, 1);
+$dto = CheatingHelper::AddHiddenCards($playerId, $cardNames);//($gameInstanceId, $playerId, 1);
 echo "Cards on sleeve returned from add operation: " . json_encode($dto) . "<br />";
 
 echo '******************************************************<br />';
@@ -44,20 +44,20 @@ echo 'TEST CASE 32.2 add two more hidden cards <br /><br />';
 $cardNames = array('clubs_9', 'diamonds_3');
 echo "More cards to be hidden: " . json_encode($cardNames) . "<br />";
 
-$dto = CheatingHelper::addHiddenCards($playerId, $cardNames);//($gameInstanceId, $playerId, 1);
+$dto = CheatingHelper::AddHiddenCards($playerId, $cardNames);//($gameInstanceId, $playerId, 1);
 echo "Cards on sleeve returned from add operation: " . json_encode($dto) . "<br />";
 
 echo '******************************************************<br />';
 echo 'TEST CASE 32.3 get cards operation <br /><br />';
 
-$dto = CheatingHelper::getHiddenCards($playerId);
+$dto = CheatingHelper::GetHiddenCards($playerId);
 echo "Cards on sleeve from get operation: " . json_encode($dto) . "<br />";
 
 echo '******************************************************<br />';
 echo 'TEST CASE 32.4 reset sleeve operation <br /><br />';
 
-$dto = CheatingHelper::resetSleeve($playerId);
+$dto = CheatingHelper::ResetSleeve($playerId);
 echo "Cards on sleeve from reset operation: " . json_encode($dto) . "<br />";
 
-QueueManager::disconnect($qConn);
+QueueManager::DisconnectQueue($qConn);
 ?>

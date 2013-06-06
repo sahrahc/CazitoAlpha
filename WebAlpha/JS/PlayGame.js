@@ -136,7 +136,7 @@ function addUserToCasinoTable() {
     };
 
     // TODO: check if authenticated and pass -1 if not otherwise the currentPlayerId
-    WSClient.call("addUserToCasinoTable",
+    WSClient.call("JoinTable",
         obj,
         addUserToCasinoTableCallback);
 }
@@ -257,7 +257,7 @@ function leaveSaloonCallback(resp) {
 function leaveSaloon() {
     var obj = {
         gameSessionId: O('gameSessionId').innerHTML,
-        playerId: O('userPlayerId').innerHTML
+        requestingPlayerId: O('userPlayerId').innerHTML
     };
 	
     WSClient.call("leaveSaloon",
@@ -280,7 +280,7 @@ function takeSeat() {
     S("centerMessageId").display = 'none';
     var obj = {
         gameSessionId: O('gameSessionId').innerHTML,
-        playerId: O('userPlayerId').innerHTML,
+        requestingPlayerId: O('userPlayerId').innerHTML,
         seatNumber: O('seatNumber').innerHTML
     };
 	

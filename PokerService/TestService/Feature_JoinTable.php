@@ -33,7 +33,7 @@ $par = json_encode(array(
     "tableSize"=>$tableSize));
 
 echo "Parameter In: $par <br /><br />";
-$gameStatusDtoEncoded = addUserToCasinoTable($par);
+$gameStatusDtoEncoded = JoinTable($par);
 echo "Parameter Out (REST): $gameStatusDtoEncoded <br /> <br />";
 
 $gameStatusDto = json_decode($gameStatusDtoEncoded);

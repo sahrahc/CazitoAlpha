@@ -26,7 +26,7 @@ class EvalHelper {
 
     /**
      * Get a deck of 52 cards randomly shuffled for use in a game. There is an index value for the card order after shuffling. This original order may be changed at the seedy saloon.
-     * @return PokerCard array
+     * @return GameCard array
      */
     public static function shuffleDeck() {
         // FIXME: cache these!
@@ -38,8 +38,7 @@ class EvalHelper {
             
             $cardCode = self::findCardCode($DECK[$indexArray[$i-1]]);
 
-            $returnList[$i] = new PokerCard(null, $i, $cardCode);
-            $returnList[$i]->cardIndex = $indexArray[$i-1];
+            $returnList[$i] = GameCard::InitShuffledCard($indexArray[$i-1], $i, $cardCode);
         }
         return $returnList;
     }

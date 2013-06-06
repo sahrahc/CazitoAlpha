@@ -19,10 +19,10 @@ if (is_null($playerId)) {
 
 $par = json_encode(array("userPlayerId"=>$playerId));
 echo "Parameter In: $par <br /><br />";
-$gameInstanceSetupDto = startPracticeSession($par);
-$gameInstanceSetup = json_decode($gameInstanceSetupDto);
-echo "Parameter Out: $gameInstanceSetupDto <br /> <br />";
+$gameStatusDtoEncoded = startPracticeSession($par);
+$gameStatusDto = json_decode($gameStatusDtoEncoded);
+echo "Parameter Out: $gameStatusDto <br /> <br />";
 
-$_SESSION['param_gameInstanceId'] = $gameInstanceSetup->gameInstanceId;
+$_SESSION['param_gameInstanceId'] = $gameStatusDto->gameInstanceId;
 
 ?>

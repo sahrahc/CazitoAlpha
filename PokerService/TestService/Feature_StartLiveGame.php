@@ -29,43 +29,44 @@ $par = json_encode(array("gameSessionId"=>$gameSessionId,
     "tableSize"=>$tableSize));
 
 echo "Parameter In: $par <br /><br />";
-$gameInstanceSetupDto = startGame($par);
-//$gameInstanceSetup = json_decode($gameInstanceSetupDto);
+$gameStatusDto = startGame($par);
 
-$qConn = QueueManager::getPlayerConnection();
-$qCh = QueueManager::getPlayerChannel($qConn);
-$qEx = QueueManager::getPlayerExchange($qCh);
-$q = QueueManager::getPlayerQueue($playerId, $qCh);
+$qConn = QueueManager::GetQueueConnection();
+$qCh = QueueManager::GetChannel($qConn);
+$qEx = QueueManager::GetPlayerExchange($qCh);
+$q = QueueManager::GetPlayerQueue($playerId, $qCh);
 
 while ($message = $q->get(AMQP_AUTOACK)) {
     $messageBody = $message->getBody();
     echo "Parameter Out (Queue): $messageBody <br /> <br />";
     $messageObject = json_decode($messageBody);
     if ($messageObject->eventType == EventType::GAME_STARTED) {
-        $gameInstanceSetup = $messageObject->eventData;
+        $gameStatusDto = $messageObject->eventData;
     }
 }
 
-echo "Parameter Out (REST, TEST ONLY): $gameInstanceSetupDto <br /> <br />";
+echo "Parameter Out (REST, TEST ONLY): $gameStatusDto <br /> <br />";
 
 // verify game session and user player id match in parameters
-if ($gameInstanceSetup->gameSessionId != $gameSessionId) {
+if ($gameStatusDto->gameSessionId != $gameSessionId) {
     throw new Exception("$feature: mismatch game session id in vs. out parameter");
 }
-if ($gameInstanceSetup->userPlayerId != $playerId) {
+if ($gameStatusDto->userPlayerId != $playerId) {
     throw new Exception("$feature: mismatch player id in vs. out parameter");
 }
 
 ////////////////////////////////////////////////////////////
 // parameter out
-$_SESSION['param_gameInstanceId'] = $gameInstanceSetup->gameInstanceId;
-$_SESSION['param_dealerPlayerId'] = $gameInstanceSetup->dealerPlayerId;
-$_SESSION['param_firstPlayerId'] = $gameInstanceSetup->firstPlayerId;
-$_SESSION['param_blindBet1PlayerId'] = $gameInstanceSetup->blindBets[0]->playerId;
-$_SESSION['param_blindBet1Size'] = $gameInstanceSetup->blindBets[0]->betSize;
-$_SESSION['param_blindBet2PlayerId'] = $gameInstanceSetup->blindBets[1]->playerId;
-$_SESSION['param_blindBet2Size'] = $gameInstanceSetup->blindBets[1]->betSize;
-$_SESSION['param_playerStatusDtos'] = json_encode($gameInstanceSetup->playerStatusDtos);
+$_SESSION['param_gameInstanceId'] = $gameStatusDto->gameInstanceId;
+$_SESSION['param_dealerPlayerId'] = $gameStatusDto->dealerPlayerId;
+/* fix, blindBetDtos from playerStatusDtos
+$_SESSION['param_blindBet1PlayerId'] = $gameStatusDto->blindBetDtos[0]->playerId;
+$_SESSION['param_blindBet1Size'] = $gameStatusDto->blindBetDtos[0]->betSize;
+$_SESSION['param_blindBet2PlayerId'] = $gameStatusDto->blindBetDtos[1]->playerId;
+$_SESSION['param_blindBet2Size'] = $gameStatusDto->blindBetDtos[1]->betSize;
+*/
+$_SESSION['param_playerStatusDtos'] = json_encode($gameStatusDto->playerStatusDtos);
+ 
 
 // object: {"gameSessionId":"31",
 // "gameInstanceId":4,
@@ -82,9 +83,9 @@ $_SESSION['param_playerStatusDtos'] = json_encode($gameInstanceSetup->playerStat
 //    "blindBet":"0",
 //    "stake":"30000",
 //    "playAmount":"0",
-//    "playerPlayNumber":"0"},
-//   {"playerId":"3","playerName":"Test1","playerImageUrl":"Avatar_user0.jpeg","seatNumber":"1","status":"BlindBet","blindBet":"1000","stake":"29000","playAmount":"1000","playerPlayNumber":"0"},
-//   {"playerId":"4","playerName":"Test2","playerImageUrl":"Avatar_user0.jpeg","seatNumber":"2","status":"BlindBet","blindBet":"500","stake":"29500","playAmount":"500","playerPlayNumber":"0"},
-//   {"playerId":"5","playerName":"Test3","playerImageUrl":"Avatar_user0.jpeg","seatNumber":"3","status":"Waiting","blindBet":"0","stake":"30000","playAmount":"0","playerPlayNumber":"0"}],"userPlayerHandDto":{"playerId":"2","pokerCard1Dto":{"playerCardNumber":1,"cardName":"diamonds_8"},"pokerCard2Dto":{"playerCardNumber":2,"cardName":"clubs_2"},"pokerHandType":null,"isWinningHand":null}}
+//    "lastPlayInstanceNumber":"0"},
+//   {"playerId":"3","playerName":"Test1","playerImageUrl":"Avatar_user0.jpeg","seatNumber":"1","status":"BlindBet","blindBet":"1000","stake":"29000","playAmount":"1000","lastPlayInstanceNumber":"0"},
+//   {"playerId":"4","playerName":"Test2","playerImageUrl":"Avatar_user0.jpeg","seatNumber":"2","status":"BlindBet","blindBet":"500","stake":"29500","playAmount":"500","lastPlayInstanceNumber":"0"},
+//   {"playerId":"5","playerName":"Test3","playerImageUrl":"Avatar_user0.jpeg","seatNumber":"3","status":"Waiting","blindBet":"0","stake":"30000","playAmount":"0","lastPlayInstanceNumber":"0"}],"userPlayerHandDto":{"playerId":"2","pokerCard1Dto":{"playerCardNumber":1,"cardName":"diamonds_8"},"pokerCard2Dto":{"playerCardNumber":2,"cardName":"clubs_2"},"pokerHandType":null,"isWinningHand":null}}
 
 ?>

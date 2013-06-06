@@ -9,24 +9,139 @@ Logger::configure(dirname(__FILE__) . '/../log4php.xml');
 
 /* * ************************************************************************************* */
 
+/**
+ * TODO: set up as child of GameSession
+ */
 class PracticeSession {
 
     public $id;
+    public $requestingPlayerId; // the player for whom the practice session is created
     public $startDateTime;
     public $tableMinimum;
     public $numberSeats;
     // transient data */
-    public $currentInstanceId;
-    public $playerStatusDtos = array();
-    public $blindBets;
+    public $isPractice = true;
     private $log;
-    public $ex;
 
-    public function __construct($gSessionId, $curInstId, $statusDT) {
+    public function __construct($gameSessionId, $playerId = null) {
         $this->log = Logger::getLogger(__CLASS__);
-        $this->id = $gSessionId;
-        $this->currentInstanceId = $curInstId;
-        $this->startDateTime = $statusDT;
+        $this->id = $gameSessionId;
+        if ($playerId) {
+            $this->requestingPlayerId = $playerId;
+        }
+    }
+
+    /**
+     * Generates and saves the virtual players for the practice session, and
+     * saves the practice instance in database.
+     * @param type $statusDT 
+     */
+    function InitNewPracticeInstance() {
+        //global $buyInMultiplier;
+
+        $statusDT = Context::GetStatusDT();
+
+        $gameInstance = new GameInstance();
+        $gameInstance->id = getNextSequence('GameInstance', 'Id');
+        $gameInstance->gameSessionId = $this->id;
+        $gameInstance->status = GameStatus::STARTED;
+        $gameInstance->startDateTime = $statusDT;
+        $gameInstance->lastUpdateDateTime = $statusDT;
+        // not setting dealer id and turn
+        $gameInstance->currentPotSize = $defaultTableMin * 1.5;
+        ;
+        $gameInstance->lastBetSize = $defaultTableMin;
+        $gameInstance->numberCommunityCardsShown = 0;
+        $gameInstance->lastInstancePlayNumber = 0;
+        $gameInstance->Insert();
+        return $gameInstance;
+    }
+
+    public function InitPlayers($playerId) {
+        $statusDT = Context::GetStatusDT();
+        // create requesting player state first
+        $player = EntityHelper::getPlayer($playerId);
+        $player->UpdatePlayerSeat(0);
+        $this->_createPracticePlayerInstance(0, $player->id, $player->name);
+
+        // create dummy practice players
+        $playerName = 'Practice 1 - ' . $this->id;
+        $player1 = EntityHelper::createPracticePlayer($playerName, 1, $this->startDateTime);
+        $this->_createPracticePlayerInstance(1, $player1->id, $playerName, $statusDT);
+
+        $playerName = 'Practice 2 - ' . $this->id;
+        $player2 = EntityHelper::createPracticePlayer($playerName, 2, $this->startDateTime);
+        $this->_createPracticePlayerInstance(2, $player2->id, $playerName, $statusDT);
+
+        $playerName = 'Practice 3 - ' . $this->id;
+        $player3 = EntityHelper::createPracticePlayer($playerName, 3, $this->startDateTime);
+        $this->_createPracticePlayerInstance(3, $player3->id, $playerName, $statusDT);
+        /* short cut for practice instance
+          // init dealer and players
+          $gameInstance->dealerPlayerId = $this->playerStatusDtos[0]->playerId;
+          $gameInstance->firstPlayerId = $this->playerStatusDtos[3]->playerId;
+
+          executeSQL("update GameInstance SET DealerPlayerId = $gameInstance->dealerPlayerId,
+          FirstPlayerId=$gameInstance->fi rstPlayerId,
+          NextPlayerId=$gameInstance->firstPlayerId, NumberPlayers = $this->numberSeats
+          WHERE id = $gameInstance->id", __FUNCTION__ . ":
+          Error updating practice game instance $gameInstance->id");
+
+          // add blind bets
+          return array(new BetDto($this->playerStatusDtos[1]->playerId, $this->playerStatusDtos[1]->blindBet),
+          new BetDto($this->playerStatusDtos[2]->playerId, $this->playerStatusDtos[2]->blindBet));
+
+         */
+    }
+
+    /**
+     * Indirectly called on practice games.
+     * @param type $pId
+     * @param type $gInstanceId
+     * @param type $statusDT
+     * @param type $check
+     * @param type $call
+     * @param type $raise
+     * @return PlayerAction
+     */
+    function GenerateRandomAction($move) {
+        /* --------------------------------------------------------------------- */
+        // generate a random action from among the allowed actions.
+        $pokerActionOptions = array(PokerActionType::RAISED,
+            PokerActionType::CALLED); //, PokerActionType::FOLD);
+        if (!is_null($move->checkAmount)) {
+            // adding the check option if available
+            $pokerActionOptions = array_merge($pokerActionOptions, array(PokerActionType::CHECKED));
+        }
+        $action = $pokerActionOptions[rand(0, count($pokerActionOptions) - 1)];
+        $value = null;
+        if ($action == PokerActionType::RAISED) {
+            $value = $move->raiseAmount;
+        } else if ($action == PokerActionType::CALLED) {
+            $value = $move->callAmount;
+        };
+        $time = Context::GetStatusDT();
+        $playerAction = new PlayerAction($move->gameInstanceId, $move->playerId, $action, $time, $value);
+        return $playerAction;
+    }
+
+    /**
+     *
+     * @param type $instanceSetupDto
+     */
+    function CommunicateGameStarted($gameStatusDto) {
+        $QEx = Context::GetQEx;
+        $statusDT = Context::GetStatusDT();
+
+        $eventType = EventType::GAME_STARTED;
+        $instanceId = $gameStatusDto->gameInstanceId;
+
+        $playerId = $this->requestingPlayerId;
+        $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $instanceId);
+
+        $message = new EventMessage($this->id, $playerId, $eventType, $statusDT, $gameStatusDto);
+        //queueMessage($playerId, json_encode($message));
+        QueueManager::QueueMessage($QEx, $playerId, json_encode($message));
     }
 
     /**
@@ -39,7 +154,7 @@ class PracticeSession {
      * @param type $pName
      * @param type $statusDT 
      */
-    function savePracticePlayer($pNumber, $pId, $pName, $statusDT) {
+    function _createPracticePlayerInstance($pNumber, $pId, $pName) {
         global $defaultTableMin;
         global $buyInMultiplier;
         global $defaultAvatarUrl;
@@ -57,131 +172,23 @@ class PracticeSession {
             $stake = $stake - $blindBet;
             $playAmount = $blindBet;
         }
-        $initialStatus = PlayerStatusType::WAITING;
         $isVirtual = 1;
         if ($pNumber == 0) {
             $isVirtual = 0;
-            // update the seat number
-            executeSQL("UPDATE Player set CurrentSeatNumber = 0 WHERE ID = $pId", __FUNCTION__ . ":
-                Error updating player id $pId to seat number 0 for practice session");
         }
-        executeSQL("INSERT INTO PlayerState (
-                GameSessionId, GameInstanceId, PlayerId, IsVirtual,
-                LastUpdateDateTime, SeatNumber, TurnNumber, Status, BlindBet,
-                Stake, LastPlayAmount, PlayerPlayNumber, NumberTimeOuts)
-                VALUES ($this->id, $this->currentInstanceId, $pId, $isVirtual,
-                '$this->startDateTime', $pNumber, $pNumber, '$initialStatus',  $blindBet,
-                $stake, 0, 0, 0)
-                ", __FUNCTION__ . "
-                : Error inserting first practice Player for practice session id $this->id");
 
-        $playerInstance = new PlayerInstanceStatus();
+        /* the following set by ResetActivePlayers:
+         * gameInstanceId, turnNumber, status, last play amount
+         * last play instance number, number timeouts
+         */
+        $playerInstance = new PlayerInstance();
         $playerInstance->playerId = $pId;
-        $playerInstance->gameInstanceId = $this->currentInstanceId;
-        $playerInstance->lastUpdateDateTime = $statusDT;
-        $playerInstance->status = PlayerStatusType::WAITING;
-        $playerInstance->stake = $stake;
-        $playerInstance->lastPlayAmount = $playAmount;
-        $playerInstance->playerPlayNumber = 0;
-        $playerInstance->numberTimeOuts = 0;
-        $playerInstance->playerInstanceSetup = new PlayerInstanceSetup();
-        $playerInstance->playerInstanceSetup->playerId = $pId;
-        $playerInstance->playerInstanceSetup->isVirtual = 1;
-        $playerInstance->playerInstanceSetup->playerName = $pName;
-        $playerInstance->playerInstanceSetup->playerImageUrl = $defaultAvatarUrl;
-        $playerInstance->playerInstanceSetup->gameSessionId = $this->id;
-        $playerInstance->playerInstanceSetup->gameInstanceId = $this->currentInstanceId;
-        $playerInstance->playerInstanceSetup->seatNumber = $pNumber;
-        $playerInstance->playerInstanceSetup->turnNumber = $pNumber;
-        $playerInstance->playerInstanceSetup->blindBet = $blindBet;
-        $playerState = new PlayerStatusDto($playerInstance);
-        $this->playerStatusDtos = array_merge($this->playerStatusDtos, array($playerState));
-    }
-
-    /**
-     * Generates and saves the virtual players for the practice session.
-     * @param type $statusDT 
-     */
-    function addDummyPlayersAndBlindBets($statusDT) {
-        $playerName = 'Practice 1 - ' . $this->id;
-        $player1 = EntityHelper::createPracticePlayer($playerName, 1, $this->startDateTime);
-        $this->savePracticePlayer(1, $player1->playerId, $playerName, $statusDT);
-
-        $playerName = 'Practice 2 - ' . $this->id;
-        $player2 = EntityHelper::createPracticePlayer($playerName, 2, $this->startDateTime);
-        $this->savePracticePlayer(2, $player2->playerId, $playerName, $statusDT);
-
-        $playerName = 'Practice 3 - ' . $this->id;
-        $player3 = EntityHelper::createPracticePlayer($playerName, 3, $this->startDateTime);
-        $this->savePracticePlayer(3, $player3->playerId, $playerName, $statusDT);
-
-        // add blind bets
-        $this->blindBets = array(new BetDto($this->playerStatusDtos[1]->playerId, $this->playerStatusDtos[1]->blindBet),
-            new BetDto($this->playerStatusDtos[2]->playerId, $this->playerStatusDtos[2]->blindBet));
-    }
-
-    /**
-     * Indirectly called on practice games.
-     * @param type $pId
-     * @param type $gInstanceId
-     * @param type $statusDT
-     * @param type $check
-     * @param type $call
-     * @param type $raise
-     * @return PlayerActionDto 
-     */
-    function generateRandomAction($pId, $gInstanceId, $statusDT, $check, $call, $raise) {
-        /* --------------------------------------------------------------------- */
-        // generate a random action from among the allowed actions.
-        $pokerActionOptions = array(PokerActionType::RAISED,
-            PokerActionType::CALLED); //, PokerActionType::FOLD);
-        if (!is_null($check)) {
-            // adding the check option if available
-            $pokerActionOptions = array_merge($pokerActionOptions, array(PokerActionType::CHECKED));
-        }
-        $action = $pokerActionOptions[rand(0, count($pokerActionOptions) - 1)];
-        $value = null;
-        if ($action == PokerActionType::RAISED) {
-            $value = $raise;
-        } else if ($action == PokerActionType::CALLED) {
-            $value = $call;
-        };
-        $playerActionDto = new PlayerActionDto($gInstanceId, $pId, $action,
-                        $statusDT, $value);
-
-        return $playerActionDto;
-    }
-
-    /**
-     * Stores the practice session configuration values used once the session is ready for play (must be called last).
-     */
-    function savePracticeSession() {
-        $nextId = getNextSequence('GameSession', 'Id');
-        executeSQL("INSERT INTO GameSession (Id, StartDateTime, TableMinimum, NumberSeats,
-                IsPractice) VALUES ($nextId, $this->startDateTime, $this->tableMinimum,
-                $numberSeats, 1), ", __FUNCTION__ . ": ERROR insert into practice session");
-        $this->id = $nextId;
-    }
-
-    /**
-     *
-     * @param type $instanceSetupDto
-     */
-    function communicateGameStarted($instanceSetupDto, $statusDT) {
-        global $dateTimeFormat;
-        
-        $eventType = EventType::GAME_STARTED;
-        $instanceId = $instanceSetupDto->gameInstanceId;
-
-        $playerId = $instanceSetupDto->userPlayerId;
-
-        $localTime = date($dateTimeFormat, strtotime($statusDT));
-
-        $message = new EventMessage($this->id,
-                        $playerId, $eventType, $localTime,
-                        $instanceSetupDto);
-        //queueMessage($playerId, json_encode($message));
-        QueueManager::queueMessage($this->ex, $playerId, json_encode($message));
+        $playerInstance->isVirtual = 1;
+        $playerInstance->gameSessionId = $this->id;
+        $playerInstance->lastUpdateDateTime = $this->startDateTime;
+        $playerInstance->seatNumber = $pNumber;
+        $playerInstance->currentStake = $stake;
+        $playerInstance->Insert();
     }
 
 }

@@ -14,15 +14,16 @@ require_once(dirname(__FILE__) . '/../Components/QueueManager.php');
 class GameSession {
 
     public $id;
-    public $casinoTableId;
-    public $gameInstance;
-    public $ex;
+    public $requestingPlayerId;
+    public $isCheatingAllowed;
+    // transient only
     private $log;
-
-    public function __construct($cTableId, $gSessionId) {
+    public $isPractice = false;
+    
+    public function __construct($gSessionId, $playerId) {
         $this->log = Logger::getLogger(__CLASS__);
-        $this->casinoTableId = $cTableId;
         $this->id = $gSessionId;
+        $this->requestingPlayerId = $playerId;
     }
 
     /**
@@ -30,54 +31,49 @@ class GameSession {
      * The number of players participating in this next game is set when the turns are reset.
      * @param int $tableMin The minimize bet.
      * @param type $statusDT
-     * @return GameInstanceStatus
+     * @return GameInstance
      */
-    function startGameInstance($tableMin, $statusDT) {
-        
+    public function InitNewLiveGameInstance() {
+        $statusDT = Context::GetStatusDT();
+
         $nextInstanceId = getNextSequence('GameInstance', 'Id');
-        $gameInstanceStatus = new GameInstanceStatus($nextInstanceId);
-        $gameInstanceStatus->lastUpdateDateTime = $statusDT;
-        // next player and turn set later per business rules
-        $gameInstanceStatus->potSize = 0;
-        $gameInstanceStatus->lastBetSize = 0;
-        $gameInstanceStatus->numberCommunityCardsShown = 0;
-        $gameInstanceStatus->lastInstancePlayNumber = 0;
-        
-        $gameInstanceStatus->gameInstanceSetup = new GameInstanceSetup($gameInstanceStatus->id, $this->id);
-        $gameInstanceStatus->gameInstanceSetup->isPractice = 0;
-        $gameInstanceStatus->gameInstanceSetup->startDateTime = $statusDT;
-        $gameInstanceStatus->gameInstanceSetup->tableMinimum = $tableMin;
+        $gameInstance = new GameInstance($nextInstanceId);
+        $gameInstance->gameSessionId = $this->id;
+        $gameInstance->status = GameStatus::STARTED;
+        $gameInstance->startDateTime = $statusDT;
+        $gameInstance->lastUpdateDateTime = $statusDT;
         // number of players set later while reseting turns.
         // dealer and first player set later per business rules
-        
-        executeSQL("INSERT INTO GameInstance (Id, GameSessionId, IsPractice, StartDateTime,
-                LastUpdateDateTime, PotSize, LastBetSize, NumberCommunityCardsShown,
-                LastInstancePlayNumber) VALUES
-                ($nextInstanceId, $this->id, 0, '$statusDT', '$statusDT', 0, 0, 0, 0)
-                ", __FUNCTION__ . ": ERROR inserting into GameInstance with generated id
-                $nextInstanceId");
-        return $gameInstanceStatus;
+        $gameInstance->currentPotSize = 0;
+        $gameInstance->lastBetSize = 0;
+        $gameInstance->numberCommunityCardsShown = 0;
+        $gameInstance->lastInstancePlayNumber = 0;
+
+        $gameInstance->Insert();
+        return $gameInstance;
     }
 
-    function communicateGameStarted($instanceSetupDto, $playerDtos, $statusDT) {
+    /**
+     * Communicates game started to the list of recipients. 
+     * @param type $instanceSetupDto
+     * @param type $recipientPlayers
+     */
+    function CommunicateGameStarted($gameStatusDto, $recipientPlayers) {
+        $QEx = Context::GetQEx();
+
         $eventType = EventType::GAME_STARTED;
-        $instanceId = $instanceSetupDto->gameInstanceId;
+        $instanceId = $gameStatusDto->gameInstanceId;
 
-        for ($i = 0; $i < count($playerDtos); $i++) {
-            // no need to check if user left, playerDtos already returns that
-            $playerId = $playerDtos[$i]->playerId;
-            //if ($playerId != $instanceSetupDto->userPlayerId) {
-                $instanceSetupDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $instanceId);
+        for ($i = 0; $i < count($recipientPlayers); $i++) {
+            $playerId = $recipientPlayers[$i]->id;
+            $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $instanceId);
 
-                $message = new EventMessage($this->id,
-                                $playerId, $eventType, $statusDT,
-                                $instanceSetupDto);
-                //$message->eventData = $instanceSetupDto;
-                QueueManager::queueMessage($this->ex, $playerId, json_encode($message));
+            $message = new QueueMessage($eventType, $gameStatusDto);
+            //$message->eventData = $instanceSetupDto;
+            QueueManager::QueueMessage($QEx, $playerId, json_encode($message));
             //}
         }
     }
-
 
 }
 ?>

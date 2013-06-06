@@ -30,15 +30,15 @@ echo 'TEST CASE 3.1: first move skip Turn Practice Player 1 <br />';
 
 /* get previous move */
 /**********************************************************************************/
-$objBefore = EntityHelper::getNextMoveForInstance($gameInstanceId);
+$objBefore = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstanceId);
 echo "Row before: " . json_encode($objBefore) . "<br />";
 
-checkExpiration();
+ProcessExpiredPokerMoves();
 // FIXME: sleep while 30 seconds or there is a message;
 /**********************************************************************************/
 /* get new move and compare it is different than previous move */
 
-$objAfter = EntityHelper::getNextMoveForInstance($gameInstanceId);
+$objAfter = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstanceId);
 echo "Row after: " . json_encode($objAfter) . "<br />";
 
 /* check message:  player status changed */

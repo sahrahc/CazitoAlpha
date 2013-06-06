@@ -25,7 +25,7 @@ if ($pokerActionType == PokerActionType::CALLED ||
 
 global $dateTimeFormat;
 $date = date($dateTimeFormat);
-$par = json_encode(new PlayerActionDto(
+$par = json_encode(new PlayerAction(
         $gameInstanceId, 
         $turnPlayerId, 
         $pokerActionType,
@@ -36,10 +36,10 @@ echo "Parameter In: $par <br /><br />";
 $actionResultDtoEncoded = sendPlayerAction($par);
 //$actionResultDto = json_decode($actionResultDtoEncoded);
 
-$qConn = QueueManager::getPlayerConnection();
-$qCh = QueueManager::getPlayerChannel($qConn);
-$qEx = QueueManager::getPlayerExchange($qCh);
-$q = QueueManager::getPlayerQueue($playerId, $qCh);
+$qConn = QueueManager::GetQueueConnection();
+$qCh = QueueManager::GetChannel($qConn);
+$qEx = QueueManager::GetPlayerExchange($qCh);
+$q = QueueManager::GetPlayerQueue($playerId, $qCh);
 
 while ($message = $q->get(AMQP_AUTOACK)) {
     $messageBody = $message->getBody();

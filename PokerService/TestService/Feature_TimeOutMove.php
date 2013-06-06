@@ -34,9 +34,9 @@ echo "Game Instance Id " . $gameInstanceId . "<br />";
 echo "Next Player Id " . $turnPlayerId . "<br />";
 
 sleep(3);
-checkExpiration();
+ProcessExpiredPokerMoves();
 
-$objAfter = EntityHelper::getNextMoveForInstance($gameInstanceId);
+$objAfter = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstanceId);
 echo "Row after: " . json_encode($objAfter) . "<br />";
 
 $_SESSION['param_turnPlayerId'] = $objAfter->playerId;

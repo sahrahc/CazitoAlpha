@@ -10,13 +10,16 @@ class CasinoTableDto {
     // from source --------------------------
     public $casinoTableId;
     public $casinoTableName;
+    public $casinoTableDescription;
+    public $tableMinimum;
+    public $numberSeats;
     public $gameSessionId;
     // additional data ----------------------
-    public $gameInstanceId;
+    //public $gameInstanceId;
     // waiting players do not have seat numbers
-    public $playerDtos;
+    //public $playerDtos;
     // if the request was unauthenticated an id is generated.
-    public $userPlayerId;
+    //public $userPlayerId;
 
     public function __construct($entity) {
         $dto->casinoTableId = $entity->id;

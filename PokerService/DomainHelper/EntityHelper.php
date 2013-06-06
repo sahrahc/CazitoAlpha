@@ -28,7 +28,6 @@ class EntityHelper {
      */
     public static function getCasinoTable($cTableId) {
         global $dateTimeFormat;
-        global $sessionExpiration;
         if (is_null($cTableId) || $cTableId == "") {
             return null;
         }
@@ -46,20 +45,7 @@ class EntityHelper {
         $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
         $obj->currentGameSessionId = $row["CurrentGameSessionId"];
         $obj->sessionStartDateTime = $row["SessionStartDateTime"];
-        //$obj->isSessionStale = false;
-
-        $result = executeSQL("SELECT LastUpdateDateTime FROM GameInstance
-                WHERE GameSessionId = $obj->currentGameSessionId ORDER BY StartDateTime DESC
-                ", __FUNCTION__ . ":Error selecting from GameInstance session id
-                $obj->currentGameSessionId");
-        if (mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_array($result);
-            // expiration date time is 24 hours after the last update
-            $expirationDateTime = DateTime::createFromFormat($dateTimeFormat, $row[0]);
-            $expirationDateTime->add(new DateInterval($sessionExpiration)); // 24 hours
-            self::log(" Last Update " . json_encode($expirationDateTime));
-            $obj->isSessionStale = new DateTime() > $expirationDateTime ? true : false;
-        }
+        // sets the stale indicator flag if no active sessions for the table
         return $obj;
     }
 
@@ -98,14 +84,16 @@ class EntityHelper {
      * @param type $statusDT
      * @return CasinoTable 
      */
-    public static function getOrCreateCasinoTable($cTableId, $tableSize, $statusDT) {
+    public static function getOrCreateCasinoTable($cTableId, $tableSize, $playerId) {
         global $numberSeats;
         global $defaultTableMin;
+        $statusDT = Context::GetStatusDT();
+
         $casinoTable = self::getCasinoTable($cTableId);
-        if (is_null($tableSize)) {
-            $tableSize = $defaultTableMin;
-        }
         if (is_null($casinoTable)) {
+            if (is_null($tableSize)) {
+                $tableSize = $defaultTableMin;
+            }
             // resetting the id
             $nextTableId = getNextSequence('CasinoTable', 'Id');
             $gameSessionId = getNextSequence('GameSession', 'Id');
@@ -117,8 +105,9 @@ class EntityHelper {
                     ($nextTableId, '$tableName', $tableSize, $numberSeats, '$statusDT',
                     $gameSessionId, '$statusDT')", __FUNCTION__ .
                     ": Error inserting into casino with generated id $nextTableId");
-            executeSQL("INSERT INTO GameSession (Id, TableMinimum, NumberSeats, StartDateTime,
-                    IsPractice) VALUES ($gameSessionId, $tableSize, $numberSeats,
+            executeSQL("INSERT INTO GameSession (Id, RequestingPlayerId,
+                TableMinimum, NumberSeats, StartDateTime,
+                    IsPractice) VALUES ($gameSessionId, $playerId, $tableSize, $numberSeats,
                     '$statusDT', 0)", __FUNCTION__ .
                     ": Error inserting into GameSession with generated id $gameSessionId");
             $casinoTable = new CasinoTable();
@@ -129,32 +118,108 @@ class EntityHelper {
             $casinoTable->lastUpdateDateTime = $statusDT;
             $casinoTable->currentGameSessionId = $gameSessionId;
             $casinoTable->sessionStartDateTime = $statusDT;
-            // $casinoTable->isSessionStale = false; null
         }
         return $casinoTable;
     }
 
-    /* * ********************************************************************************* */
+    public static function GetGameSession($gameSessionId) {
+        $result = executeSQL("SELECT * FROM GameSession WHERE Id = $gameSessionId", __FUNCTION__ . ": ERROR selecting from GameSession id $gameSessionId");
+        if (mysql_num_rows($result) == 0) {
+            return null;
+        }
+        $row = mysql_fetch_array($result);
+        $isPractice = $row["IsPractice"];
+        if ($isPractice) {
+            $gameSession = new PracticeSession($row["Id"], $row["RequestingPlayerId"]);
+            $gameSession->tableMinimum = $row["TableMinimum"];
+            $gameSession->numberSeats = $row["NumberSeats"];
+        } else {
+            $gameSession = new GameSession($row["Id"]);
+        }
+        return $gameSession;
+    }
+
+    public static function CreatePracticeSession($playerId) {
+        global $numberSeats;
+        global $defaultTableMin;
+
+        $nextSessionId = getNextSequence('GameSession', 'Id');
+        $gameSession = new PracticeSession($nextSessionId, $playerId);
+        $gameSession->startDateTime = Context::GetStatusDT();
+        $gameSession->numberSeats = $numberSeats;
+        $gameSession->tableMinimum = $defaultTableMin;
+
+        executeSQL("INSERT INTO GameSession (Id, RequestingPlayerId,
+            StartDateTime, TableMinimum, NumberSeats,
+                IsPractice) VALUES ($gameSession->Id, $gameSession->requestingPlayerId,
+                $gameSession->startDateTime, $gameSession->tableMinimum,
+                $gameSession->numberSeats, $gameSession->isPractice), "
+                , __FUNCTION__ . ": ERROR insert into game session");
+    }
+
+    /**
+     * Returns all the active sessions, live and practice
+     * @param type $casinoTableId
+     * @return int[]
+     */
+    public static function GetActiveGameSessionIds() {
+        global $dateTimeFormat;
+        global $sessionExpiration;
+        $expirationDateTime = DateTime::createFromFormat($dateTimeFormat, $row[0]);
+        $expirationDateTime->add(new DateInterval($sessionExpiration)); // 24 hours
+
+        $result = executeSQL("SELECT s.Id FROM GameSession s " .
+                " LEFT JOIN CasinoTable c on c.CurrentGameSessionId = s.Id " .
+                " INNER JOIN GameInstance i on s.GameInstanceId = i.Id" .
+                " WHERE s.LastUpdateDateTime < '$expirationDateTime' " .
+                ": Error selecting active practice and live game sessions");
+        if (mysql_num_rows($result) == 0) {
+            return null;
+        }
+        $gameSessionIds = null;
+        $i = 0;
+        while ($row = mysql_fetch_array($result)) {
+            $gameSessionIds[$i] = $row["Id"];
+        }
+        return $gameSessionIds;
+    }
+
+    public static function GetPlayersForCasinoTable($cTableId) {
+        $result = executeSQL("SELECT * FROM Player WHERE CurrentCasinoTableId = $cTableId
+            ORDER BY CurrentSeatNumber", __FUNCTION__ . ": ERROR selecting from CasinoTable id $cTableId");
+        if (mysql_num_rows($result) == 0) {
+            return null;
+        }
+        $i = 0;
+        while ($row = mysql_fetch_array($result)) {
+            $players[$i] = new Player($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
+            $players[$i]->lastUpdateDateTime = $row["LastUpdateDateTime"];
+            $players[$i]->casinoTableId = $row["CurrentCasinoTableId"];
+            $players[$i]->currentSeatNumber = $row["CurrentSeatNumber"];
+            $players[$i]->reservedSeatNumber = $row["ReservedSeatNumber"];
+            $players[$i]->waitStartDateTime = $row["WaitStartDateTime"];
+            $players[$i]->buyIn = $row["BuyIn"];
+
+            $i++;
+        }
+        return $players;
+    }
+
+    /*     * ********************************************************************************* */
+
     /**
      * Get the game instance object given the identifier or null if not found. Exception handling if not found to be decided by the calling operation.
      * @param int $gInstId
      * @return GameInstance
      */
-    public static function getGameInstance($gInstId) {
+    public static function GetGameInstance($gInstId) {
         if (is_null($gInstId)) {
             return null;
         }
 
         // left join on casino table and practice session
-        $result = executeSQL("SELECT g.*, c.TableMinimum AS CasinoMin, s.TableMinimum AS
-                PracticeMin, dp.TurnNumber AS DealerTurnNumber, np.TurnNumber AS NextTurnNumber
+        $result = executeSQL("SELECT g.* 
                 FROM GameInstance g
-                LEFT JOIN PlayerState dp ON g.ID = dp.GameInstanceId
-                    AND g.DealerPlayerId = dp.PlayerId
-                LEFT JOIN PlayerState np ON g.ID = np.GameInstanceId
-                    AND g.NextPlayerId = np.PlayerId
-                LEFT JOIN CasinoTable c ON g.GameSessionId = c.CurrentGameSessionId
-                LEFT JOIN GameSession s on g.GameSessionId = s.Id
                 WHERE g.Id = $gInstId", __FUNCTION__ . ": Error selecting GameInstance instance id $gInstId");
 
         if (mysql_num_rows($result) == 0) {
@@ -162,34 +227,28 @@ class EntityHelper {
         }
 
         $row = mysql_fetch_array($result);
-        $obj = new GameInstanceStatus($row["Id"]);
+        $obj = new GameInstance($row["Id"]);
+        $obj->gameSessionId = $row["GameSessionId"];
+        $obj->status = $row["Status"];
+        $obj->startDateTime = $row["StartDateTime"];
         $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
+        $obj->numberPlayers = $row["NumberPlayers"];
+        $obj->dealerPlayerId = $row["DealerPlayerId"];
+        $obj->firstPlayerId = $row["FirstPlayerId"];
         $obj->nextPlayerId = $row["NextPlayerId"];
-        $obj->nextTurnNumber = $row["NextTurnNumber"]; // via join
-        $obj->potSize = $row["PotSize"];
+        $obj->currentPotSize = $row["CurrentPotSize"];
         $obj->lastBetSize = $row["LastBetSize"];
         $obj->numberCommunityCardsShown = $row['NumberCommunityCardsShown'];
         $obj->lastInstancePlayNumber = $row['LastInstancePlayNumber'];
         $obj->winningPlayerId = $row['WinningPlayerId'];
 
-        $obj->gameInstanceSetup = new GameInstanceSetup($row["Id"], $row["GameSessionId"]);
-        $obj->gameInstanceSetup->isPractice = $row["IsPractice"];
-        $obj->gameInstanceSetup->startDateTime = $row["StartDateTime"];
-        $obj->gameInstanceSetup->tableMinimum = $row["CasinoMin"]; // via join
-        $obj->gameInstanceSetup->numberPlayers = $row["NumberPlayers"];
-        if (is_null($obj->gameInstanceSetup->tableMinimum)) {
-            $obj->gameInstanceSetup->tableMinimum = $row["PracticeMin"];
-        }
-        $obj->gameInstanceSetup->dealerPlayerId = $row["DealerPlayerId"];
-        $obj->gameInstanceSetup->dealerTurnNumber = $row["DealerTurnNumber"]; // via join
-        $obj->gameInstanceSetup->firstPlayerId = $row["FirstPlayerId"];
         return $obj;
     }
 
     /**
      * Get a game session's last instance, including the last dealer, bet size and pot size.
      * @param int $gSessionId
-     * @return GameInstanceStatus
+     * @return GameInstance
      */
     public static function getSessionLastInstance($gSessionId) {
         // left join on casino table and practice session
@@ -210,7 +269,7 @@ class EntityHelper {
         }
 
         $row = mysql_fetch_array($result);
-        $obj = new GameInstanceStatus($row["Id"]);
+        $obj = new GameInstance($row["Id"]);
         $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
         $obj->nextPlayerId = $row["NextPlayerId"];
         $obj->nextTurnNumber = $row["NextTurnNumber"]; // via join
@@ -220,95 +279,71 @@ class EntityHelper {
         $obj->lastInstancePlayNumber = $row['LastInstancePlayNumber'];
         $obj->winningPlayerId = $row['WinningPlayerId'];
 
-        $obj->gameInstanceSetup = new GameInstanceSetup($row["Id"], $row["GameSessionId"]);
-        $obj->gameInstanceSetup->isPractice = $row["IsPractice"];
-        $obj->gameInstanceSetup->startDateTime = $row["StartDateTime"];
-        $obj->gameInstanceSetup->tableMinimum = $row["CasinoMin"]; // via join
-        if (is_null($obj->gameInstanceSetup->tableMinimum)) {
-            $obj->gameInstanceSetup->tableMinimum = $row["PracticeMin"];
+        $obj->gameSessionId = $row["GameSessionId"];
+        $obj->isPractice = $row["IsPractice"];
+        $obj->startDateTime = $row["StartDateTime"];
+        $obj->tableMinimum = $row["CasinoMin"]; // via join
+        if (is_null($obj->tableMinimum)) {
+            $obj->tableMinimum = $row["PracticeMin"];
         }
-        $obj->gameInstanceSetup->numberPlayers = $row["NumberPlayers"];
-        $obj->gameInstanceSetup->dealerPlayerId = $row["DealerPlayerId"];
-        $obj->gameInstanceSetup->dealerTurnNumber = $row["DealerTurnNumber"]; // via join
-        $obj->gameInstanceSetup->firstPlayerId = $row["FirstPlayerId"];
+        $obj->numberPlayers = $row["NumberPlayers"];
+        $obj->dealerPlayerId = $row["DealerPlayerId"];
+        $obj->dealerTurnNumber = $row["DealerTurnNumber"]; // via join
+        $obj->firstPlayerId = $row["FirstPlayerId"];
         return $obj;
     }
 
     /**
-     * Only practice sessions and instances are created this way.
-     * @global type $defaultTableMin
-     * @global type $buyInMultiplier
-     * @global type $numberSeats
-     * @param type $gSessionId
-     * @param type $playerId
-     * @param type $statusDT
-     * @return GameInstanceStatus
+     * Given a game instance for a practice session, return the player
+     * @param gInstId
+     * @return \Player
+     * @throws Exception
      */
-    public static function createPracticeInstance($gSessionId, $playerId, $statusDT) {
-        global $defaultTableMin;
-        global $buyInMultiplier;
-        global $numberSeats;
+    public static function getPracticeInstancePlayer($gInstId) {
 
-        $stake = $defaultTableMin * $buyInMultiplier;
-        $sessionId = $gSessionId;
-        if (is_null($gSessionId)) {
-            // resetting the id
-            $sessionId = getNextSequence('GameSession', 'Id');
-            executeSQL("INSERT INTO GameSession (Id, StartDateTime, TableMinimum,
-                    NumberSeats, IsPractice) VALUES($sessionId, '$statusDT', $defaultTableMin,
-                    $numberSeats, 1)", __FUNCTION__ . "
-                    : Error inserting GameSession with generated id $sessionId");
+        $result = executeSQL("SELECT p.* FROM Player p
+            INNER JOIN PlayerState s on p.id = s.PlayerId
+            INNER JOIN GameSession g on g.id = s.GameSessionId
+            WHERE g.IsPractice = 1 AND s.GameInstanceId = $gInstId", __FUNCTION__ . ": Error selecting Player on practice instance $gInstId");
+
+        if (mysql_num_rows($result) == 0) {
+            throw new Exception("Invalid game instance id");
         }
-        $nextInstanceId = getNextSequence('GameInstance', 'Id');
-        $potSize = $defaultTableMin * 1.5;
-        // dealer, first and next player id set after this method.
-        executeSQL("INSERT INTO GameInstance (Id, GameSessionId, IsPractice, StartDateTime,
-                LastUpdateDateTime, NumberPlayers, DealerPlayerId, FirstPlayerId, NextPlayerId,
-                PotSize, LastBetSize, NumberCommunityCardsShown, LastInstancePlayNumber) VALUES
-                ($nextInstanceId, $sessionId, 1, '$statusDT', '$statusDT',
-                $numberSeats, null, null, null, $potSize, $defaultTableMin, 0, 0)", __FUNCTION__ .
-                ": Error insert into game instance with generated id $nextInstanceId");
+        $row = mysql_fetch_array($result);
+        $obj = new Player($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
+        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
+        /* $obj->casinoTableId = $row["CurrentCasinoTableId"];
+          $obj->currentSeatNumber = $row["CurrentSeatNumber"];
+          $obj->reservedSeatNumber = $row["ReservedSeatNumber"];
+          $obj->waitStartDateTime = $row["WaitStartDateTime"];
+         */
+        $obj->buyIn = $row["BuyIn"];
 
-        $gameInstance = new GameInstanceStatus($nextInstanceId);
-        $gameInstance->lastUpdateDateTime = $statusDT;
-        // not setting dealer id and turn
-        $gameInstance->potSize = $potSize;
-        $gameInstance->lastBetSize = $defaultTableMin;
-        $gameInstance->numberCommunityCardsShown = 0;
-        $gameInstance->lastInstancePlayNumber = 0;
-
-        $gameInstance->gameInstanceSetup = new GameInstanceSetup($gameInstance->id, $sessionId);
-        $gameInstance->gameInstanceSetup->isPractice = 1;
-        $gameInstance->gameInstanceSetup->startDateTime = $statusDT;
-        $gameInstance->gameInstanceSetup->tableMinimum = $defaultTableMin;
-        $gameInstance->gameInstanceSetup->numberPlayers = 4;
-
-        return $gameInstance;
+        return $obj;
     }
 
-    /* * ********************************************************************************* */
+    /*     * ********************************************************************************* */
+
     /**
      * Retrieve a player given the player id or null if not found. Exception handling in that case by calling function.
      * @param int $playerId
-     * @param int $cTableId
-     * @return PlayerDto
+     * @return Player, throws exception if not found
      */
-    public static function getPlayerDto($playerId) {
-        if (is_null($playerId)) {
-            return null;
-        }
+    public static function getPlayer($playerId) {
 
         $result = executeSQL("SELECT * FROM Player WHERE Id = $playerId", __FUNCTION__ . ": Error selecting Player with player id $playerId");
 
         if (mysql_num_rows($result) == 0) {
-            return null;
+            throw new Exception("Invalid user id");
         }
         $row = mysql_fetch_array($result);
-        $obj = new PlayerDto($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
+        $obj = new Player($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
+        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
         $obj->casinoTableId = $row["CurrentCasinoTableId"];
-        $obj->currentSeatNumber = $row['CurrentSeatNumber'];
-        $obj->reservedSeatNumber = $row['ReservedSeatNumber'];
-        $obj->buyin = $row["BuyIn"];
+        $obj->currentSeatNumber = $row["CurrentSeatNumber"];
+        $obj->reservedSeatNumber = $row["ReservedSeatNumber"];
+        $obj->waitStartDateTime = $row["WaitStartDateTime"];
+        $obj->buyIn = $row["BuyIn"];
 
         return $obj;
     }
@@ -316,21 +351,23 @@ class EntityHelper {
     /**
      *
      * @param type $playerName
-     * @return PlayerDto 
+     * @return Player
      */
-    public static function getPlayerDtoByName($playerName) {
+    public static function getPlayerByName($playerName) {
         $result = executeSQL("SELECT * FROM Player WHERE Name = '$playerName'", __FUNCTION__ . "
                 : Error selecting from Player with name $playerName ");
         if (mysql_num_rows($result) > 0) {
             $row = mysql_fetch_array($result);
             $playerId = $row["Id"];
             self::log()->debug(__FUNCTION__ . ": player found $playerId");
-            $playerDto = new PlayerDto($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
-            $playerDto->casinoTableId = $row["CurrentCasinoTableId"];
-            $playerDto->currentSeatNumber = $row['CurrentSeatNumber'];
-            $playerDto->reservedSeatNumber = $row['ReservedSeatNumber'];
-            $playerDto->buyin = $row["BuyIn"];
-            return $playerDto;
+            $player = new Player($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
+            $player->lastUpdateDateTime = $row["LastUpdateDateTime"];
+            $player->casinoTableId = $row["CurrentCasinoTableId"];
+            $player->currentSeatNumber = $row['CurrentSeatNumber'];
+            $player->reservedSeatNumber = $row['ReservedSeatNumber'];
+            $player->waitStartDateTime = $row["WaitStartDateTime"];
+            $player->buyIn = $row["BuyIn"];
+            return $player;
         }
         return null;
     }
@@ -340,11 +377,11 @@ class EntityHelper {
      * @global type $defaultAvatarUrl
      * @param string $playerName
      * @param type $statusDT
-     * @return PlayerDto 
+     * @return Player
      */
-    public static function createPlayer($playerName, $statusDT) {
+    public static function createPlayer($playerName) {
         global $defaultAvatarUrl;
-
+        $statusDT = Context::GetStatusDT();
         $nextPlayerId = getNextSequence('Player', 'Id');
         if ($playerName == 'Guest') {
             $playerName = 'Guest' . $nextPlayerId;
@@ -356,8 +393,8 @@ class EntityHelper {
             VALUES ($nextPlayerId, 0, '$playerName', '$imageUrl', null,
                 null, null, '$statusDT', '$statusDT')", __FUNCTION__ . ": Error
                 inserting Player generated id $nextPlayerId");
-        $playerDto = new PlayerDto($nextPlayerId, $playerName, $imageUrl, 0);
-        return $playerDto;
+        $player = new Player($nextPlayerId, $playerName, $imageUrl, 0);
+        return $player;
     }
 
     /**
@@ -368,9 +405,9 @@ class EntityHelper {
      * @param type $playerName
      * @param type $seatNum
      * @param type $statusDT
-     * @return PlayerDto 
+     * @return Player
      */
-    public static function createPracticePlayer($playerName, $seatNum, $statusDT) {
+    public static function createPracticePlayer($playerName, $seatNum) {
         global $defaultAvatarUrl;
         global $defaultTableMin;
         global $buyInMultiplier;
@@ -378,16 +415,18 @@ class EntityHelper {
         $nextPlayerId = getNextSequence('Player', 'Id');
         $imageUrl = $defaultAvatarUrl;
         $buyIn = $defaultTableMin * $buyInMultiplier;
+        $statusDT = Context::GetStatusDT();
 
         executeSQL("INSERT INTO Player (Id, IsVirtual, Name, ImageUrl, CurrentCasinoTableId,
             CurrentSeatNumber, BuyIn, LastUpdateDateTime, WaitStartDateTime)
             VALUES ($nextPlayerId, 1, '$playerName', '$imageUrl', null,
                 $seatNum, $buyIn, '$statusDT', '$statusDT')", __FUNCTION__ . ": Error
                 inserting Player generated id $nextPlayerId");
-        $playerDto = new PlayerDto($nextPlayerId, $playerName, $imageUrl, 1);
-        $playerDto->currentSeatNumber = $seatNum;
-        $playerDto->buyin = $buyIn;
-        return $playerDto;
+        $player = new Player($nextPlayerId, $playerName, $imageUrl, 1);
+        $player->currentSeatNumber = $seatNum;
+        $player->lastUpdateDateTime = $statusDT;
+        $player->buyIn = $buyIn;
+        return $player;
     }
 
     /**
@@ -397,163 +436,93 @@ class EntityHelper {
      * @param type $casinoTableId
      * @param string $playerName
      * @param type $statusDT
-     * @return PlayerDto
+     * @return Player
      */
     public static function getOrCreatePlayer($playerName, $statusDT) {
-        $playerDto = null;
+        $player = null;
         if ($playerName != 'Guest') {
-            $playerDto = self::getPlayerDtoByName($playerName);
+            $player = self::getPlayerByName($playerName);
         }
-        if (is_null($playerDto)) {
-            $playerDto = self::createPlayer($playerName, $statusDT);
+        if (is_null($player)) {
+            $player = self::createPlayer($playerName, $statusDT);
         }
-        return $playerDto;
+        return $player;
     }
 
-    /* * ********************************************************************************* */
+    /*     * ********************************************************************************* */
+
     /**
      * Get a player's instance given the player and instance identifiers.
      * @param type $gInstId
      * @param type $pId
-     * @return PlayerInstanceStatus
+     * @return PlayerInstance
      */
-    public static function getPlayerInstance($gInstId, $pId) {
-        // sorted by seat number
-        $result = executeSQL("SELECT p.Name AS Name, p.ImageURL as ImageUrl, ps.*
-                FROM PlayerState ps INNER JOIN Player p ON ps.Playerid = p.Id
-                WHERE GameInstanceId = $gInstId and PlayerId = $pId ORDER BY SeatNumber", __FUNCTION__ . ": ERROR loading PlayerState with instance id $gInstId
+    public static function getPlayerInstance($gameId, $pId, $isSessionId = false) {
+        if ($isSessionId) {
+            $result = executeSQL("SELECT *
+                FROM PlayerState
+                WHERE GameSessionId = $gameId and PlayerId = $pId ORDER BY SeatNumber", __FUNCTION__ . ": ERROR loading PlayerState with instance id $gameId
                 and player id = $pId");
+        } else {
+            $result = executeSQL("SELECT *
+                FROM PlayerState
+                WHERE GameInstanceId = $gameId and PlayerId = $pId ORDER BY SeatNumber", __FUNCTION__ . ": ERROR loading PlayerState with instance id $gameId
+                and player id = $pId");
+        }
+        // sorted by seat number
         if (mysql_num_rows($result) == 0) {
             return null;
         }
-        $playerStatus = null;
-        $i = 0;
         $row = mysql_fetch_array($result);
-        $playerStatus = new PlayerInstanceStatus();
+        $playerStatus = new PlayerInstance();
         $playerStatus->playerId = $row["PlayerId"];
         $playerStatus->gameInstanceId = $row["GameInstanceId"];
+        $playerStatus->isVirtual = $row["IsVirtual"];
+        $playerStatus->gameSessionId = $row["GameSessionId"];
         $playerStatus->lastUpdateDateTime = $row["LastUpdateDateTime"];
+        $playerStatus->seatNumber = $row["SeatNumber"];
+        $playerStatus->turnNumber = $row["TurnNumber"];
         $playerStatus->status = $row["Status"];
-        $playerStatus->stake = $row["Stake"];
+        $playerStatus->currentStake = $row["CurrentStake"];
         $playerStatus->lastPlayAmount = $row["LastPlayAmount"];
-        $playerStatus->playerPlayNumber = $row["PlayerPlayNumber"];
+        $playerStatus->lastPlayInstanceNumber = $row["LastPlayInstanceNumber"];
         $playerStatus->numberTimeOuts = $row["NumberTimeOuts"];
 
-        $playerStatus->playerInstanceSetup = new PlayerInstanceSetup();
-        $playerStatus->playerInstanceSetup->playerId = $row["PlayerId"];
-        $playerStatus->playerInstanceSetup->isVirtual = $row["IsVirtual"];
-        $playerStatus->playerInstanceSetup->playerName = $row["Name"];
-        $playerStatus->playerInstanceSetup->playerImageUrl = $row["ImageUrl"];
-        $playerStatus->playerInstanceSetup->gameSessionId = $row["GameSessionId"];
-        $playerStatus->playerInstanceSetup->gameInstanceId = $row["GameInstanceId"];
-        $playerStatus->playerInstanceSetup->seatNumber = $row["SeatNumber"];
-        $playerStatus->playerInstanceSetup->turnNumber = $row["TurnNumber"];
-        $playerStatus->playerInstanceSetup->blindBet = $row["BlindBet"];
-
         return $playerStatus;
-    }
-
-    /**
-     * Get all the players instance setup and status for a game instance
-     * @param int gInstId
-     * @return PlayerInstanceStatus[]
-     */
-    public static function getPlayerInstancesForGame($gInstId) {
-        // sorted by seat number
-        $result = executeSQL("SELECT p.Name AS Name, p.ImageURL as ImageUrl, ps.*
-                FROM PlayerState ps INNER JOIN Player p ON ps.Playerid = p.Id
-                WHERE GameInstanceId = $gInstId ORDER BY TurnNumber", __FUNCTION__ . ": ERROR loading PlayerStates with instance id $gInstId");
-        if (mysql_num_rows($result) == 0) {
-            return null;
-        }
-        $playerInstances = null;
-        $i = 0;
-        while ($row = mysql_fetch_array($result)) {
-            $playerInstances[$i] = new PlayerInstanceStatus();
-            $playerInstances[$i]->playerId = $row["PlayerId"];
-            $playerInstances[$i]->gameInstanceId = $row["GameInstanceId"];
-            $playerInstances[$i]->lastUpdateDateTime = $row["LastUpdateDateTime"];
-            $playerInstances[$i]->status = $row["Status"];
-            $playerInstances[$i]->stake = $row["Stake"];
-            $playerInstances[$i]->lastPlayAmount = $row["LastPlayAmount"];
-            $playerInstances[$i]->playerPlayNumber = $row["PlayerPlayNumber"];
-            $playerInstances[$i]->numberTimeOuts = $row["NumberTimeOuts"];
-
-            $playerInstances[$i]->playerInstanceSetup = new PlayerInstanceSetup();
-            $playerInstances[$i]->playerInstanceSetup->playerId = $row["PlayerId"];
-            $playerInstances[$i]->playerInstanceSetup->isVirtual = $row["IsVirtual"];
-            $playerInstances[$i]->playerInstanceSetup->playerName = $row["Name"];
-            $playerInstances[$i]->playerInstanceSetup->playerImageUrl = $row["ImageUrl"];
-            $playerInstances[$i]->playerInstanceSetup->gameSessionId = $row["GameSessionId"];
-            $playerInstances[$i]->playerInstanceSetup->gameInstanceId = $row["GameInstanceId"];
-            $playerInstances[$i]->playerInstanceSetup->seatNumber = $row["SeatNumber"];
-            $playerInstances[$i]->playerInstanceSetup->turnNumber = $row["TurnNumber"];
-            $playerInstances[$i]->playerInstanceSetup->blindBet = $row["BlindBet"];
-            $i++;
-        }
-        return $playerInstances;
     }
 
     /**
      * Get the player status Dtos for all players in an instance.
      * @param type $gInstId
      * @return PlayerStatusDto array
+      public static function getPlayerStatusDtosForInstance($gameInstance, $addName = false) {
+      // sorted by seat number
+      $result = executeSQL("SELECT p.Name AS Name, p.ImageURL as ImageUrl, ps.*
+      FROM PlayerState ps INNER JOIN Player p ON ps.Playerid = p.Id
+      WHERE GameInstanceId = $gameInstance->id ORDER BY SeatNumber", __FUNCTION__ . ": ERROR loading PlayerStates with instance id $gameInstance->id");
+      if (mysql_num_rows($result) == 0) {
+      return null;
+      }
+      $playerStatusDtos = null;
+      $i = 0;
+      while ($row = mysql_fetch_array($result)) {
+      $playerStatusDtos[$i] = new PlayerStatusDto();
+      $playerStatusDtos[$i]->playerId = $row["PlayerId"];
+      if ($addName) {
+      $playerStatusDtos[$i]->playerName = $row["Name"];
+      $playerStatusDtos[$i]->playerImageUrl = $row["ImageUrl"];
+      }
+      $playerStatusDtos[$i]->seatNumber = $row["SeatNumber"];
+      $playerStatusDtos[$i]->status = $row["Status"];
+      $playerStatusDtos[$i]->currentStake = $row["CurrentStake"];
+      $playerStatusDtos[$i]->lastPlayAmount = $row["LastPlayAmount"];
+      $playerStatusDtos[$i]->lastPlayInstanceNumber = $row["LastPlayInstanceNumber"];
+      $i++;
+      }
+      return $playerStatusDtos;
+      }
      */
-    public static function getPlayerStatusDtosForInstance($gInstId) {
-        // sorted by seat number
-        $result = executeSQL("SELECT p.Name AS Name, p.ImageURL as ImageUrl, ps.*
-                FROM PlayerState ps INNER JOIN Player p ON ps.Playerid = p.Id
-                WHERE GameInstanceId = $gInstId ORDER BY SeatNumber", __FUNCTION__ . ": ERROR loading PlayerStates with instance id $gInstId");
-        if (mysql_num_rows($result) == 0) {
-            return null;
-        }
-        $playerStatusDtos = null;
-        $i = 0;
-        while ($row = mysql_fetch_array($result)) {
-            $playerStatusDtos[$i] = new PlayerStatusDto(null);
-            $playerStatusDtos[$i]->playerId = $row["PlayerId"];
-            $playerStatusDtos[$i]->playerName = $row["Name"];
-            $playerStatusDtos[$i]->playerImageUrl = $row["ImageUrl"];
-            $playerStatusDtos[$i]->seatNumber = $row["SeatNumber"];
-            $playerStatusDtos[$i]->status = $row["Status"];
-            $playerStatusDtos[$i]->blindBet = $row["BlindBet"];
-            $playerStatusDtos[$i]->stake = $row["Stake"];
-            $playerStatusDtos[$i]->playAmount = $row["LastPlayAmount"];
-            $playerStatusDtos[$i]->playerPlayNumber = $row["PlayerPlayNumber"];
-            $i++;
-        }
-        return $playerStatusDtos;
-    }
-
-    /* * ********************************************************************************* */
-    /**
-     * Retrieves the next move from the queue. Log warning if more than one found.
-     * @param type $gInstanceId
-     * @return NextPokerMove
-     */
-    public static function getNextMoveForInstance($gInstanceId) {
-        $result = executeSQL("SELECT * FROM NextPokerMove WHERE GameInstanceId = $gInstanceId
-                AND IsDeleted = 0 ORDER BY ExpirationDate DESC LIMIT 1", __FUNCTION__ . "
-                : Error selecting from NextPokerMove for instance $gInstanceId");
-        $row = mysql_fetch_array($result);
-        $exceptionMsg = null;
-        if (mysql_num_rows($result) == 0) {
-            return null;
-        }
-        $nextMove = new NextPokerMove();
-        $nextMove->id = $row["Id"];
-        $nextMove->gameInstanceId = $row["GameInstanceId"];
-        $nextMove->isPractice = $row["IsPractice"];
-        $nextMove->playerId = $row["PlayerId"];
-        $nextMove->turnNumber = $row["TurnNumber"];
-        $nextMove->expirationDate = $row["ExpirationDate"];
-        $nextMove->isEndGameNext = $row["IsEndGameNext"];
-        $nextMove->callAmount = $row["CallAmount"];
-        $nextMove->checkAmount = $row["CheckAmount"];
-        $nextMove->raiseAmount = $row["RaiseAmount"];
-        return $nextMove;
-    }
-
+    /*     * ********************************************************************************* */
 }
 
 ?>

@@ -31,10 +31,10 @@ echo 'TEST CASE 2.1: first move sendPlayerAction with practice session <br />';
 
 global $dateTimeFormat;
 $date = date($dateTimeFormat);
-$playerActionDto = new PlayerActionDto($gameInstanceId, $playerId, PokerActionType::CHECKED,
+$playerAction = new PlayerAction($gameInstanceId, $playerId, PokerActionType::CHECKED,
         $date, 300);
 
-$par = json_encode($playerActionDto);
+$par = json_encode($playerAction);
 echo "parameter $par <br />";
 $actionResultArray = sendPlayerAction($par);
 showPokerMove($par, $actionResultArray);

@@ -222,8 +222,8 @@ function dealAllCards($numPlayers, $instanceId) {
         echo "$number ";
     }
     for ($i = 0; $i < $totalCards; $i++) {
-        $card[$i] = findCardName($DECK[$cardIndex[$i]]);
-        $returnList[$i] = new PokerCard($i+1, $cardIndex[$i], $card[$i]);
+        $cardCode[$i] = findCardName($DECK[$cardIndex[$i]]);
+        $returnList[$i] = GameCard::InitShuffledCard($i+1, $cardIndex[$i], $cardCode[$i]);
     }
     return $returnList;
 }

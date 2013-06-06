@@ -7,7 +7,7 @@
     <body>
         <?php
         
-        //$dbName = 'cazito5_sprint9';
+        $dbName = 'cazito5_sprint9';
         include_once(dirname(__FILE__) . '/../PokerService/Config.php');
         
         include('DropSchema.php');

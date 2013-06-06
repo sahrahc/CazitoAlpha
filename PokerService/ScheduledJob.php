@@ -6,14 +6,15 @@ include_once('DomainHelper/CheatingHelper.php');
 cleanUp();
 //ejectInactivePlayer();
 // trying different values...
-checkExpiration();
+ProcessExpiredPokerMoves();
 
 //CheatingHelper::updateTimedItems();
 
 // every three seconds, 19 times = 57   th' second
 for ($i=0;$i<19;$i++) {
     sleep(3);
-    checkExpiration();
+    ProcessExpiredPokerMoves();
+    ProcessTimedCheatingItems();
   //  updateTimedItems();
 }
 ?>
