@@ -1,0 +1,40 @@
+footer#textLinks {
+    @extend .clearfix;
+    width: 100%;
+    //background: url(/themes/Todos/img/footer/bg-footer.png);
+    background-color: #9EB8F0;
+    height: 27px;
+    color: $black;
+    font-size: 11px;
+    margin-top: -27px;		/* Sticky footer */
+    position: relative;
+
+    /*holds logo and date*/
+    .left {
+    padding-left: 21px;
+    padding-top: 6px;
+    }
+
+    /*holds text links*/
+    p {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding:0;
+
+        a {
+            display: inline;
+            color: $black;
+            margin: 0 8px;
+            text-decoration: none;
+        }
+        a:hover {
+            color: $red;
+        }
+    }
+
+}
+/*
+.containerInner {
+    @include opacity(1);
+}
+*/

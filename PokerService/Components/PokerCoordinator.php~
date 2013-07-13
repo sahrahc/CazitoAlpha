@@ -1,0 +1,308 @@
+<?php
+
+/*
+ * PokerCoordinator: business logic for actions that require multiple business
+ * objects to act in sequence. This logic does not fit the object model 
+ * paradigm.
+ * Every action that requires communication to all players fit this category.
+ */
+/* * ************************************************************************************* */
+// Configure logging
+include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
+Logger::configure(dirname(__FILE__) . '/../log4php.xml');
+$analytics = Logger::getLogger("CoordinatorService");
+
+// Include Application Scripts
+require_once(dirname(__FILE__) . '/../Metadata.php');
+
+/* * ************************************************************************************* */
+
+/**
+ * Security checks already done - game session and instance to player validation
+ */
+class PokerCoordinator {
+
+    /**
+     * Start a live game with real players. Validates that a game is not already 
+     * in progress. session and player id's already verified.
+     * 
+     * @global log $analytics
+     * @param int $gameSessionId
+     * @param int $requestingPlayerId
+     */
+    public static function StartGame($gameSessionId, $requestingPlayerId) {
+        global $analytics;
+        global $log;
+        
+        // validate last game was finished. Abandoned games do finish 
+        // with all players timing out.
+        $lastInstance = EntityHelper::getSessionLastInstance($gameSessionId);
+        if ($lastInstance && !$lastInstance->IsGameEnded()) {
+            $analytics->info("Game instance for session $gameSessionId requested by $requestingPlayerId but live instance $lastInstance->id");
+            $log->error("Game instance for session $gameSessionId requested by $requestingPlayerId but live instance $lastInstance->id");
+            return;
+        }
+        else {
+            $analytics->info("Game instance for session $gameSessionId requested by $requestingPlayerId");    
+        }
+        
+        // init objects
+        $casinoTable = EntityHelper::getCasinoTableForSession($gameSessionId);        
+        $blindBetAmounts = $casinoTable->FindBlindBetAmounts();
+        $tableSize = $casinoTable->tableMinimum;
+        
+        $gameSession = EntityHelper::GetGameSession($casinoTable->currentGameSessionId);        
+        // validate it is a practice session
+        if ($gameSession->isPractice) {
+            $log->error("Practice game $gameSessionId confused as live session.");
+            return;
+        }
+        
+        // sequencing of poker game start - same sequencing for live vs.
+        // practice games (excluding communication and wait list)
+        $gameInstance = $gameSession->InitNewLiveGameInstance();
+        $playerStatuses = $gameInstance->ResetActivePlayers();
+        
+        $gameInstance->InitInstanceWithDealerAndBlinds($blindBetAmounts, $playerStatuses);
+        GameInstanceCards::InitDealGameCards($gameInstance);
+        $firstMove = ExpectedPokerMove::InitFirstMoveConstraints($gameInstance, $tableSize);
+
+        // start populating the response
+        $gameStatusDto = GameStatusDto::SetStartedGame($gameInstance);
+        $updatedPlayerStatuses = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);
+        $gameStatusDto->playerStatusDtos = PlayerStatusDto::MapPlayerStatuses($updatedPlayerStatuses);
+        $gameStatusDto->nextMoveDto = new PokerMoveDto($firstMove);
+        $gameStatusDto->communityCards = CardHelper::getCommunityCardDtos($gameInstance->id, 3);
+        $gameStatusDto->waitingListSize = $casinoTable->GetWaitingListSize();
+        // communicate to all playing and waiting players. Can't use PlayerStatuses because instance only
+        // usePlayerHandDto specific for each user, set by communicate function
+        $gameSession->CommunicateGameStarted($gameStatusDto, EntityHelper::GetPlayersForCasinoTable($casinoTable->id));
+
+        PlayerVisibleCard::RevealMarkedCards($gameInstance);
+    }
+
+    /**
+     * Start a practice game (other than the first game which started 
+     * with the practice session). Validates that a game is not already 
+     * in progress. session and player id's already verified.
+     * @global type $numberSeats
+     * @global type $defaultTableMin
+     * @global type $log
+     * @global type $dateTimeFormat
+     */
+    //
+    
+    /**
+     * Start a practice game. Validation 
+     * 
+     * @global type $log
+     * @param int $gameSessionId
+     */
+    public static function StartPracticeGame($gameSessionId) {
+        global $log;
+
+        // can't start game if another is being played
+        if (!is_null(EntityHelper::getSessionLastInstance($gameSessionId))) {
+            return;
+        }
+
+        $statusDateTime = Context::GetStatusDT();
+        
+        $gameSession = EntityHelper::GetGameSession($gameSessionId);
+        // validate it is a practice session
+        if (!$gameSession->isPractice) {
+            $log->error("Live game $gameSessionId confused as practice session.");
+            return;
+        }
+        
+        $blindBetAmounts = $gameSession->FindBlindBetAmounts();
+        $tableSize = $gameSession->tableMinimum;
+        
+        // sequencing of poker game start - same sequencing for live vs.
+        // practice games (excluding communication)
+        $gameInstance = $gameSession->InitNewPracticeInstance();
+        $playerStatuses = $gameInstance->ResetActivePlayers(true);
+
+        $gameInstance->InitInstanceWithDealerAndBlinds($blindBetAmounts, $playerStatuses);
+        GameInstanceCards::InitDealGameCards($gameInstance);
+        $firstMove = ExpectedPokerMove::InitFirstMoveConstraints($gameInstance, $tableSize);
+
+        // start populating the response
+        $gameStatusDto = GameStatusDto::SetStartedGame($gameInstance);
+        $updatedPlayerStatuses = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);        
+        $gameStatusDto->playerStatusDtos = PlayerStatusDto::MapPlayerStatuses($updatedPlayerStatuses, true);
+        $gameStatusDto->nextMoveDto = new PokerMoveDto($firstMove);
+        $gameStatusDto->communityCards = CardHelper::getCommunityCardDtos($gameInstance->id, 3);
+        // communicate to user
+        $gameSession->CommunicateGameStarted($gameStatusDto, $statusDateTime);
+    }
+
+    /**
+     * Processes a player action, whether dummy or live. In the latter case
+     * $validateMove is true so that action is validated against expected 
+     * Session and player id's already verified.
+     * 
+     * @param PlayerAction $playerAction
+     * @param boolean $validateMove
+     */
+    public static function MakePokerMove($playerAction, $validateMove) {
+        global $log;
+        
+        $gameInstance = EntityHelper::GetGameInstance($playerAction->gameInstanceId);
+        if ($gameInstance->IsGameEnded()) {
+            $log->error("User attempted move but game is ended: " . json_encode($playerAction));
+            return;
+        }
+
+        if (!is_null($validateMove)) {
+            $playerAction->ValidateMove();
+        }
+        
+        // updates PlayerStatus
+        $playerInstanceStatus = $gameInstance->ApplyPlayerAction($playerAction);
+        $gameInstance->UpdateInstanceAfterMove();
+
+        // craft response DTO
+        $gameStatusDto = new GameStatusDto();
+
+        // current play may have triggered game end
+        if ($gameInstance->IsGameEnded()) {
+            // updates the winning player id and hands
+            $gameInstance->FindWinner();
+            $gameStatusDto->winningPlayerId = $gameInstance->winningPlayerId;
+            $playerHandsDto = PlayerHandDto::mapPlayerHands($gameInstance->playerHands);
+            $gameStatusDto->playerHandsDto = $playerHandsDto;
+        } else {
+            // update the next player id and turn number
+            $curTurn = $playerInstanceStatus->turnNumber;
+
+            // update next player id on game instance
+            $nextMove = ExpectedPokerMove::FindNextExpectedMoveForInstance($gameInstance, $curTurn);
+            $gameStatusDto->nextMoveDto = new NextPokerMoveDto($nextMove);
+
+            // find whether community cards need to be send (gameinstance is updated)
+            // update the community cards
+            $roundNumber = $gameInstance->IsRoundEnd();
+            if ($roundNumber === 1 or $roundNumber === 2) {
+                $newCards = GameInstanceCards::DealCommunityCards($roundNumber);
+                if ($newCards) {
+                    $gameStatusDto->newCommunityCards = $newCards;
+                    $gameInstance->numberCommunityCardsShown =+ count($newCards);
+                }
+            }
+        }
+        // only send the player who made the move.
+        $gameStatusDto->updatePlayerStatusDto = PlayerStatusDto::mapPlayerStatus($playerInstanceStatus);
+
+        $gameInstance->CommunicateMoveResult($gameStatusDto, 0);
+    }
+
+    public static function SkipPokerMove($pokerMove, $gameInstance) {
+        global $log;
+        
+        // Logic --------------------------------------------------------------------------------
+        if ($gameInstance->IsGameEnded()) {
+            $log->error("Time out triggered but game already ended: " . json_encode($pokerMove));
+            return;
+        }
+
+        // updates PlayerStatus
+        $playerInstanceStatus = $gameInstance->SkipTurn($pokerMove);
+
+        if ($playerInstanceStatus->numberTimeOuts >= 3) {
+            $casinoTable = EntityHelper::getCasinoTableForSession($gameInstance->gameSessionId);
+            $vacatedSeat = TableCoordinator::RemoveUserFromTable($casinoTable, $pokerMove->playerId);
+            TableCoordinator::ReserveAndOfferSeat($casinoTable, $vacatedSeat);
+        }
+
+        // follow player status update with instance level follow-up
+        $gameStatusDto = new GameStatusDto();
+
+        // current play may have triggered game end
+        if ($gameInstance->IsGameEnded()) {
+            $gameInstance->FindWinner();
+            $gameStatusDto->winningPlayerId = $gameInstance->winningPlayerId;
+            $playerHandsDto = PlayerHandDto::mapPlayerHands($gameInstance->playerHands);
+            $gameStatusDto->playerHandsDto = $playerHandsDto;
+        } else {
+            // update the next player id and turn number
+            $curTurn = $playerInstanceStatus->turnNumber;
+
+            // update next player id on game instance
+            $nextMove = ExpectedPokerMove::FindNextExpectedMoveForInstance($gameInstance, $curTurn);
+
+            // find whether community cards need to be send (gameinstance is updated)
+            // update the community cards
+            $roundNumber = $gameInstance->IsRoundEnd();
+            if ($roundNumber) {
+                $newCards = GameInstanceCards::DealCommunityCards($roundNumber);
+                if ($newCards) {
+                    $gameStatusDto->newCommunityCards = $newCards;
+                    $gameInstance->numberCommunityCardsShown =+ count($newCards);
+                }
+            }
+            $gameStatusDto->nextMoveDto = new NextPokerMoveDto($nextMove);
+        }
+
+        $gameStatusDto->updatePlayerStatusDto = PlayerStatusDto::mapPlayerStatus($playerInstanceStatus);
+        $gameInstance->UpdateInstanceAfterMove();
+
+        $gameInstance->CommunicateMoveResult($gameStatusDto, 0);
+    }
+
+    public static function Cheat($gameSessionId, $playerId, $gameInstanceId, $cheatRequestDto) {
+
+        /* --------------------------------------------------------------------- */
+        Context::Init();
+
+        // cheating items before user enters session
+        switch ($cheatRequestDto->itemType) {
+            case ItemType::LOAD_CARD_ON_SLEEVE:
+                $cardNameList = $cheatRequestDto->cardNameList;
+                CheatingHelper::AddHiddenCards($playerId, $cardNameList);
+            case ItemType::SOCIAL_SPOTTER:
+                CheatingHelper::StartCardMarking($playerId, $gameSessionId);
+        }
+
+        $gameInstance = EntityHelper::GetGameInstance($cheatRequestDto->gameInstanceId);
+        if (is_null($gameInstance)) {
+            $gameInstance = EntityHelper::getSessionLastInstance($cheatRequestDto->gameSessionId);
+        }
+        if (is_null($gameInstance)) {
+            return null;
+        }
+        // convenience vars
+        $gameInstanceId = $gameInstance->id;
+        $gameSessionId = $gameInstance->gameSessionId;
+        // Logic -----------------------------------------------------------------
+        $returnDto = null;
+
+        switch ($cheatRequestDto->itemType) {
+            case ItemType::ACE_PUSHER:
+                $playerCardNumber = $cheatRequestDto->playerCardNumber;
+                CheatingHelper::PushRandomAce($playerId, $gameInstance, $playerCardNumber);
+                break;
+            case ItemType::HEART_MARKER:
+                CheatingHelper::GetSuitForAllGameCards($playerId, $gameInstance, 'hearts');
+                break;
+            case ItemType::CLUB_MARKER:
+                CheatingHelper::GetSuitForAllGameCards($playerId, $gameInstance, 'clubs');
+                break;
+            case ItemType::DIAMOND_MARKER:
+                CheatingHelper::GetSuitForAllGameCards($playerId, $gameInstance, 'diamonds');
+                break;
+            case ItemType::RIVER_SHUFFLER:
+                CheatingHelper::CheatLookRiverCard($playerId, $gameInstance);
+                break;
+            case ItemType::RIVER_SHUFFLER_USE:
+                CheatingHelper::CheatSwapRiverCard($playerId, $gameInstance);
+                break;
+            default:
+                break;
+        }
+        Context::Disconnect();
+    }
+
+}
+
+?>

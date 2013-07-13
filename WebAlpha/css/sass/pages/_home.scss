@@ -1,0 +1,29 @@
+/* 
+    Document   : home
+    Created on : Jun 19, 2013, 4:07:20 PM
+    Author     : cazito
+    Description:
+        Purpose of the stylesheet follows.
+*/
+section#home {
+    position:relative;
+    height:400px;
+    width:642px;
+    background-repeat:no-repeat;
+    border-style: outset;
+    border-color: green;
+    border-width:2px;
+        background-image:url('../../../images/SaloonSafe.png');
+}
+
+/* center the options */
+section#home table {
+    margin-left: auto;
+    margin-right: auto;
+    
+}
+/* size each option */
+section#home input {
+    height: 40px;
+    width: 40px;
+}

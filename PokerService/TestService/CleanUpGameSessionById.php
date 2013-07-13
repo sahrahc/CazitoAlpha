@@ -20,45 +20,49 @@
 // 
 // Setup ///////////////////////////////////////////////////
 
-function cleanUpGameSessionById($conTest, $gameSessionId) {
+function cleanUpGameSessionById($gameSessionId) {
 
     // Exception handling: verify parameter
     echo "-----CleanUpGameSessionById: Deleting session $gameSessionId --------------<br/>";
     // delete GameInstance, GameCard, PlayerAction, NextPokerMove
     // and GameSession for a GameSessionId
-    $sql = "DELETE GameCard FROM GameCard INNER JOIN GameInstance
+    executeSQL("DELETE GameCard FROM GameCard INNER JOIN GameInstance
     ON GameCard.GameInstanceId = GameInstance.Id
-    WHERE GameInstance.GameSessionId = $gameSessionId";
-    executeSQL($sql, "Error Deleting From GameCard for session Id $gameSessionId");
+    WHERE GameInstance.GameSessionId = $gameSessionId", 
+            "Error Deleting From GameCard for session Id $gameSessionId");
     echo "Info: " . mysql_affected_rows() . " GameCard rows deleted for session.<br />";
     
-    $sql = "DELETE PlayerAction FROM PlayerAction INNER JOIN GameInstance
+    executeSQL("DELETE PlayerAction FROM PlayerAction INNER JOIN GameInstance
     ON PlayerAction.GameInstanceId = GameInstance.Id
-    WHERE GameSessionId = $gameSessionId";
-    executeSQL($sql, "Error Deleting From PlayerAction for session id $gameSessionId");
+    WHERE GameSessionId = $gameSessionId",
+            "Error Deleting From PlayerAction for session id $gameSessionId");
     echo "Info: " . mysql_affected_rows() . " PlayerAction rows deleted for session.<br />";
     
-    $sql = "DELETE NextPokerMove FROM NextPokerMove 
+    executeSQL("DELETE ExpectedPokerMove FROM ExpectedPokerMove 
     INNER JOIN GameInstance
-    ON NextPokerMove.GameInstanceId = GameInstance.Id
-    WHERE GameInstance.GameSessionId = $gameSessionId";
-    executeSQL($sql, "Error Deleting from NextPokerMove where session id $gameSessionId");
-    echo "Info: " . mysql_affected_rows() . " NextPokerMove rows deleted for session.<br />";
+    ON ExpectedPokerMove.GameInstanceId = GameInstance.Id
+    WHERE GameInstance.GameSessionId = $gameSessionId",
+            "Error Deleting from ExpectedPokerMove where session id $gameSessionId");
+    echo "Info: " . mysql_affected_rows() . " ExpectedPokerMove rows deleted for session.<br />";
     
     // delete from playerState
-    $sql = "DELETE FROM PlayerState WHERE GameSessionId = $gameSessionId";
-    executeSQL($sql, "Error Deleting from PlayerState where session id $gameSessionId");
+    executeSQL("DELETE FROM PlayerState WHERE GameSessionId = $gameSessionId",
+            "Error Deleting from PlayerState where session id $gameSessionId");
     echo "Info: " . mysql_affected_rows() . " PlayerState rows deleted for session.<br />";
     
-    $sql = "DELETE FROM GameInstance WHERE GameSessionId = $gameSessionId";
-    executeSQL($sql, "Error Deleting from GameInstance where sessionid $gameSessionId");
+    executeSQL("DELETE FROM GameInstance WHERE GameSessionId = $gameSessionId",
+            "Error Deleting from GameInstance where sessionid $gameSessionId");
     echo "Info: " .mysql_affected_rows() . " GameInstance rows deleted for session.<br />";
     
-    $sql = "DELETE FROM GameSession WHERE Id = $gameSessionId";
-    executeSQL($sql, "Error Deleting from GameSession where id $gameSessionId");
+    executeSQL("DELETE FROM GameSession WHERE Id = $gameSessionId",
+            "Error Deleting from GameSession where id $gameSessionId");
     echo "Info: " . mysql_affected_rows() . " GameSession rows deleted for session.<br/>";
     echo "-----CleanUpGameSessionById----------------------------------<br />";
     
+    $qConn = QueueManager::GetConnection();
+    $qCh = QueueManager::GetChannel($qConn);
+    $q = QueueManager::GetGameSessionQueue($gameSessionId, $qCh);
+    QueueManager::DeleteQueue($q);
 }
 
 ?>

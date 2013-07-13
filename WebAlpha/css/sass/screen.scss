@@ -1,0 +1,32 @@
+/*!
+*/
+
+@import 'core/colors';
+@import 'core/fonts';
+@import 'core/footer';
+@import 'core/header';
+@import 'core/html';
+@import 'core/layout';
+@import 'core/messaging';
+@import 'core/navigation';
+
+/*!
+* Line break
+*/
+// Include the external files/plugins
+
+@import 'plugins/jcarousel-skin-tango';
+@import 'plugins/jquery-ui-popup';
+@import 'plugins/reset';
+
+/*!
+* Line break
+*/
+/**
+* Page specific CSS
+*/
+@import 'pages/home';
+@import 'pages/playSection';
+@import 'pages/frontStreet';
+@import 'pages/cheatingSection';
+

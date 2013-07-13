@@ -1,12 +1,5 @@
 <?php
 
-// Configure logging
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-
-//include_once(dirname(__FILE__) . '/../Components/EventMessageProducer.php');
-include_once(dirname(__FILE__) . '/../Components/QueueManager.php');
-
 /* * ************************************************************************************** */
 
 /**
@@ -30,19 +23,22 @@ class Player {
      * Use constructor when first logged in
      */
     function __construct($id, $name, $imageUrl, $isVirtual) {
-        $this->playerId = $id;
-        $this->playerName = $name;
-        $this->playerImageUrl = $imageUrl;
-        $this->isVirtual = $isVirtual;
+        $this->id = $id == null ? null : (int)$id;
+        $this->name = $name;
+        $this->imageUrl = $imageUrl;
+        $this->isVirtual = $isVirtual == null ? null : (int)$isVirtual;
     }
     
     public function Update() {
+        global $logPlayer;
+        global $dateTimeFormat;
+        
         $seatValue = $this->currentSeatNumber;
         $waitingStartDT = "null";
         // set seat
         if (is_null($this->currentSeatNumber)) {
             $seatValue = "null";
-            $waitingStartDT = Context::GetStatusDT();
+            $waitingStartDT = Context::GetStatusDT()->format($dateTimeFormat);
         }
         $reservedSeat = $this->reservedSeatNumber;
         if (is_null($this->reservedSeatNumber)) {
@@ -57,9 +53,9 @@ class Player {
             LastUpdateDateTime = '$waitingStartDT'
             WHERE Id = $this->id", __FUNCTION__ . "
                 : Error updating Player player id $this->id");
-        self::$log->warn(__FUNCTION__ . ": Updated casino id for player id
-                            $this->id when getting player");
-    }
+        // log updated player record
+        $logPlayer->info("");
+        }
 
     /**
      * Converts a reserved seat into a current seat.
@@ -68,13 +64,17 @@ class Player {
      * @param type $pId
      */
     public function UpdatePlayerSeat($seatNum, $isReserved = false) {
-        $statusDT = Context::GetStatusDT();
+        global $logPlayer;
+        global $dateTimeFormat;
+        
+        $statusDT = Context::GetStatusDT()->format($dateTimeFormat);
         if ($isReserved) {
             $this->reservedSeatNumber = $seatNum;
             executeSQL("UPDATE Player SET ReservedSeatNumber = $seatNum,
                     CurrentSeatNumber = null, LastUpdateDateTime = '$statusDT' WHERE Id =
                     $this->id", __FUNCTION__ .
                     ": Error updating Player id $this->id to reserved seat number $seatNum");
+            $logPlayer->info("");
             return;
         }
         $this->currentSeatNumber = $seatNum;
@@ -82,6 +82,7 @@ class Player {
                     ReservedSeatNumber = null, LastUpdateDateTime = '$statusDT' WHERE Id =
                     $this->id", __FUNCTION__ .
                 ": Error updating Player id $this->id to seat number $seatNum");
+            $logPlayer->info("");
     }
 
 }

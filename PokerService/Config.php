@@ -1,11 +1,12 @@
 <?php
-
+// configure logging
+/* * ***************************************************************************************************** */
 $dbName = 'cazito5_sprint9';
 /* * ***************************************************************************************************** */
 /** poker playing defaults */
-$defaultTableMin = 10000; // practice
+$defaultTableMin = 1000; // practice
 $numberSeats = 4; // max number of seats
-$buyInMultiplier = 30;
+$buyInMultiplier = 300;
 
 /* * ***************************************************************************************************** */
 // formats
@@ -23,6 +24,7 @@ $playExpiration = 'PT20S'; // time given to a player to make a move
 $practiceExpiration = 'PT2S'; // time between practice player moves
 $moveTimeOut = 'PT20M'; // time when next move is purged from the queue.
 $sessionExpiration = 'PT24H';
+$waitSessionExpiration = 'PT12H'; // time before a session without games is expired
 /* * ***************************************************************************************************** */
 // cheating time outs
 $cHeartMarkerTimeOut = 'PT5M';
@@ -45,7 +47,28 @@ $stomp_vhost = '/';
 /* * ***************************************************************************************************** */
 $amqp_port = 5672;
 $amqp_host = 'localhost';
-$amqp_exchange = 'player';
+$amqp_player_exchange = 'player';
+$amqp_session_exchange = 'session';
+$amqp_chat_exchange = 'chat';
 $qmap_vhost = '/';
 
+// Include Libraries
+include_once(dirname(__FILE__) . '/../Libraries/log4php/Logger.php');
+include_once(dirname(__FILE__) . '/../Helper/WebServiceDecoder.php');
+include_once(dirname(__FILE__) . '/../Helper/DataHelper.php');
+
+// Include Application Scripts
+require_once(dirname(__FILE__) . '/Metadata.php');
+require_once(dirname(__FILE__) . '/Components/AllInclude.php');
+require_once(dirname(__FILE__) . '/DomainHelper/AllInclude.php');
+require_once(dirname(__FILE__) . '/DomainEnhanced/AllInclude.php');
+require_once(dirname(__FILE__) . '/DomainModel/AllInclude.php');
+require_once(dirname(__FILE__) . '/Dto/AllInclude.php');
+
+Logger::configure(dirname(__FILE__) . '/log4php.xml');
+$analytics = Logger::getLogger('analytics');
+$log = Logger::getLogger('log');
+$logPlayer = Logger::getLogger('LogPlayer');
+
+connectToStateDB();
 ?>

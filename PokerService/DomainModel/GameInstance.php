@@ -1,12 +1,5 @@
 <?php
 
-// Configure logging
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-
-// Include Application Scripts
-require_once(dirname(__FILE__) . '/../Metadata.php');
-require_once(dirname(__FILE__) . '/../Components/QueueManager.php');
 /* * ************************************************************************************* */
 
 class HighestHand {
@@ -38,8 +31,9 @@ class GameInstance {
     public $playerHands;
     private $log;
 
-    public function __construct() {
+    public function __construct($id) {
         $this->log = Logger::getLogger(__CLASS__);
+        $this->id = $id == null ? null : (int)$id;
     }
 
     /*
@@ -50,13 +44,15 @@ class GameInstance {
 
     public function ResetActivePlayers($isPractice = false) {
         // Delete players who left the casino table
-        if ($isPractice) {
-            PlayerInstance::DeleteDepartedPlayerInstances($this->id);
+        if (!$isPractice) {
+            PlayerInstance::DeleteDepartedPlayerInstances($this->gameSessionId);
             // Get players with same gamesessionid and seat number
             // who don't have player state
             $newPlayerStatuses = PlayerInstance::GetNewPlayerStatesOnSession($this);
-            foreach ($newPlayerStatuses as $playerStatus) {
-                $playerStatus->Insert();
+            if (!is_null($newPlayerStatuses)) {
+                foreach ($newPlayerStatuses as $playerStatus) {
+                    $playerStatus->Insert();
+                }
             }
         }
         //-------------------------------------------------------------
@@ -64,18 +60,19 @@ class GameInstance {
         //-------------------------------------------------------------
         // Get all player instances for the game session, after adding/removing
         // game instance id updated when reset below
-        $playerStatuses = PlayerInstance::GetPlayerInstancesForGame($this->id, $isSessionId = true);
+        $playerStatuses = PlayerInstance::GetPlayerInstancesForGame($this->gameSessionId, $isSessionId = true);
         $lastDealerSN = $this->_getLastDealerSeatNumber();
 
         // assign turn numbers and update; note that players who just joined the table will have both an insert and an update
         $countPlayers = count($playerStatuses);
         for ($i = 0; $i < $countPlayers; $i++) {
+            // first turn is for user left to the one who placed blind
             $turnNumber = ($i + ($countPlayers - 1) - $lastDealerSN) % $countPlayers;
             $playerStatuses[$i]->gameInstanceId = $this->id;
             $playerStatuses[$i]->turnNumber = $turnNumber;
             $playerStatuses[$i]->UpdatePlayerTurnAndReset();
         }
-        return $playerStatuses;
+        return PlayerInstance::GetPlayerInstancesForGame($this->id);
     }
 
     /**
@@ -84,7 +81,6 @@ class GameInstance {
      * @param array(int, int) blindAmts The size of the small and large blinds.
      * @param PlayerInstance[] $pStatuses The index is the turn number because reset makes them so.
      * @param timestamp statusDT
-     * @return blindBets[BetDto, Bet]
      */
     function InitInstanceWithDealerAndBlinds($blindAmts, $pStatuses) {
         $blind1 = $blindAmts[0];
@@ -92,7 +88,9 @@ class GameInstance {
 
         $statusDT = Context::GetStatusDT();
         $count = count($pStatuses);
-        $dealerTurn = 0 % $count;
+        // dealer is always turn 0 but need modulus because number of seats
+        // may result in less turns than roles (e.g., 2 players)
+        $dealerTurn = 0 % $count; // for symmetry
         $blind1Turn = 1 % $count;
         $blind2Turn = 2 % $count;
         $nextPlayerTurn = 3 % $count;
@@ -110,8 +108,6 @@ class GameInstance {
         $this->currentPotSize = $blind1 + $blind2;
         $this->numberPlayers = $count;
         $this->lastUpdateDateTime = $statusDT;
-        $this->lastInstancePlayNumber = 2;
-        $this->numberCommunityCardsShown = 3;
 
         $this->_updateDealerAndBlinds();
     }
@@ -128,23 +124,21 @@ class GameInstance {
         // initialize playerstatus
         $playerInstanceStatus = EntityHelper::getPlayerInstance($this->id, $playerAction->playerId);
 
-        // fields that automatically update
-        // update player status, player number and last play amount
         $playerInstanceStatus->status = $playerAction->pokerActionType;
-        $playerInstanceStatus->lastPlayInstanceNumber += 1;
-        if (!is_null($playerAction->actionValue)) {
-            $playerInstanceStatus->lastPlayAmount = $playerAction->actionValue;
-        }
+
         // update instance last play number;
         $this->lastInstancePlayNumber +=1;
+        $playerInstanceStatus->lastPlayInstanceNumber = $this->lastInstancePlayNumber;
 
         // fields that need to be calculated
         // update the player stake and game instance potsize and lastbetsize
+        // for fold and checks, last play amount does not change
         if ($playerAction->pokerActionType == PokerActionType::CALLED ||
                 $playerAction->pokerActionType == PokerActionType::BLIND_BET ||
-                $playerAction->pokerActionType == PokerActionType::RAISED) {
-            $playerInstanceStatus->stake -= $playerAction->actionValue;
-            $this->potSize += $playerAction->actionValue;
+                $playerAction->pokerActionType == PokerActionType::RAISED) {    
+            $playerInstanceStatus->currentStake -= $playerAction->actionValue;
+            $playerInstanceStatus->lastPlayAmount = $playerAction->actionValue; 
+            $this->currentPotSize += $playerAction->actionValue;
             $this->lastBetSize = $playerAction->actionValue;
         }
         if ($playerAction->pokerActionType == PokerActionType::CHECKED) {
@@ -155,7 +149,7 @@ class GameInstance {
 
         $pokerMove = $playerAction->ConvertToPokerMove();
         $pokerMove->Delete();
-        
+
         return $playerInstanceStatus;
     }
 
@@ -169,7 +163,9 @@ class GameInstance {
     function SkipTurn($pokerMove) {
         // initialize playerstatus
         $playerInstanceStatus = EntityHelper::getPlayerInstance($this->id, $pokerMove->playerId);
-
+        if ($playerInstanceStatus == PlayerStatusType::LEFT) {
+            return;
+        }
         // increment time out
         $playerInstanceStatus->numberTimeOuts += 1;
         // fields that automatically update
@@ -177,11 +173,14 @@ class GameInstance {
         if ($playerInstanceStatus->status != PlayerStatusType::LEFT) {
             $playerInstanceStatus->status = PlayerStatusType::SKIPPED;
         }
-       
-        $playerInstanceStatus->lastPlayInstanceNumber +=1;
-
+        if ($playerInstanceStatus->numberTimeOuts >= 3) {
+            $playerInstanceStatus->status = PlayerStatusType::LEFT;
+        } else {
+            $playerInstanceStatus->status = PlayerStatusType::SKIPPED;
+        }        
         // update instance last play number;
         $this->lastInstancePlayNumber +=1;
+        $playerInstanceStatus->lastPlayInstanceNumber = $this->lastInstancePlayNumber;
 
         // player status stake and last player amount does not change
         // game instance pot size and last bet size does not change.
@@ -189,17 +188,17 @@ class GameInstance {
         $playerInstanceStatus->UpdateAfterMove();
 
         $pokerMove->Delete();
-        
+
         return $playerInstanceStatus;
     }
-    
+
     /**
      * After a player makes a move, this operation is called to retrieve 
      * the constraints on the next player's
       moves. The next move is saved so that it can be expired.
      * Restrictions: updateNextPlayerIdAndTurn must have been called before.
      * @return ExpectedPokerMove
-     */
+     
     public function FindNextExpectedMove($curTurn) {
         global $playExpiration;
         global $practiceExpiration;
@@ -237,6 +236,8 @@ class GameInstance {
         $nextPokerMove->Insert();
         return $nextPokerMove;
     }
+     * 
+     */
 
     /**
      * Find the winner and everyone's hands at the end of the game.
@@ -244,6 +245,7 @@ class GameInstance {
      */
     function FindWinner() {
         $statusDT = Context::GetStatusDT();
+        // gets all the game cards for the instance
         $gameCards = CardHelper::getGameCardsForInstance($this->id);
         $playerHands = $gameCards->playerHands;
 
@@ -253,6 +255,8 @@ class GameInstance {
         $hH->winningPlayerId = 0;
 
         for ($i = 0; $i < count($playerHands); $i++) {
+            // folded does not count
+            if ($playerHands)
             $cards = array(
                 $gameCards->communityCards[0]->cardIndex,
                 $gameCards->communityCards[1]->cardIndex,
@@ -262,31 +266,31 @@ class GameInstance {
                 $gameCards->playerHands[$i]->pokerCard1->cardIndex,
                 $gameCards->playerHands[$i]->pokerCard2->cardIndex
             );
-            $playerHands[$i] = CardHelper::identifyPlayerHand($cards, $playerHands[$i]);
+            //$playerHands[$i]->pokerHandType = 
+            CardHelper::identifyPlayerHand($cards, $playerHands[$i]);
 
             $hH = CardHelper::getHigherCard($hH, $playerHands[$i]);
         }
 
-        // update plsayer hands.
+        // update player hands.
         for ($i = 0; $i < count($playerHands); $i++) {
             // update hand for each player
             if ($playerHands[$i]->playerId == $hH->winningPlayerId) {
                 $playerHands[$i]->isWinningHand = 1;
-                $status = "Won";
             } else {
-                $status = "Lost";
                 $playerHands[$i]->isWinningHand = 0;
             }
         }
         // save winning player Id
         $this->lastUpdateDateTime = $statusDT;
         $this->winningPlayerId = $hH->winningPlayerId;
+        // update instance with winner info
         $this->_updateWinner();
         $this->playerHands = $playerHands;
         PlayerInstance::UpdatePlayerStateHands($playerHands);
         /* --------------------------------------------------------------------- */
         /* mark cards that are to be seen if item is enabled */
-        CheatingHelper::MarkGameCards($this);
+        PlayerVisibleCard::AddVisibleCards($this);
         /* --------------------------------------------------------------------- */
     }
 
@@ -324,7 +328,7 @@ class GameInstance {
      * @return bool
      */
     public function IsGameEnded() {
-        if ($this->winningPlayerId) {
+        if (!is_null($this->winningPlayerId)) {
             return true;
         }
         // see if current player's move triggered and end date before calculating the next.
@@ -340,7 +344,7 @@ class GameInstance {
         }
         // if next player and previous player play is fourth, end game.
         // instance has been updated yet by the calling function
-        if ($this->instancePlayNumber >= $this->numberPlayers * 4) {
+        if ($this->lastInstancePlayNumber >= $this->numberPlayers * 4) {
             return true;
         }
         return false;
@@ -350,18 +354,16 @@ class GameInstance {
      * Create an message and send it to everyone's queue including the player who made the move.
      * @param type $isTimeOut Whether the action was by a player or triggered by timeout
      */
-    function CommunicateMoveResult($gameStatusDto, $isTimeOut) {
-        $ex = Context::GetQEx;
+    function CommunicateMoveResult($gameStatusDto) {
+        $ex = Context::GetExchangePlayer();
 
         // a timeout by a practice game is not a time out.
-        $actionType = EventType::PLAYER_MOVE;
-        if ($this->isPractice == 0 && $isTimeOut == 1) {
-            $actionType = EventType::TIME_OUT;
-        }
-
+        $actionType = EventType::ChangeNextTurn;
+        
         // get the players;
         $players = null;
-        if ($this->isPractice == 1) {
+        $gameSession = EntityHelper::GetGameSession($gameStatusDto->gameSessionId);
+        if ($gameSession->isPractice == 1) {
             // for practice game, get non-virtual player only
             // by convention first player on list, but not using convention
             $players = array(EntityHelper::getPracticeInstancePlayer($this->id));
@@ -375,8 +377,8 @@ class GameInstance {
                     $players[$i] == PlayerStatusType::LEFT) {
                 continue;
             }
-            $message = new EventMessage($this->gameSessionId, $players[$i]->id, $actionType, $this->lastUpdateDateTime, $gameStatusDto);
-            QueueManager::QueueMessage($ex, $players[$i]->id, json_encode($message));
+            $message = new QueueMessage($actionType, $gameStatusDto);
+            QueueManager::SendToPlayer($ex, $players[$i]->id, json_encode($message));
         }
     }
 
@@ -385,15 +387,19 @@ class GameInstance {
      * @param type $gameInstance
      */
     public function Insert() {
+        global $dateTimeFormat;
+        
+        $startDTString = $this->startDateTime->format($dateTimeFormat);
+        $updateDTString = $this->lastUpdateDateTime->format($dateTimeFormat);
         // TODO: set null?
         executeSQL("INSERT INTO GameInstance (Id, GameSessionId, Status, 
             StartDateTime, LastUpdateDateTime, CurrentPotSize, LastBetSize, 
             NumberCommunityCardsShown, LastInstancePlayNumber) VALUES (
                 $this->id, 
                 $this->gameSessionId, 
-                $this->status, 
-                '$this->startDateTime',
-                '$this->lastUpdateDateTime',
+                '$this->status', 
+                '$startDTString',
+                '$updateDTString',
                 $this->currentPotSize,
                 $this->lastBetSize,
                 $this->numberCommunityCardsShown,
@@ -406,12 +412,15 @@ class GameInstance {
      * @param type $statusDT
      */
     public function UpdateInstanceAfterMove() {
-        $statusDT = Context::GetStatusDT();
+        global $dateTimeFormat;
+        $this->status = GameStatus::IN_PROGRESS;
+        $statusDT = Context::GetStatusDT()->format($dateTimeFormat);
         // update in database
         // no need to save the next player turn number
         executeSQL("UPDATE GameInstance SET LastUpdateDateTime = '$statusDT',
+            Status = '$this->status',
                 NextPlayerId = $this->nextPlayerId,
-                PotSize = $this->potSize,
+                CurrentPotSize = $this->currentPotSize,
                 LastBetSize = $this->lastBetSize,
                 NumberCommunityCardsShown = $this->numberCommunityCardsShown,
                 LastInstancePlayNumber = $this->lastInstancePlayNumber
@@ -420,14 +429,18 @@ class GameInstance {
     }
 
     public static function DeleteExpiredInstances($expirationDateTime) {
+        global $dateTimeFormat;
+        
+        $endString = $expirationDateTime->format($dateTimeFormat);
         // TODO: also flush player action and game card from memory as 
         // should be done when game ended
         executeSQL("DELETE FROM ExpectedPokerMove WHERE GameInstanceId in
-            (SELECT ID FROM GameInstance WHERE LastUpdateDateTime <= $expirationDateTime)",
+            (SELECT ID FROM GameInstance WHERE LastUpdateDateTime <= '$endString')", 
                 __FUNCTION__ . ":Error deleting expired poker moves");
-        executeSQL("DELETE FROM GameInstance WHERE LastUpdateDateTime <= $expirationDateTime",
+        executeSQL("DELETE FROM GameInstance WHERE LastUpdateDateTime <= '$endString'", 
                 __FUNCTION__ . ": Error deleting expired game instances");
     }
+
     /*     * ***************************************************************************** */
     /* update instance status */
 
@@ -444,7 +457,7 @@ class GameInstance {
                 : Error selecting from PlayerState for last dealer in 
                 game session $this->gameSessionId");
         if (mysql_num_rows($result) == 0) {
-            return null;
+            return -1;
         }
         $row = mysql_fetch_array($result);
         return $row[0];
@@ -454,18 +467,21 @@ class GameInstance {
      * Get the player id and turn that should make the next play after current. This method updates the game instance status.
      * @param type $curTurnNum current turn number
      */
-    private function _getNextPlayerIdAndTurn($curTurnNum) {
+    public function GetNextPlayerIdAndTurn($curTurnNum) {
         if (is_null($curTurnNum)) {
             $curTurnNum = -1;
         }
-        $result = executeSQL("SELECT PlayerId, TurnNumber, Status, IsVirtual FROM PlayerState
+ //                   AND Status != '" . PlayerStatusType::LEFT. "'
+        $result = executeSQL("SELECT PlayerId, TurnNumber, Status, IsVirtual 
+            FROM PlayerState
                 WHERE GameInstanceId = $this->id AND TurnNumber > $curTurnNum
                 ORDER BY TurnNumber LIMIT 1", __FUNCTION__ . "
                 : Error selecting from PlayerState instance id $this->id and
                 turn greater than $curTurnNum");
         if (mysql_num_rows($result) == 0) {
             $result = executeSQL("SELECT PlayerId, TurnNumber, Status, IsVirtual
-                    FROM PlayerState WHERE GameInstanceId = $this->id AND TurnNumber >= 0
+                    FROM PlayerState 
+                    WHERE GameInstanceId = $this->id AND TurnNumber >= 0
                     ORDER BY TurnNumber LIMIT 1", __FUNCTION__ . "
                     : Error selecting from PlayerState instance id $this->id and turn >=0");
         }
@@ -483,21 +499,26 @@ class GameInstance {
             $nextPlayerStatus = EntityHelper::getPlayerInstance($this->id, $nextPlayerId);
             //$nextPlayerStatus->isVirtual = $row['IsVirtual'];
             $this->nextPlayerId = $nextPlayerId;
-            $this->nextTurnNumber = $nextTurn;
-            $this->isNextPlayerVirtual = $isVirtual;
+            //$this->nextTurnNumber = $nextTurn;
             return $nextPlayerStatus;
         } else {
             // keep looking, but increment play counters
             // is the next line correct? what's the point?
-            $this->playerInstanceStatus->lastPlayInstanceNumber +=1;
+            //$this->playerInstanceStatus->lastPlayInstanceNumber +=1;
             $this->lastInstancePlayNumber +=1;
-            $this->_getNextPlayerIdAndTurn($nextTurn);
+            if ($this->lastInstancePlayNumber < 4 * $this->numberPlayers) {
+                $this->GetNextPlayerIdAndTurn($nextTurn);
+            } else {
+                $this->nextPlayerId = null;
+            }
         }
     }
 
     private function _updateDealerAndBlinds() {
+        global $dateTimeFormat;
+        $updateDTString = $this->lastUpdateDateTime->format($dateTimeFormat);
         executeSQL("UPDATE GameInstance SET 
-            LastUpdateDateTime = '$this->lastUpdateDateTime',
+            LastUpdateDateTime = '$updateDTString',
             NumberPlayers = $this->numberPlayers,
             DealerPlayerId = $this->dealerPlayerId, 
             FirstPlayerId = $this->firstPlayerId,
@@ -514,14 +535,19 @@ class GameInstance {
      * updates the player state also
      */
     private function _updateWinner() {
-        executeSQL("UPDATE GameInstance SET WinningPlayerId = $this->winningPlayerId,
-                LastUpdateDateTime = '$this->lastUpdateDateTime' 
+        global $dateTimeFormat;
+        $updateDTString = $this->lastUpdateDateTime->format($dateTimeFormat);
+        $status = GameStatus::ENDED;
+
+        executeSQL("UPDATE GameInstance SET Status = '$status',
+            WinningPlayerId = $this->winningPlayerId,
+                LastUpdateDateTime = '$updateDTString' 
                     WHERE Id = $this->id", __FUNCTION__ . "
                 : ERROR updating GameInstance id $this->id");
 
         // reward winner's stake
-        executeSQL("UPDATE PlayerState SET Stake = Stake + $this->potSize,
-                LastUpdateDateTime = '$this->lastUpdateDateTime' WHERE PlayerId =
+        executeSQL("UPDATE PlayerState SET CurrentStake = CurrentStake + $this->currentPotSize,
+                LastUpdateDateTime = '$updateDTString' WHERE PlayerId =
                 $this->winningPlayerId AND GameInstanceId = $this->id", __FUNCTION__ . "
                 : ERROR updating winning PlayerState for game instance id $this->id");
     }

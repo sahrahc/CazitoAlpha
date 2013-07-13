@@ -18,23 +18,23 @@
 // 
 // Setup ///////////////////////////////////////////////////
 
-function cleanUpOrphanCasino($conTest) {
+function cleanUpOrphanCasino() {
     echo "-----CleanOrphanCasino---------------------------------------<br/>";
 
     // delete casino tables without players
-    $sql = "DELETE CasinoTable FROM CasinoTable 
+    executeSQL("DELETE CasinoTable FROM CasinoTable 
     LEFT JOIN Player 
     ON CasinoTable.Id = Player.CurrentCasinoTableId
-    And Player.CurrentCasinoTableId IS NULL";
-    executeSQL($sql, "Error deleting from CasinoTable with no players");
+    And Player.CurrentCasinoTableId IS NULL", 
+            "Error deleting from CasinoTable with no players");
     echo "Info: " . mysql_affected_rows() . " CasinoTable rows deleted because no players.<br />";
 
     // delete casino table without game sessions
-    $sql = "DELETE CasinoTable FROM CasinoTable
+    executeSQL("DELETE CasinoTable FROM CasinoTable
     LEFT JOIN GameSession 
     ON CasinoTable.CurrentGameSessionId = GameSession.Id
-    And GameSession.Id IS NULL";
-    executeSQL($sql, "Error deleting from CasinoTable with no game session");
+    And GameSession.Id IS NULL",
+            "Error deleting from CasinoTable with no game session");
     echo "Info: " . mysql_affected_rows() . " CasinoTable rows deleted because no game sesions.<br/>";
     
     echo "-----CleanUpOrphanCasino-------------------------------------<br />";

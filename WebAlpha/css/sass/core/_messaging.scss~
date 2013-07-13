@@ -1,0 +1,61 @@
+/* 
+    Document   : messaging
+    Created on : Jun 20, 2013, 11:00:24 AM
+    Author     : cazito
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+/* #messagingFrame */
+.messagingWindow div
+{
+    height: 201px;
+    margin: 1px 0px 0px 5px;
+    border: 2px solid #B6BFD7;
+    background-color: #EEEEEE;
+    border-radius: 3px;
+ p
+{
+    width: 144px;
+    text-align:center;
+    border: 1px solid #7E8493;
+    border-radius: 3px;
+    margin: 5px 1px 0px 5px;
+    color: #D9E1F5;
+    font-family: Comic Sans MS;
+    font-size: 0.8em;
+    background-color:#7E8493;
+}
+}
+.msg
+{
+    /* top: 0px; */
+    margin-bottom:0px;
+}
+.msgForm {
+    display:block;
+}
+.msgText {
+    width: 140px;
+    height: 161px;
+    background-color: white;
+    border: 1px outset grey;
+    margin: 0px 1px 2px 1px;
+    font-family:"Trebuchet MS", Helvetica, sans-serif;
+    font-size: 0.8em;
+}
+.msgInput {
+    width: 98px;
+    border: 1px inset grey;
+    height: 30px;
+    font-size:0.6em;
+}
+.msgSend {
+    width: 35px;
+    font-size: 0.6em;
+}
+/*#casinoTableHeader
+{
+margin-bottom: 0;
+}
+*/

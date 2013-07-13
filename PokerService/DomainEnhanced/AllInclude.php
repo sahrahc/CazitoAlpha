@@ -1,6 +1,5 @@
 <?php
-include_once('CheaterMessage.php');
-include_once('PlayerActiveItem.php');
-include_once('PlayerHiddenCard.php');
-include_once('PlayerVisibleCard.php');
+include_once(dirname(__FILE__) . '/PlayerActiveItem.php');
+include_once(dirname(__FILE__) . '/PlayerHiddenCard.php');
+include_once(dirname(__FILE__) . '/PlayerVisibleCard.php');
 ?>

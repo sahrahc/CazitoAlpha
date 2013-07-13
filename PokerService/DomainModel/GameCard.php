@@ -37,8 +37,8 @@ class GameCard {
     public function Insert($gameInstanceId, $playerId, $playerCardNumber) {
         executeSQL("INSERT INTO GameCard (GameInstanceId, PlayerId, PlayerCardNumber, 
                     DeckPosition, CardCode, CardIndex) VALUES ($gameInstanceId, 
-                $playerId, $playerCardNumber, '$this->cardCode', 
-                $this->cardIndex)", __FUNCTION__ . "
+                $playerId, $playerCardNumber, $this->deckPosition, '$this->cardCode', 
+                $this->cardIndex)", __CLASS__ . "-" .  __FUNCTION__ . "
                     : Error inserting GameCard instance ID $gameInstanceId");
             }
 }

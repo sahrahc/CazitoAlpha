@@ -22,7 +22,7 @@ $playerId = $row['PlayerId'];
 global $dateTimeFormat;
 $statusDT = date($dateTimeFormat);
 
-    $qConn = QueueManager::GetQueueConnection();
+    $qConn = QueueManager::GetConnection();
     $ch = QueueManager::GetChannel($qConn);
     $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
@@ -41,14 +41,14 @@ $cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
 echo "Community card before look: " . json_encode($cCards) . "<br /><br />";
 
 echo 'TEST CASE 34.1 swap before looking not allowed<br /><br />';
-$dto = CheatingHelper::CheatLookRiverCard($playerId, $gameInstance, $statusDT);
+$dto = CheatingHelper::CheatLookRiverCard($playerId, $gameInstance, $statusDT, ItemType::RIVER_SHUFFLER);
 $cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
 echo "Community card after looking (no change): " . json_encode($cCards) . "<br /><br />";
 
 echo '******************************************************<br />';
 echo 'TEST CASE 34.2: Look and swap river cards for instance <br /><br />';
 
-$dto = CheatingHelper::CheatSwapRiverCard($playerId, $gameInstance);
+$dto = CheatingHelper::CheatSwapRiverCard($playerId, $gameInstance, ItemType::RIVER_SHUFFLER);
 $cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
 echo "Community card after swapping: " . json_encode($cCards) . "<br /><br />";
 

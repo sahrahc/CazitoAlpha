@@ -1,5 +1,5 @@
 <?php
-include_once(dirname(__FILE__) . '/../DomainModel/CasinoTable.php');
+include_once('../DomainModel/CasinoTable.php');
 
 $redis = new Redis();
 $redisIpAddr = '127.0.0.1';

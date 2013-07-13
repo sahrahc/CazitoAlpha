@@ -24,7 +24,7 @@ $playerId = $row['PlayerId'];
 echo "Test Data: Instance is $gameInstanceId and playerId $playerId for JP <br /><br />";
 //$playerHand = CardHelper::getPlayerCard($playerId, $gameInstanceId, 1);
 
-    $qConn = QueueManager::GetQueueConnection();
+    $qConn = QueueManager::GetConnection();
     $ch = QueueManager::GetChannel($qConn);
     $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);

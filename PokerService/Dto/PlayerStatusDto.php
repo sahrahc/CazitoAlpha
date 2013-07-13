@@ -17,14 +17,14 @@ class PlayerStatusDto {
     public $lastPlayAmount;
     public $lastPlayInstanceNumber;
 
-    public static function mapPlayerStatus($entity, $addNames) {
+    public static function mapPlayerStatus($entity, $addNames=false) {
         $playerStatusDto = new PlayerStatusDto();
         if (!is_null($entity)) {
             $playerStatusDto->playerId = $entity->playerId;
             if ($addNames) {
-              $playerDto = EntityHelper::getPlayerDto($this->playerId);
-              $playerStatusDto->playerName = $playerDto->playerName;
-              $playerStatusDto->playerImageUrl = $playerDto->playerImageUrl;
+              $player = EntityHelper::getPlayer($entity->playerId);
+              $playerStatusDto->playerName = $player->name;
+              $playerStatusDto->playerImageUrl = $player->imageUrl;
             }
             $playerStatusDto->seatNumber = $entity->seatNumber;
             $playerStatusDto->status = $entity->status;
@@ -40,7 +40,7 @@ class PlayerStatusDto {
         for ($i = 0, $l = count($playerStatuses); $i < $l; $i++) {
             $obj[$i] = self::mapPlayerStatus($playerStatuses[$i], $addNames);
         }
-        return obj;
+        return $obj;
     }
 
     /**
@@ -63,7 +63,7 @@ class PlayerStatusDto {
             $obj[$i]->currentStake = $players[$i]->buyIn;
             $obj[$i]->status = $status;
             $obj[$i]->lastPlayAmount = null;
-            $obj[$i]->lastPlayInstanceNumber = 0;
+            $obj[$i]->lastPlayInstanceNumber = null;
         }
         return $obj;
     }

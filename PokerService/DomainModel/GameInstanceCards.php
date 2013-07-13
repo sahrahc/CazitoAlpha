@@ -36,14 +36,14 @@ class GameInstanceCards {
             $card1Code = $pokerCards[$cardCounter]->cardCode;
             $card1DeckPosition = $pokerCards[$cardCounter]->deckPosition;
             $game1Card = GameCard::InitShuffledCard($card1Index, $card1DeckPosition, $card1Code);
-            $game1Card->Insert($gameInstance->d, $playerStatus->id, 1);
+            $game1Card->Insert($gameInstance->id, $playerStatus->playerId, 1);
             $cardCounter++;
 
             $card2Index = $pokerCards[$cardCounter]->cardIndex;
             $card2Code = $pokerCards[$cardCounter]->cardCode;
             $card2DeckPosition = $pokerCards[$cardCounter]->deckPosition;
             $game2Card = GameCard::InitShuffledCard($card2Index, $card2DeckPosition, $card2Code);
-            $game2Card->Insert($gameInstance->id, $playerStatus->id, 2);
+            $game2Card->Insert($gameInstance->id, $playerStatus->playerId, 2);
             $cardCounter++;
         }
         // 2. pick the next 10 to be community cards
@@ -64,7 +64,7 @@ class GameInstanceCards {
             $cardCode = $pokerCards[$i]->cardCode;
             $deckPosition = $pokerCards[$i]->deckPosition;
             $remainingCard = GameCard::InitShuffledCard($cardIndex, $deckPosition, $cardCode);
-            $remainingCard->Insert($gameInstance->d, 'null', 'null');
+            $remainingCard->Insert($gameInstance->id, 'null', 'null');
         }
     }
 
@@ -73,11 +73,11 @@ class GameInstanceCards {
      * communcation via queue
      * Evalate whether community cards need to be dealt on table based on turns.
      */
-    public function DealCommunityCards($gameInstance, $roundNumber) {
-        if ($roundNumber > 2) {
+    public static function DealCommunityCards($gameInstance, $roundNumber) {
+        if ($roundNumber > 3) {
             return;
         }
-        $numberCards = $roundNumber + 3;
+        $numberCards = $roundNumber + 2; // 3 on round 1, 4 on round 2, 5 on round 3.
         $previousNumberCards = $gameInstance->numberCommunityCardsShown;
         $allCards = CardHelper::getCommunityCardDtos($gameInstance->id, $numberCards);
         $length = $numberCards == 3 ? 3 : 1;

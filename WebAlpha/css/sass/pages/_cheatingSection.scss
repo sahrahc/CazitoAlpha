@@ -1,0 +1,81 @@
+.cheatersCatalog{
+    position:absolute;
+}
+.cheaterItemDetail{
+    position:relative;
+}
+/* not working, why? */
+.cheaterItemDetail > div {
+    position:absolute;
+    left: 103px;
+}
+/* both sleeve and next card are hidden */
+.hiddenCard {
+    background-color:#7E8493;
+    padding: 4px 4px;
+    width:112px;
+    height:108px;
+    border-radius: 3px;
+    border: 2px solid #B6BFD7;
+    color: #D9E1F5;
+    font-family: Comic Sans MS;
+    font-size: 0.8em;
+    overflow: auto;
+    .sleeveCard {
+        top: 0px;
+    }
+    .nextCard {
+    top: 325px;
+    z-index:1;
+    }
+}
+.cheatingItemAction {
+    display:none;
+    position:absolute;
+    top: 124px;
+    width:117px;
+    height: 70px;
+    background-color:#F1F6FB;
+    display: table-cell;
+    vertical-align:middle;
+    margin-top: auto;
+    margin-bottom: auto;
+    border: 2px solid #B6BFD7;
+    border-radius: 3px;
+    overflow: auto;
+    padding: 1px 2px 2px 1px;
+    text-align: center;
+    font-size:small;
+}
+.cheatingItemAction input {
+    display: inline-block;
+    width: 80px;
+    font-size:0.8em;
+}
+.cheatingItemDesc {
+    display:none;
+    top: 205px;
+    background-color:#F0F6F9;
+    font-size:small;
+    width:200px;
+    /* height: 105px; 
+overflow: auto; */
+    padding: 2px 2px;
+    z-index: 10;
+    border: 2px solid #B6BFD7;
+    border-radius: 3px;
+}
+.cheatImg {
+    border-radius: 3px;
+    border: 2px solid #B6BFD7;
+    width: 80px;
+    height: 35px;
+}
+/*-----------------------------------------------------------------------------------*/
+.cheatingCard {
+    /* display:none; */
+    height: 42px;
+    width: 30px;
+	z-index: 5;
+    margin: 2px;
+}

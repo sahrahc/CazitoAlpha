@@ -1,0 +1,3770 @@
+/*
+*/
+/* line 1, ../sass/core/_footer.scss */
+footer#textLinks {
+  width: 100%;
+  background-color: #9EB8F0;
+  height: 27px;
+  color: #111111;
+  font-size: 11px;
+  margin-top: -27px;
+  /* Sticky footer */
+  position: relative;
+  /*holds logo and date*/
+  /*holds text links*/
+}
+/* line 13, ../sass/core/_footer.scss */
+footer#textLinks .left {
+  padding-left: 21px;
+  padding-top: 6px;
+}
+/* line 19, ../sass/core/_footer.scss */
+footer#textLinks p {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0;
+}
+/* line 24, ../sass/core/_footer.scss */
+footer#textLinks p a {
+  display: inline;
+  color: #111111;
+  margin: 0 8px;
+  text-decoration: none;
+}
+/* line 30, ../sass/core/_footer.scss */
+footer#textLinks p a:hover {
+  color: #d23420;
+}
+
+/*
+.containerInner {
+    @include opacity(1);
+}
+*/
+/* line 1, ../sass/core/_header.scss */
+header#main {
+  background-color: khaki;
+  padding: 0;
+  margin-bottom: 53px;
+  position: relative;
+  width: 100%;
+  height: 50px;
+  text-align: left;
+  z-index: 101;
+}
+
+/* line 12, ../sass/core/_header.scss */
+#logo {
+  float: left;
+  margin-right: 4px;
+}
+
+/* line 16, ../sass/core/_header.scss */
+#header-central {
+  height: 123px;
+  margin: 0 auto;
+  /*width: 1070px; 
+  width:642px;*/
+  width: 1014px;
+  z-index: 10;
+}
+/* line 23, ../sass/core/_header.scss */
+#header-central p {
+  float: left;
+  width: 500px;
+  font-size: 1.5em;
+  color: white;
+}
+
+/* line 3, ../sass/core/_html.scss */
+h1 {
+  font-size: 1.8em;
+  padding: 0 0 0 0;
+  margin: 0 0 0 0;
+}
+
+/* line 8, ../sass/core/_html.scss */
+h2 {
+  font-size: 1.8em;
+}
+
+/* line 11, ../sass/core/_html.scss */
+strong {
+  font-weight: bold;
+}
+
+/* Position the major areas. Because of reset, all the sizes must add up*/
+/* layout **************************************************************/
+/* the main part, may be contain left and right frames */
+/* line 4, ../sass/core/_layout.scss */
+.main {
+  width: 1024px;
+  height: 768px;
+  padding: 5px 5px;
+  z-index: -1;
+  background-image: url("../../../images/window-bg.png");
+  background-repeat: no-repeat;
+}
+
+/* line 12, ../sass/core/_layout.scss */
+.main left-frame {
+  width: 220px;
+  height: 444px;
+  padding: 5px 5px 5px 0px;
+  float: left;
+}
+
+/* line 18, ../sass/core/_layout.scss */
+.main right-frame {
+  position: relative;
+  /* elements within must align top or bottom */
+  width: 152px;
+  height: 436px;
+  border-radius: 3px;
+  /* left: 642px; /* = container width */
+  float: right;
+}
+
+/* line 26, ../sass/core/_layout.scss */
+.log {
+  width: 1014px;
+  height: 80px;
+  background-color: white;
+  text-align: left;
+  color: blue;
+  clear: both;
+  opacity: 0.6;
+  border-radius: 3px;
+  padding: 5px 5px;
+  margin-bottom: 5px;
+  overflow: auto;
+}
+
+/* header **************************************************************/
+/* ul on the top area is for session information only hence no display */
+/* line 41, ../sass/core/_layout.scss */
+.hiddenVariables {
+  display: none;
+}
+
+/* 
+    Document   : messaging
+    Created on : Jun 20, 2013, 11:00:24 AM
+    Author     : cazito
+    Description:
+        Purpose of the stylesheet follows.
+*/
+/* #messagingFrame */
+/* line 11, ../sass/core/_messaging.scss */
+.msg {
+  /* top: 0px; */
+  margin-bottom: 0px;
+  height: 201px;
+  margin: 1px 0px 0px 5px;
+  border: 2px solid #B6BFD7;
+  background-color: #EEEEEE;
+  border-radius: 3px;
+}
+/* line 21, ../sass/core/_messaging.scss */
+.msg p {
+  width: 144px;
+  text-align: center;
+  border: 1px solid #7E8493;
+  border-radius: 3px;
+  margin: 5px 1px 0px 5px;
+  color: #D9E1F5;
+  font-family: Comic Sans MS;
+  font-size: 0.8em;
+  background-color: #7E8493;
+}
+/* line 32, ../sass/core/_messaging.scss */
+.msg .msgForm {
+  display: block;
+}
+/* line 35, ../sass/core/_messaging.scss */
+.msg .msgText {
+  width: 140px;
+  height: 161px;
+  background-color: white;
+  border: 1px outset grey;
+  margin: 0px 1px 2px 1px;
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-size: 0.8em;
+}
+/* line 44, ../sass/core/_messaging.scss */
+.msg .msgInput {
+  width: 98px;
+  border: 1px inset grey;
+  height: 30px;
+  font-size: 0.6em;
+}
+/* line 50, ../sass/core/_messaging.scss */
+.msg .msgSend {
+  width: 35px;
+  font-size: 0.6em;
+}
+
+/*#casinoTableHeader
+{
+margin-bottom: 0;
+}
+*/
+/* line 2, ../sass/core/_navigation.scss */
+nav.primary ul {
+  float: right;
+  margin: 0;
+  padding: 10px 0 0 0;
+}
+/* line 8, ../sass/core/_navigation.scss */
+nav.primary ul li {
+  float: left;
+}
+/* line 12, ../sass/core/_navigation.scss */
+nav.primary ul .activePlaying {
+  disabled: "disabled";
+}
+
+/* line 18, ../sass/core/_navigation.scss */
+.greetings li {
+  color: #868686;
+  display: block;
+  font: 16px/100% "Flamenco", Arial, Helvetica, Verdana, sans-serif;
+  padding: 6px 10px;
+  text-decoration: none;
+  text-transform: lowercase;
+}
+
+/*
+* Line break
+*/
+/* line 1, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-container {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  background: #7E8493;
+  border: 1px solid #B6BFD7;
+}
+
+/* line 9, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl {
+  direction: rtl;
+}
+
+/* line 13, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-container-horizontal {
+  width: 245px;
+  padding: 20px 40px;
+}
+
+/* line 18, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-container-vertical {
+  width: 75px;
+  height: 360px;
+  padding: 40px 10px;
+}
+
+/* line 24, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-clip {
+  overflow: hidden;
+}
+
+/* line 28, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-clip-horizontal {
+  width: 245px;
+  height: 75px;
+}
+
+/* line 33, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-clip-vertical {
+  width: 75px;
+  height: 360px;
+}
+
+/* line 38, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-item {
+  width: 80px;
+  height: 35px;
+}
+
+/* line 43, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-item-horizontal {
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+/* line 48, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-item-horizontal {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+/* line 53, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-item-vertical {
+  margin-bottom: 10px;
+}
+
+/* line 57, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-item-placeholder {
+  background: #fff;
+  color: #000;
+}
+
+/**
+ *  Horizontal Buttons
+ */
+/* line 65, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal {
+  position: absolute;
+  top: 43px;
+  right: 5px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(next-horizontal.png) no-repeat 0 0;
+}
+
+/* line 75, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-next-horizontal {
+  left: 5px;
+  right: auto;
+  background-image: url(prev-horizontal.png);
+}
+
+/* line 82, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-next-horizontal:focus {
+  background-position: -32px 0;
+}
+
+/* line 86, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal:active {
+  background-position: -64px 0;
+}
+
+/* line 93, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:focus,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:active {
+  cursor: default;
+  background-position: -96px 0;
+}
+
+/* line 98, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal {
+  position: absolute;
+  top: 43px;
+  left: 5px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(prev-horizontal.png) no-repeat 0 0;
+}
+
+/* line 108, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-prev-horizontal {
+  left: auto;
+  right: 5px;
+  background-image: url(next-horizontal.png);
+}
+
+/* line 115, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-prev-horizontal:focus {
+  background-position: -32px 0;
+}
+
+/* line 119, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal:active {
+  background-position: -64px 0;
+}
+
+/* line 126, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:focus,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:active {
+  cursor: default;
+  background-position: -96px 0;
+}
+
+/**
+ *  Vertical Buttons
+ */
+/* line 134, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical {
+  position: absolute;
+  bottom: 5px;
+  left: 33px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(next-vertical.png) no-repeat 0 0;
+}
+
+/* line 145, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical:hover,
+.jcarousel-skin-tango .jcarousel-next-vertical:focus {
+  background-position: 0 -32px;
+}
+
+/* line 149, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical:active {
+  background-position: 0 -64px;
+}
+
+/* line 156, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:hover,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:focus,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:active {
+  cursor: default;
+  background-position: 0 -96px;
+}
+
+/* line 161, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical {
+  position: absolute;
+  top: 5px;
+  left: 33px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(prev-vertical.png) no-repeat 0 0;
+}
+
+/* line 172, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical:hover,
+.jcarousel-skin-tango .jcarousel-prev-vertical:focus {
+  background-position: 0 -32px;
+}
+
+/* line 176, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical:active {
+  background-position: 0 -64px;
+}
+
+/* line 183, ../sass/plugins/_jcarousel-skin-tango.scss */
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:hover,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:focus,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:active {
+  cursor: default;
+  background-position: 0 -96px;
+}
+
+/*
+ * jQuery UI CSS Framework 1.8.22
+ *
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Theming/API
+ */
+/* Layout helpers
+----------------------------------*/
+/* line 13, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-helper-hidden {
+  display: none;
+}
+
+/* line 14, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-helper-hidden-accessible {
+  position: absolute !important;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+}
+
+/* line 15, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-helper-reset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  line-height: 1.3;
+  text-decoration: none;
+  font-size: 100%;
+  list-style: none;
+}
+
+/* line 16, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-helper-clearfix:before, .ui-helper-clearfix:after {
+  content: "";
+  display: table;
+}
+
+/* line 17, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-helper-clearfix:after {
+  clear: both;
+}
+
+/* line 18, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-helper-clearfix {
+  zoom: 1;
+}
+
+/* line 19, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-helper-zfix {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  position: absolute;
+  opacity: 0;
+  filter: Alpha(Opacity=0);
+}
+
+/* Interaction Cues
+----------------------------------*/
+/* line 24, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-disabled {
+  cursor: default !important;
+}
+
+/* Icons
+----------------------------------*/
+/* states and images */
+/* line 31, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon {
+  display: block;
+  text-indent: -99999px;
+  overflow: hidden;
+  background-repeat: no-repeat;
+}
+
+/* Misc visuals
+----------------------------------*/
+/* Overlays */
+/* line 38, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * jQuery UI CSS Framework 1.8.22
+ *
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Theming/API
+ *
+ * To view and modify this theme, visit http://jqueryui.com/themeroller/?ffDefault=Trebuchet%20MS,%20Tahoma,%20Verdana,%20Arial,%20sans-serif&fwDefault=bold&fsDefault=1.1em&cornerRadius=4px&bgColorHeader=f6a828&bgTextureHeader=12_gloss_wave.png&bgImgOpacityHeader=35&borderColorHeader=e78f08&fcHeader=ffffff&iconColorHeader=ffffff&bgColorContent=eeeeee&bgTextureContent=03_highlight_soft.png&bgImgOpacityContent=100&borderColorContent=dddddd&fcContent=333333&iconColorContent=222222&bgColorDefault=f6f6f6&bgTextureDefault=02_glass.png&bgImgOpacityDefault=100&borderColorDefault=cccccc&fcDefault=1c94c4&iconColorDefault=ef8c08&bgColorHover=fdf5ce&bgTextureHover=02_glass.png&bgImgOpacityHover=100&borderColorHover=fbcb09&fcHover=c77405&iconColorHover=ef8c08&bgColorActive=ffffff&bgTextureActive=02_glass.png&bgImgOpacityActive=65&borderColorActive=fbd850&fcActive=eb8f00&iconColorActive=ef8c08&bgColorHighlight=ffe45c&bgTextureHighlight=03_highlight_soft.png&bgImgOpacityHighlight=75&borderColorHighlight=fed22f&fcHighlight=363636&iconColorHighlight=228ef1&bgColorError=b81900&bgTextureError=08_diagonals_thick.png&bgImgOpacityError=18&borderColorError=cd0a0a&fcError=ffffff&iconColorError=ffd27a&bgColorOverlay=666666&bgTextureOverlay=08_diagonals_thick.png&bgImgOpacityOverlay=20&opacityOverlay=50&bgColorShadow=000000&bgTextureShadow=01_flat.png&bgImgOpacityShadow=10&opacityShadow=20&thicknessShadow=5px&offsetTopShadow=-5px&offsetLeftShadow=-5px&cornerRadiusShadow=5px
+ */
+/* Component containers
+----------------------------------*/
+/* line 56, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget {
+  font-family: Trebuchet MS, Tahoma, Verdana, Arial, sans-serif;
+  font-size: 1.1em;
+}
+
+/* line 57, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget .ui-widget {
+  font-size: 1em;
+}
+
+/* line 58, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
+  font-family: Trebuchet MS, Tahoma, Verdana, Arial, sans-serif;
+  font-size: 1em;
+}
+
+/* line 59, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-content {
+  border: 1px solid #dddddd;
+  background: #eeeeee url(images/ui-bg_highlight-soft_100_eeeeee_1x100.png) 50% top repeat-x;
+  color: #333333;
+}
+
+/* line 60, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-content a {
+  color: #333333;
+}
+
+/* line 61, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-header {
+  border: 1px solid #e78f08;
+  background: #f6a828 url(images/ui-bg_gloss-wave_35_f6a828_500x100.png) 50% 50% repeat-x;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* line 62, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-header a {
+  color: #ffffff;
+}
+
+/* Interaction states
+----------------------------------*/
+/* line 66, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
+  border: 1px solid #cccccc;
+  background: #f6f6f6 url(images/ui-bg_glass_100_f6f6f6_1x400.png) 50% 50% repeat-x;
+  font-weight: bold;
+  color: #1c94c4;
+}
+
+/* line 67, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-default a, .ui-state-default a:link, .ui-state-default a:visited {
+  color: #1c94c4;
+  text-decoration: none;
+}
+
+/* line 68, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-hover, .ui-widget-content .ui-state-hover, .ui-widget-header .ui-state-hover, .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
+  border: 1px solid #fbcb09;
+  background: #fdf5ce url(images/ui-bg_glass_100_fdf5ce_1x400.png) 50% 50% repeat-x;
+  font-weight: bold;
+  color: #c77405;
+}
+
+/* line 69, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-hover a, .ui-state-hover a:hover {
+  color: #c77405;
+  text-decoration: none;
+}
+
+/* line 70, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active {
+  border: 1px solid #fbd850;
+  background: white url(images/ui-bg_glass_65_ffffff_1x400.png) 50% 50% repeat-x;
+  font-weight: bold;
+  color: #eb8f00;
+}
+
+/* line 71, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-active a, .ui-state-active a:link, .ui-state-active a:visited {
+  color: #eb8f00;
+  text-decoration: none;
+}
+
+/* line 72, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget :active {
+  outline: none;
+}
+
+/* Interaction Cues
+----------------------------------*/
+/* line 76, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-highlight, .ui-widget-content .ui-state-highlight, .ui-widget-header .ui-state-highlight {
+  border: 1px solid #fed22f;
+  background: #ffe45c url(images/ui-bg_highlight-soft_75_ffe45c_1x100.png) 50% top repeat-x;
+  color: #363636;
+}
+
+/* line 77, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-highlight a, .ui-widget-content .ui-state-highlight a, .ui-widget-header .ui-state-highlight a {
+  color: #363636;
+}
+
+/* line 78, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-error, .ui-widget-content .ui-state-error, .ui-widget-header .ui-state-error {
+  border: 1px solid #cd0a0a;
+  background: #b81900 url(images/ui-bg_diagonals-thick_18_b81900_40x40.png) 50% 50% repeat;
+  color: #ffffff;
+}
+
+/* line 79, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-error a, .ui-widget-content .ui-state-error a, .ui-widget-header .ui-state-error a {
+  color: #ffffff;
+}
+
+/* line 80, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-error-text, .ui-widget-content .ui-state-error-text, .ui-widget-header .ui-state-error-text {
+  color: #ffffff;
+}
+
+/* line 81, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-priority-primary, .ui-widget-content .ui-priority-primary, .ui-widget-header .ui-priority-primary {
+  font-weight: bold;
+}
+
+/* line 82, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-priority-secondary, .ui-widget-content .ui-priority-secondary, .ui-widget-header .ui-priority-secondary {
+  opacity: .7;
+  filter: Alpha(Opacity=70);
+  font-weight: normal;
+}
+
+/* line 83, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-disabled, .ui-widget-content .ui-state-disabled, .ui-widget-header .ui-state-disabled {
+  opacity: .35;
+  filter: Alpha(Opacity=35);
+  background-image: none;
+}
+
+/* Icons
+----------------------------------*/
+/* states and images */
+/* line 89, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon {
+  width: 16px;
+  height: 16px;
+  background-image: url(images/ui-icons_222222_256x240.png);
+}
+
+/* line 90, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-content .ui-icon {
+  background-image: url(images/ui-icons_222222_256x240.png);
+}
+
+/* line 91, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-header .ui-icon {
+  background-image: url(images/ui-icons_ffffff_256x240.png);
+}
+
+/* line 92, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-default .ui-icon {
+  background-image: url(images/ui-icons_ef8c08_256x240.png);
+}
+
+/* line 93, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-hover .ui-icon, .ui-state-focus .ui-icon {
+  background-image: url(images/ui-icons_ef8c08_256x240.png);
+}
+
+/* line 94, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-active .ui-icon {
+  background-image: url(images/ui-icons_ef8c08_256x240.png);
+}
+
+/* line 95, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-highlight .ui-icon {
+  background-image: url(images/ui-icons_228ef1_256x240.png);
+}
+
+/* line 96, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-state-error .ui-icon, .ui-state-error-text .ui-icon {
+  background-image: url(images/ui-icons_ffd27a_256x240.png);
+}
+
+/* positioning */
+/* line 99, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-1-n {
+  background-position: 0 0;
+}
+
+/* line 100, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-1-ne {
+  background-position: -16px 0;
+}
+
+/* line 101, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-1-e {
+  background-position: -32px 0;
+}
+
+/* line 102, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-1-se {
+  background-position: -48px 0;
+}
+
+/* line 103, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-1-s {
+  background-position: -64px 0;
+}
+
+/* line 104, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-1-sw {
+  background-position: -80px 0;
+}
+
+/* line 105, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-1-w {
+  background-position: -96px 0;
+}
+
+/* line 106, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-1-nw {
+  background-position: -112px 0;
+}
+
+/* line 107, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-2-n-s {
+  background-position: -128px 0;
+}
+
+/* line 108, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-carat-2-e-w {
+  background-position: -144px 0;
+}
+
+/* line 109, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-1-n {
+  background-position: 0 -16px;
+}
+
+/* line 110, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-1-ne {
+  background-position: -16px -16px;
+}
+
+/* line 111, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-1-e {
+  background-position: -32px -16px;
+}
+
+/* line 112, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-1-se {
+  background-position: -48px -16px;
+}
+
+/* line 113, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-1-s {
+  background-position: -64px -16px;
+}
+
+/* line 114, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-1-sw {
+  background-position: -80px -16px;
+}
+
+/* line 115, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-1-w {
+  background-position: -96px -16px;
+}
+
+/* line 116, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-1-nw {
+  background-position: -112px -16px;
+}
+
+/* line 117, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-2-n-s {
+  background-position: -128px -16px;
+}
+
+/* line 118, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-triangle-2-e-w {
+  background-position: -144px -16px;
+}
+
+/* line 119, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-1-n {
+  background-position: 0 -32px;
+}
+
+/* line 120, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-1-ne {
+  background-position: -16px -32px;
+}
+
+/* line 121, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-1-e {
+  background-position: -32px -32px;
+}
+
+/* line 122, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-1-se {
+  background-position: -48px -32px;
+}
+
+/* line 123, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-1-s {
+  background-position: -64px -32px;
+}
+
+/* line 124, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-1-sw {
+  background-position: -80px -32px;
+}
+
+/* line 125, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-1-w {
+  background-position: -96px -32px;
+}
+
+/* line 126, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-1-nw {
+  background-position: -112px -32px;
+}
+
+/* line 127, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-2-n-s {
+  background-position: -128px -32px;
+}
+
+/* line 128, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-2-ne-sw {
+  background-position: -144px -32px;
+}
+
+/* line 129, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-2-e-w {
+  background-position: -160px -32px;
+}
+
+/* line 130, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-2-se-nw {
+  background-position: -176px -32px;
+}
+
+/* line 131, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowstop-1-n {
+  background-position: -192px -32px;
+}
+
+/* line 132, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowstop-1-e {
+  background-position: -208px -32px;
+}
+
+/* line 133, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowstop-1-s {
+  background-position: -224px -32px;
+}
+
+/* line 134, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowstop-1-w {
+  background-position: -240px -32px;
+}
+
+/* line 135, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-1-n {
+  background-position: 0 -48px;
+}
+
+/* line 136, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-1-ne {
+  background-position: -16px -48px;
+}
+
+/* line 137, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-1-e {
+  background-position: -32px -48px;
+}
+
+/* line 138, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-1-se {
+  background-position: -48px -48px;
+}
+
+/* line 139, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-1-s {
+  background-position: -64px -48px;
+}
+
+/* line 140, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-1-sw {
+  background-position: -80px -48px;
+}
+
+/* line 141, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-1-w {
+  background-position: -96px -48px;
+}
+
+/* line 142, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-1-nw {
+  background-position: -112px -48px;
+}
+
+/* line 143, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-2-n-s {
+  background-position: -128px -48px;
+}
+
+/* line 144, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-2-ne-sw {
+  background-position: -144px -48px;
+}
+
+/* line 145, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-2-e-w {
+  background-position: -160px -48px;
+}
+
+/* line 146, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthick-2-se-nw {
+  background-position: -176px -48px;
+}
+
+/* line 147, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthickstop-1-n {
+  background-position: -192px -48px;
+}
+
+/* line 148, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthickstop-1-e {
+  background-position: -208px -48px;
+}
+
+/* line 149, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthickstop-1-s {
+  background-position: -224px -48px;
+}
+
+/* line 150, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowthickstop-1-w {
+  background-position: -240px -48px;
+}
+
+/* line 151, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowreturnthick-1-w {
+  background-position: 0 -64px;
+}
+
+/* line 152, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowreturnthick-1-n {
+  background-position: -16px -64px;
+}
+
+/* line 153, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowreturnthick-1-e {
+  background-position: -32px -64px;
+}
+
+/* line 154, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowreturnthick-1-s {
+  background-position: -48px -64px;
+}
+
+/* line 155, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowreturn-1-w {
+  background-position: -64px -64px;
+}
+
+/* line 156, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowreturn-1-n {
+  background-position: -80px -64px;
+}
+
+/* line 157, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowreturn-1-e {
+  background-position: -96px -64px;
+}
+
+/* line 158, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowreturn-1-s {
+  background-position: -112px -64px;
+}
+
+/* line 159, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowrefresh-1-w {
+  background-position: -128px -64px;
+}
+
+/* line 160, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowrefresh-1-n {
+  background-position: -144px -64px;
+}
+
+/* line 161, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowrefresh-1-e {
+  background-position: -160px -64px;
+}
+
+/* line 162, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrowrefresh-1-s {
+  background-position: -176px -64px;
+}
+
+/* line 163, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-4 {
+  background-position: 0 -80px;
+}
+
+/* line 164, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-arrow-4-diag {
+  background-position: -16px -80px;
+}
+
+/* line 165, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-extlink {
+  background-position: -32px -80px;
+}
+
+/* line 166, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-newwin {
+  background-position: -48px -80px;
+}
+
+/* line 167, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-refresh {
+  background-position: -64px -80px;
+}
+
+/* line 168, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-shuffle {
+  background-position: -80px -80px;
+}
+
+/* line 169, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-transfer-e-w {
+  background-position: -96px -80px;
+}
+
+/* line 170, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-transferthick-e-w {
+  background-position: -112px -80px;
+}
+
+/* line 171, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-folder-collapsed {
+  background-position: 0 -96px;
+}
+
+/* line 172, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-folder-open {
+  background-position: -16px -96px;
+}
+
+/* line 173, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-document {
+  background-position: -32px -96px;
+}
+
+/* line 174, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-document-b {
+  background-position: -48px -96px;
+}
+
+/* line 175, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-note {
+  background-position: -64px -96px;
+}
+
+/* line 176, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-mail-closed {
+  background-position: -80px -96px;
+}
+
+/* line 177, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-mail-open {
+  background-position: -96px -96px;
+}
+
+/* line 178, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-suitcase {
+  background-position: -112px -96px;
+}
+
+/* line 179, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-comment {
+  background-position: -128px -96px;
+}
+
+/* line 180, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-person {
+  background-position: -144px -96px;
+}
+
+/* line 181, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-print {
+  background-position: -160px -96px;
+}
+
+/* line 182, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-trash {
+  background-position: -176px -96px;
+}
+
+/* line 183, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-locked {
+  background-position: -192px -96px;
+}
+
+/* line 184, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-unlocked {
+  background-position: -208px -96px;
+}
+
+/* line 185, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-bookmark {
+  background-position: -224px -96px;
+}
+
+/* line 186, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-tag {
+  background-position: -240px -96px;
+}
+
+/* line 187, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-home {
+  background-position: 0 -112px;
+}
+
+/* line 188, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-flag {
+  background-position: -16px -112px;
+}
+
+/* line 189, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-calendar {
+  background-position: -32px -112px;
+}
+
+/* line 190, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-cart {
+  background-position: -48px -112px;
+}
+
+/* line 191, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-pencil {
+  background-position: -64px -112px;
+}
+
+/* line 192, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-clock {
+  background-position: -80px -112px;
+}
+
+/* line 193, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-disk {
+  background-position: -96px -112px;
+}
+
+/* line 194, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-calculator {
+  background-position: -112px -112px;
+}
+
+/* line 195, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-zoomin {
+  background-position: -128px -112px;
+}
+
+/* line 196, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-zoomout {
+  background-position: -144px -112px;
+}
+
+/* line 197, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-search {
+  background-position: -160px -112px;
+}
+
+/* line 198, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-wrench {
+  background-position: -176px -112px;
+}
+
+/* line 199, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-gear {
+  background-position: -192px -112px;
+}
+
+/* line 200, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-heart {
+  background-position: -208px -112px;
+}
+
+/* line 201, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-star {
+  background-position: -224px -112px;
+}
+
+/* line 202, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-link {
+  background-position: -240px -112px;
+}
+
+/* line 203, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-cancel {
+  background-position: 0 -128px;
+}
+
+/* line 204, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-plus {
+  background-position: -16px -128px;
+}
+
+/* line 205, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-plusthick {
+  background-position: -32px -128px;
+}
+
+/* line 206, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-minus {
+  background-position: -48px -128px;
+}
+
+/* line 207, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-minusthick {
+  background-position: -64px -128px;
+}
+
+/* line 208, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-close {
+  background-position: -80px -128px;
+}
+
+/* line 209, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-closethick {
+  background-position: -96px -128px;
+}
+
+/* line 210, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-key {
+  background-position: -112px -128px;
+}
+
+/* line 211, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-lightbulb {
+  background-position: -128px -128px;
+}
+
+/* line 212, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-scissors {
+  background-position: -144px -128px;
+}
+
+/* line 213, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-clipboard {
+  background-position: -160px -128px;
+}
+
+/* line 214, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-copy {
+  background-position: -176px -128px;
+}
+
+/* line 215, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-contact {
+  background-position: -192px -128px;
+}
+
+/* line 216, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-image {
+  background-position: -208px -128px;
+}
+
+/* line 217, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-video {
+  background-position: -224px -128px;
+}
+
+/* line 218, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-script {
+  background-position: -240px -128px;
+}
+
+/* line 219, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-alert {
+  background-position: 0 -144px;
+}
+
+/* line 220, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-info {
+  background-position: -16px -144px;
+}
+
+/* line 221, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-notice {
+  background-position: -32px -144px;
+}
+
+/* line 222, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-help {
+  background-position: -48px -144px;
+}
+
+/* line 223, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-check {
+  background-position: -64px -144px;
+}
+
+/* line 224, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-bullet {
+  background-position: -80px -144px;
+}
+
+/* line 225, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-radio-off {
+  background-position: -96px -144px;
+}
+
+/* line 226, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-radio-on {
+  background-position: -112px -144px;
+}
+
+/* line 227, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-pin-w {
+  background-position: -128px -144px;
+}
+
+/* line 228, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-pin-s {
+  background-position: -144px -144px;
+}
+
+/* line 229, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-play {
+  background-position: 0 -160px;
+}
+
+/* line 230, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-pause {
+  background-position: -16px -160px;
+}
+
+/* line 231, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-seek-next {
+  background-position: -32px -160px;
+}
+
+/* line 232, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-seek-prev {
+  background-position: -48px -160px;
+}
+
+/* line 233, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-seek-end {
+  background-position: -64px -160px;
+}
+
+/* line 234, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-seek-start {
+  background-position: -80px -160px;
+}
+
+/* ui-icon-seek-first is deprecated, use ui-icon-seek-start instead */
+/* line 236, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-seek-first {
+  background-position: -80px -160px;
+}
+
+/* line 237, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-stop {
+  background-position: -96px -160px;
+}
+
+/* line 238, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-eject {
+  background-position: -112px -160px;
+}
+
+/* line 239, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-volume-off {
+  background-position: -128px -160px;
+}
+
+/* line 240, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-volume-on {
+  background-position: -144px -160px;
+}
+
+/* line 241, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-power {
+  background-position: 0 -176px;
+}
+
+/* line 242, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-signal-diag {
+  background-position: -16px -176px;
+}
+
+/* line 243, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-signal {
+  background-position: -32px -176px;
+}
+
+/* line 244, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-battery-0 {
+  background-position: -48px -176px;
+}
+
+/* line 245, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-battery-1 {
+  background-position: -64px -176px;
+}
+
+/* line 246, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-battery-2 {
+  background-position: -80px -176px;
+}
+
+/* line 247, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-battery-3 {
+  background-position: -96px -176px;
+}
+
+/* line 248, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-plus {
+  background-position: 0 -192px;
+}
+
+/* line 249, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-minus {
+  background-position: -16px -192px;
+}
+
+/* line 250, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-close {
+  background-position: -32px -192px;
+}
+
+/* line 251, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-triangle-e {
+  background-position: -48px -192px;
+}
+
+/* line 252, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-triangle-s {
+  background-position: -64px -192px;
+}
+
+/* line 253, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-triangle-w {
+  background-position: -80px -192px;
+}
+
+/* line 254, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-triangle-n {
+  background-position: -96px -192px;
+}
+
+/* line 255, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-arrow-e {
+  background-position: -112px -192px;
+}
+
+/* line 256, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-arrow-s {
+  background-position: -128px -192px;
+}
+
+/* line 257, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-arrow-w {
+  background-position: -144px -192px;
+}
+
+/* line 258, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-arrow-n {
+  background-position: -160px -192px;
+}
+
+/* line 259, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-zoomin {
+  background-position: -176px -192px;
+}
+
+/* line 260, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-zoomout {
+  background-position: -192px -192px;
+}
+
+/* line 261, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circle-check {
+  background-position: -208px -192px;
+}
+
+/* line 262, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circlesmall-plus {
+  background-position: 0 -208px;
+}
+
+/* line 263, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circlesmall-minus {
+  background-position: -16px -208px;
+}
+
+/* line 264, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-circlesmall-close {
+  background-position: -32px -208px;
+}
+
+/* line 265, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-squaresmall-plus {
+  background-position: -48px -208px;
+}
+
+/* line 266, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-squaresmall-minus {
+  background-position: -64px -208px;
+}
+
+/* line 267, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-squaresmall-close {
+  background-position: -80px -208px;
+}
+
+/* line 268, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-grip-dotted-vertical {
+  background-position: 0 -224px;
+}
+
+/* line 269, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-grip-dotted-horizontal {
+  background-position: -16px -224px;
+}
+
+/* line 270, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-grip-solid-vertical {
+  background-position: -32px -224px;
+}
+
+/* line 271, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-grip-solid-horizontal {
+  background-position: -48px -224px;
+}
+
+/* line 272, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-gripsmall-diagonal-se {
+  background-position: -64px -224px;
+}
+
+/* line 273, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-icon-grip-diagonal-se {
+  background-position: -80px -224px;
+}
+
+/* Misc visuals
+----------------------------------*/
+/* Corner radius */
+/* line 280, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-corner-all, .ui-corner-top, .ui-corner-left, .ui-corner-tl {
+  -moz-border-radius-topleft: 4px;
+  -webkit-border-top-left-radius: 4px;
+  -khtml-border-top-left-radius: 4px;
+  border-top-left-radius: 4px;
+}
+
+/* line 281, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-corner-all, .ui-corner-top, .ui-corner-right, .ui-corner-tr {
+  -moz-border-radius-topright: 4px;
+  -webkit-border-top-right-radius: 4px;
+  -khtml-border-top-right-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+/* line 282, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-corner-all, .ui-corner-bottom, .ui-corner-left, .ui-corner-bl {
+  -moz-border-radius-bottomleft: 4px;
+  -webkit-border-bottom-left-radius: 4px;
+  -khtml-border-bottom-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+/* line 283, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-corner-all, .ui-corner-bottom, .ui-corner-right, .ui-corner-br {
+  -moz-border-radius-bottomright: 4px;
+  -webkit-border-bottom-right-radius: 4px;
+  -khtml-border-bottom-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* Overlays */
+/* line 286, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-overlay {
+  background: #666666 url(images/ui-bg_diagonals-thick_20_666666_40x40.png) 50% 50% repeat;
+  opacity: .50;
+  filter: Alpha(Opacity=50);
+}
+
+/* line 287, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-widget-shadow {
+  margin: -5px 0 0 -5px;
+  padding: 5px;
+  background: black url(images/ui-bg_flat_10_000000_40x100.png) 50% 50% repeat-x;
+  opacity: .20;
+  filter: Alpha(Opacity=20);
+  -moz-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}
+
+                                                                                                                                                                                                                                                                                      /*
+* jQuery UI Resizable 1.8.22
+*
+* Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+* Dual licensed under the MIT or GPL Version 2 licenses.
+* http://jquery.org/license
+*
+* http://docs.jquery.com/UI/Resizable#theming
+*/
+/* line 296, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable {
+  position: relative;
+}
+
+/* line 297, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-handle {
+  position: absolute;
+  font-size: 0.1px;
+  display: block;
+}
+
+/* line 298, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle {
+  display: none;
+}
+
+/* line 299, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-n {
+  cursor: n-resize;
+  height: 7px;
+  width: 100%;
+  top: -5px;
+  left: 0;
+}
+
+/* line 300, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-s {
+  cursor: s-resize;
+  height: 7px;
+  width: 100%;
+  bottom: -5px;
+  left: 0;
+}
+
+/* line 301, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-e {
+  cursor: e-resize;
+  width: 7px;
+  right: -5px;
+  top: 0;
+  height: 100%;
+}
+
+/* line 302, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-w {
+  cursor: w-resize;
+  width: 7px;
+  left: -5px;
+  top: 0;
+  height: 100%;
+}
+
+/* line 303, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-se {
+  cursor: se-resize;
+  width: 12px;
+  height: 12px;
+  right: 1px;
+  bottom: 1px;
+}
+
+/* line 304, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-sw {
+  cursor: sw-resize;
+  width: 9px;
+  height: 9px;
+  left: -5px;
+  bottom: -5px;
+}
+
+/* line 305, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-nw {
+  cursor: nw-resize;
+  width: 9px;
+  height: 9px;
+  left: -5px;
+  top: -5px;
+}
+
+/* line 306, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-resizable-ne {
+  cursor: ne-resize;
+  width: 9px;
+  height: 9px;
+  right: -5px;
+  top: -5px;
+}
+
+                                                                                      /*
+* jQuery UI Selectable 1.8.22
+*
+* Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+* Dual licensed under the MIT or GPL Version 2 licenses.
+* http://jquery.org/license
+*
+* http://docs.jquery.com/UI/Selectable#theming
+*/
+/* line 315, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-selectable-helper {
+  position: absolute;
+  z-index: 100;
+  border: 1px dotted black;
+}
+
+/*
+ * jQuery UI Accordion 1.8.22
+ *
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Accordion#theming
+ */
+/* IE/Win - Fix animation bug - #4615 */
+/* line 326, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion {
+  width: 100%;
+}
+
+/* line 327, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion .ui-accordion-header {
+  cursor: pointer;
+  position: relative;
+  margin-top: 1px;
+  zoom: 1;
+}
+
+/* line 328, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion .ui-accordion-li-fix {
+  display: inline;
+}
+
+/* line 329, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion .ui-accordion-header-active {
+  border-bottom: 0 !important;
+}
+
+/* line 330, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion .ui-accordion-header a {
+  display: block;
+  font-size: 1em;
+  padding: .5em .5em .5em .7em;
+}
+
+/* line 331, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion-icons .ui-accordion-header a {
+  padding-left: 2.2em;
+}
+
+/* line 332, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion .ui-accordion-header .ui-icon {
+  position: absolute;
+  left: .5em;
+  top: 50%;
+  margin-top: -8px;
+}
+
+/* line 333, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion .ui-accordion-content {
+  padding: 1em 2.2em;
+  border-top: 0;
+  margin-top: -2px;
+  position: relative;
+  top: 1px;
+  margin-bottom: 2px;
+  overflow: auto;
+  display: none;
+  zoom: 1;
+}
+
+/* line 334, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-accordion .ui-accordion-content-active {
+  display: block;
+}
+
+/*
+ * jQuery UI Autocomplete 1.8.22
+ *
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Autocomplete#theming
+ */
+/* line 344, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-autocomplete {
+  position: absolute;
+  cursor: default;
+}
+
+/* workarounds */
+/* line 347, ../sass/plugins/_jquery-ui-popup.scss */
+* html .ui-autocomplete {
+  width: 1px;
+}
+
+/* without this, the menu expands to 100% in IE6 */
+/*
+ * jQuery UI Menu 1.8.22
+ *
+ * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Menu#theming
+ */
+/* line 358, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-menu {
+  list-style: none;
+  padding: 2px;
+  margin: 0;
+  display: block;
+  float: left;
+}
+
+/* line 365, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-menu .ui-menu {
+  margin-top: -3px;
+}
+
+/* line 368, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-menu .ui-menu-item {
+  margin: 0;
+  padding: 0;
+  zoom: 1;
+  float: left;
+  clear: left;
+  width: 100%;
+}
+
+/* line 376, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-menu .ui-menu-item a {
+  text-decoration: none;
+  display: block;
+  padding: .2em .4em;
+  line-height: 1.5;
+  zoom: 1;
+}
+
+/* line 384, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-menu .ui-menu-item a.ui-state-hover,
+.ui-menu .ui-menu-item a.ui-state-active {
+  font-weight: normal;
+  margin: -1px;
+}
+
+/*
+ * jQuery UI Button 1.8.22
+ *
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Button#theming
+ */
+/* line 397, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button {
+  display: inline-block;
+  position: relative;
+  padding: 0;
+  margin-right: .1em;
+  text-decoration: none !important;
+  cursor: pointer;
+  text-align: center;
+  zoom: 1;
+  overflow: visible;
+}
+
+/* the overflow property removes extra width in IE */
+/* line 398, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-icon-only {
+  width: 2.2em;
+}
+
+/* to make room for the icon, a width needs to be set here */
+/* line 399, ../sass/plugins/_jquery-ui-popup.scss */
+button.ui-button-icon-only {
+  width: 2.4em;
+}
+
+/* button elements seem to need a little more width */
+/* line 400, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-icons-only {
+  width: 3.4em;
+}
+
+/* line 401, ../sass/plugins/_jquery-ui-popup.scss */
+button.ui-button-icons-only {
+  width: 3.7em;
+}
+
+/*button text element */
+/* line 404, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button .ui-button-text {
+  display: block;
+  line-height: 1.4;
+}
+
+/* line 405, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-text-only .ui-button-text {
+  padding: .4em 1em;
+}
+
+/* line 406, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text {
+  padding: .4em;
+  text-indent: -9999999px;
+}
+
+/* line 407, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-text-icon-primary .ui-button-text, .ui-button-text-icons .ui-button-text {
+  padding: .4em 1em .4em 2.1em;
+}
+
+/* line 408, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-text-icon-secondary .ui-button-text, .ui-button-text-icons .ui-button-text {
+  padding: .4em 2.1em .4em 1em;
+}
+
+/* line 409, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-text-icons .ui-button-text {
+  padding-left: 2.1em;
+  padding-right: 2.1em;
+}
+
+/* no icon support for input elements, provide padding by default */
+/* line 411, ../sass/plugins/_jquery-ui-popup.scss */
+input.ui-button {
+  padding: .4em 1em;
+}
+
+/*button icon element(s) */
+/* line 414, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-icon-only .ui-icon, .ui-button-text-icon-primary .ui-icon, .ui-button-text-icon-secondary .ui-icon, .ui-button-text-icons .ui-icon, .ui-button-icons-only .ui-icon {
+  position: absolute;
+  top: 50%;
+  margin-top: -8px;
+}
+
+/* line 415, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-icon-only .ui-icon {
+  left: 50%;
+  margin-left: -8px;
+}
+
+/* line 416, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-text-icon-primary .ui-button-icon-primary, .ui-button-text-icons .ui-button-icon-primary, .ui-button-icons-only .ui-button-icon-primary {
+  left: .5em;
+}
+
+/* line 417, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-text-icon-secondary .ui-button-icon-secondary, .ui-button-text-icons .ui-button-icon-secondary, .ui-button-icons-only .ui-button-icon-secondary {
+  right: .5em;
+}
+
+/* line 418, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-button-text-icons .ui-button-icon-secondary, .ui-button-icons-only .ui-button-icon-secondary {
+  right: .5em;
+}
+
+/*button sets*/
+/* line 421, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-buttonset {
+  margin-right: 7px;
+}
+
+/* line 422, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-buttonset .ui-button {
+  margin-left: 0;
+  margin-right: -0.3em;
+}
+
+/* workarounds */
+/* line 425, ../sass/plugins/_jquery-ui-popup.scss */
+button.ui-button::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/* reset extra padding in Firefox */
+/*
+ * jQuery UI Dialog 1.8.22
+ *
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Dialog#theming
+ */
+/* line 435, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog {
+  position: absolute;
+  padding: .2em;
+  width: 300px;
+  overflow: hidden;
+}
+
+/* line 436, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-titlebar {
+  padding: .4em 1em;
+  position: relative;
+}
+
+/* line 437, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-title {
+  float: left;
+  margin: .1em 16px .1em 0;
+}
+
+/* line 438, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-titlebar-close {
+  position: absolute;
+  right: .3em;
+  top: 50%;
+  width: 19px;
+  margin: -10px 0 0 0;
+  padding: 1px;
+  height: 18px;
+}
+
+/* line 439, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-titlebar-close span {
+  display: block;
+  margin: 1px;
+}
+
+/* line 440, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-titlebar-close:hover, .ui-dialog .ui-dialog-titlebar-close:focus {
+  padding: 0;
+}
+
+/* line 441, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-content {
+  position: relative;
+  border: 0;
+  padding: .5em 1em;
+  background: none;
+  overflow: auto;
+  zoom: 1;
+}
+
+/* line 442, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-buttonpane {
+  text-align: left;
+  border-width: 1px 0 0 0;
+  background-image: none;
+  margin: .5em 0 0 0;
+  padding: .3em 1em .5em .4em;
+}
+
+/* line 443, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {
+  float: right;
+}
+
+/* line 444, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-dialog-buttonpane button {
+  margin: .5em .4em .5em 0;
+  cursor: pointer;
+}
+
+/* line 445, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-dialog .ui-resizable-se {
+  width: 14px;
+  height: 14px;
+  right: 3px;
+  bottom: 3px;
+}
+
+/* line 446, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-draggable .ui-dialog-titlebar {
+  cursor: move;
+}
+
+/*
+ * jQuery UI Slider 1.8.22
+ *
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Slider#theming
+ */
+/* line 456, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider {
+  position: relative;
+  text-align: left;
+}
+
+/* line 457, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider .ui-slider-handle {
+  position: absolute;
+  z-index: 2;
+  width: 1.2em;
+  height: 1.2em;
+  cursor: default;
+}
+
+/* line 458, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider .ui-slider-range {
+  position: absolute;
+  z-index: 1;
+  font-size: .7em;
+  display: block;
+  border: 0;
+  background-position: 0 0;
+}
+
+/* line 460, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-horizontal {
+  height: .8em;
+}
+
+/* line 461, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-horizontal .ui-slider-handle {
+  top: -0.3em;
+  margin-left: -0.6em;
+}
+
+/* line 462, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-horizontal .ui-slider-range {
+  top: 0;
+  height: 100%;
+}
+
+/* line 463, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-horizontal .ui-slider-range-min {
+  left: 0;
+}
+
+/* line 464, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-horizontal .ui-slider-range-max {
+  right: 0;
+}
+
+/* line 466, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-vertical {
+  width: .8em;
+  height: 100px;
+}
+
+/* line 467, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-vertical .ui-slider-handle {
+  left: -0.3em;
+  margin-left: 0;
+  margin-bottom: -0.6em;
+}
+
+/* line 468, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-vertical .ui-slider-range {
+  left: 0;
+  width: 100%;
+}
+
+/* line 469, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-vertical .ui-slider-range-min {
+  bottom: 0;
+}
+
+/* line 470, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-slider-vertical .ui-slider-range-max {
+  top: 0;
+}
+
+                                                   /*
+* jQuery UI Tabs 1.8.22
+*
+* Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+* Dual licensed under the MIT or GPL Version 2 licenses.
+* http://jquery.org/license
+*
+* http://docs.jquery.com/UI/Tabs#theming
+*/
+/* line 479, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs {
+  position: relative;
+  padding: .2em;
+  zoom: 1;
+}
+
+/* position: relative prevents IE scroll bug (element with position: relative inside container with overflow: auto appear as "fixed") */
+/* line 480, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs .ui-tabs-nav {
+  margin: 0;
+  padding: .2em .2em 0;
+}
+
+/* line 481, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs .ui-tabs-nav li {
+  list-style: none;
+  float: left;
+  position: relative;
+  top: 1px;
+  margin: 0 .2em 1px 0;
+  border-bottom: 0 !important;
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* line 482, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs .ui-tabs-nav li a {
+  float: left;
+  padding: .5em 1em;
+  text-decoration: none;
+}
+
+/* line 483, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected {
+  margin-bottom: 0;
+  padding-bottom: 1px;
+}
+
+/* line 484, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected a, .ui-tabs .ui-tabs-nav li.ui-state-disabled a, .ui-tabs .ui-tabs-nav li.ui-state-processing a {
+  cursor: text;
+}
+
+/* line 485, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs .ui-tabs-nav li a, .ui-tabs.ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-selected a {
+  cursor: pointer;
+}
+
+/* first selector in group seems obsolete, but required to overcome bug in Opera applying cursor: text overall if defined elsewhere... */
+/* line 486, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs .ui-tabs-panel {
+  display: block;
+  border-width: 0;
+  padding: 1em 1.4em;
+  background: none;
+}
+
+/* line 487, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-tabs .ui-tabs-hide {
+  display: none !important;
+}
+
+/*
+ * jQuery UI Datepicker 1.8.22
+ *
+ * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Datepicker#theming
+ */
+/* line 497, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker {
+  width: 17em;
+  padding: .2em .2em 0;
+  display: none;
+}
+
+/* line 498, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-header {
+  position: relative;
+  padding: .2em 0;
+}
+
+/* line 499, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-prev, .ui-datepicker .ui-datepicker-next {
+  position: absolute;
+  top: 2px;
+  width: 1.8em;
+  height: 1.8em;
+}
+
+/* line 500, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-prev-hover, .ui-datepicker .ui-datepicker-next-hover {
+  top: 1px;
+}
+
+/* line 501, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-prev {
+  left: 2px;
+}
+
+/* line 502, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-next {
+  right: 2px;
+}
+
+/* line 503, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-prev-hover {
+  left: 1px;
+}
+
+/* line 504, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-next-hover {
+  right: 1px;
+}
+
+/* line 505, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-prev span, .ui-datepicker .ui-datepicker-next span {
+  display: block;
+  position: absolute;
+  left: 50%;
+  margin-left: -8px;
+  top: 50%;
+  margin-top: -8px;
+}
+
+/* line 506, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-title {
+  margin: 0 2.3em;
+  line-height: 1.8em;
+  text-align: center;
+}
+
+/* line 507, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-title select {
+  font-size: 1em;
+  margin: 1px 0;
+}
+
+/* line 508, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker select.ui-datepicker-month-year {
+  width: 100%;
+}
+
+/* line 510, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker select.ui-datepicker-month,
+.ui-datepicker select.ui-datepicker-year {
+  width: 49%;
+}
+
+/* line 511, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker table {
+  width: 100%;
+  font-size: .9em;
+  border-collapse: collapse;
+  margin: 0 0 .4em;
+}
+
+/* line 512, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker th {
+  padding: .7em .3em;
+  text-align: center;
+  font-weight: bold;
+  border: 0;
+}
+
+/* line 513, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker td {
+  border: 0;
+  padding: 1px;
+}
+
+/* line 514, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker td span, .ui-datepicker td a {
+  display: block;
+  padding: .2em;
+  text-align: right;
+  text-decoration: none;
+}
+
+/* line 515, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-buttonpane {
+  background-image: none;
+  margin: .7em 0 0 0;
+  padding: 0 .2em;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+/* line 516, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-buttonpane button {
+  float: right;
+  margin: .5em .2em .4em;
+  cursor: pointer;
+  padding: .2em .6em .3em .6em;
+  width: auto;
+  overflow: visible;
+}
+
+/* line 517, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker .ui-datepicker-buttonpane button.ui-datepicker-current {
+  float: left;
+}
+
+/* with multiple calendars */
+/* line 520, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker.ui-datepicker-multi {
+  width: auto;
+}
+
+/* line 521, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-multi .ui-datepicker-group {
+  float: left;
+}
+
+/* line 522, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-multi .ui-datepicker-group table {
+  width: 95%;
+  margin: 0 auto .4em;
+}
+
+/* line 523, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-multi-2 .ui-datepicker-group {
+  width: 50%;
+}
+
+/* line 524, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-multi-3 .ui-datepicker-group {
+  width: 33.3%;
+}
+
+/* line 525, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-multi-4 .ui-datepicker-group {
+  width: 25%;
+}
+
+/* line 526, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-multi .ui-datepicker-group-last .ui-datepicker-header {
+  border-left-width: 0;
+}
+
+/* line 527, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-multi .ui-datepicker-group-middle .ui-datepicker-header {
+  border-left-width: 0;
+}
+
+/* line 528, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-multi .ui-datepicker-buttonpane {
+  clear: left;
+}
+
+/* line 529, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-row-break {
+  clear: both;
+  width: 100%;
+  font-size: 0em;
+}
+
+/* RTL support */
+/* line 532, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl {
+  direction: rtl;
+}
+
+/* line 533, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-prev {
+  right: 2px;
+  left: auto;
+}
+
+/* line 534, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-next {
+  left: 2px;
+  right: auto;
+}
+
+/* line 535, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-prev:hover {
+  right: 1px;
+  left: auto;
+}
+
+/* line 536, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-next:hover {
+  left: 1px;
+  right: auto;
+}
+
+/* line 537, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-buttonpane {
+  clear: right;
+}
+
+/* line 538, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-buttonpane button {
+  float: left;
+}
+
+/* line 539, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-buttonpane button.ui-datepicker-current {
+  float: right;
+}
+
+/* line 540, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-group {
+  float: right;
+}
+
+/* line 541, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-group-last .ui-datepicker-header {
+  border-right-width: 0;
+  border-left-width: 1px;
+}
+
+/* line 542, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-rtl .ui-datepicker-group-middle .ui-datepicker-header {
+  border-right-width: 0;
+  border-left-width: 1px;
+}
+
+/* IE6 IFRAME FIX (taken from datepicker 1.5.3 */
+/* line 545, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-datepicker-cover {
+  position: absolute;
+  /*must have*/
+  z-index: -1;
+  /*must have*/
+  filter: mask();
+  /*must have*/
+  top: -4px;
+  /*must have*/
+  left: -4px;
+  /*must have*/
+  width: 200px;
+  /*must have*/
+  height: 200px;
+  /*must have*/
+}
+
+/*
+* jQuery UI Progressbar 1.8.22
+*
+* Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
+* Dual licensed under the MIT or GPL Version 2 licenses.
+* http://jquery.org/license
+*
+* http://docs.jquery.com/UI/Progressbar#theming
+*/
+/* line 562, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-progressbar {
+  height: 2em;
+  text-align: left;
+  overflow: hidden;
+}
+
+/* line 563, ../sass/plugins/_jquery-ui-popup.scss */
+.ui-progressbar .ui-progressbar-value {
+  margin: -1px;
+  height: 100%;
+}
+
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+/* line 18, ../sass/plugins/_reset.scss */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+/* line 28, ../sass/plugins/_reset.scss */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+  display: block;
+}
+
+/* line 31, ../sass/plugins/_reset.scss */
+body {
+  line-height: 1;
+}
+
+/* line 34, ../sass/plugins/_reset.scss */
+ol, ul {
+  list-style: none;
+}
+
+/* line 37, ../sass/plugins/_reset.scss */
+blockquote, q {
+  quotes: none;
+}
+
+/* line 41, ../sass/plugins/_reset.scss */
+blockquote:before, blockquote:after,
+q:before, q:after {
+  content: '';
+  content: none;
+}
+
+/* line 45, ../sass/plugins/_reset.scss */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/*
+* Line break
+*/
+/**
+* Page specific CSS
+*/
+/* 
+    Document   : home
+    Created on : Jun 19, 2013, 4:07:20 PM
+    Author     : cazito
+    Description:
+        Purpose of the stylesheet follows.
+*/
+/* line 8, ../sass/pages/_home.scss */
+section#home {
+  position: relative;
+  height: 400px;
+  width: 642px;
+  background-repeat: no-repeat;
+  border-style: outset;
+  border-color: green;
+  border-width: 2px;
+  background-image: url("../../../images/SaloonSafe.png");
+}
+
+/* center the options */
+/* line 20, ../sass/pages/_home.scss */
+section#home table {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* size each option */
+/* line 26, ../sass/pages/_home.scss */
+section#home input {
+  height: 40px;
+  width: 40px;
+}
+
+/* all relative elements within the game board
+        The following are overlayed:
+        1) game background
+        2) canvas - for animated elements
+        3) board table DIV - this is where the elements that are not animated are positioned
+*/
+    /*
+#gameBackground
+{
+    position:absolute;
+    /* background-color: #B2C97E; 
+    border: 3px outset #958E3E;
+    background-image:url('../../../images/board-bg.png');
+    background-repeat:repeat;
+    border-radius: 5px;
+    z-index:1;
+    width:640px;
+    height:400px; 
+}
+*/
+/* the main gaming area with players info (status, stake, dealer button, etc.)
+   community cards, cards, etc. 
+#boardTable */
+/* line 24, ../sass/pages/_playSection.scss */
+section#play-section {
+  position: relative;
+  /*z-index:3; */
+  float: left;
+  background-color: transparent;
+  text-align: middle;
+  width: 640px;
+  height: 400px;
+  /* merging #gameBackground with boardTable */
+  z-index: 1;
+  background-image: url("../../../images/board-bg.png");
+  background-repeat: repeat;
+}
+
+/*#playGameCanvasId */
+/* line 38, ../sass/pages/_playSection.scss */
+#play-section-canvas {
+  position: absolute;
+  z-index: 2;
+  /* top and left are seven to adjust for the border */
+  top: 7px;
+  left: 7px;
+  width: 640px;
+  height: 400px;
+}
+
+    /*
+.pokerTable {
+    position:relative;
+    width: 642px;
+    height:444px; 
+    /* left:220px; = to the cheaters frame width 
+    float: left;
+    padding: 5px 0px 0px 5px;
+}
+.pokerTable {
+    position: absolute;
+    top: 200px;
+    left: 20px;
+}
+*/
+/*************************************************************************************/
+/* this button shows up if a seat becomes available for a waiting user so that
+   the user can accept it */
+/* line 65, ../sass/pages/_playSection.scss */
+#takeSeatButton {
+  display: none;
+  position: absolute;
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+  background-color: #D7AF82;
+  font-weight: bold;
+  font-style: italic;
+  border-radius: 5px;
+  width: 150px;
+  height: 80px;
+}
+
+/*************************************************************************************/
+/* div enveloping each player info */
+/* line 80, ../sass/pages/_playSection.scss */
+.playerInfo {
+  position: absolute;
+  /* display:none; */
+  width: 150px;
+  height: 80px;
+  border-radius: 5px;
+  padding: 0px auto;
+}
+
+/* different box displays depending on player status */
+/* line 89, ../sass/pages/_playSection.scss */
+.playerInfoNormal {
+  border: 2px ridge grey;
+  background-color: #D3D3D3;
+}
+
+/* line 93, ../sass/pages/_playSection.scss */
+.playerInfoTimeOut {
+  border: 2px ridge grey;
+  background-color: #E59093;
+}
+
+/* line 97, ../sass/pages/_playSection.scss */
+.playerInfoWinner {
+  border: 3px double grey;
+  background-color: #1463FF;
+}
+
+/* line 101, ../sass/pages/_playSection.scss */
+.playerInfoNext {
+  border: 3px dotted grey;
+  background-color: #70B251;
+}
+
+/* line 105, ../sass/pages/_playSection.scss */
+.playerInfoUser {
+  border: 3px ridge #9086D9;
+  background-color: #BEBBD5;
+}
+
+/* line 109, ../sass/pages/_playSection.scss */
+.playerInfo p {
+  text-align: center;
+}
+
+/*
+.playerInfo img {
+    margin: 0px 20px 20px 0px;
+    height:30px;	
+} */
+/* line 117, ../sass/pages/_playSection.scss */
+.avatarImg {
+  display: block;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-left: auto;
+  margin-right: auto;
+  height: 30px;
+}
+
+/* line 125, ../sass/pages/_playSection.scss */
+#player0Info {
+  top: 310px;
+  /* 400 - 80px (height) - 5 */
+  left: 5px;
+}
+
+/* line 129, ../sass/pages/_playSection.scss */
+#player1Info {
+  top: 5px;
+  left: 5px;
+}
+
+/* line 133, ../sass/pages/_playSection.scss */
+#player2Info {
+  top: 5px;
+  left: 482px;
+  /* 642 - 150 px - 5 */
+}
+
+/* line 137, ../sass/pages/_playSection.scss */
+#player3Info {
+  top: 310px;
+  left: 482px;
+}
+
+/* line 142, ../sass/pages/_playSection.scss */
+.playerName {
+  font-weight: bold;
+}
+
+/* line 145, ../sass/pages/_playSection.scss */
+.playerStake {
+  font-size: small;
+}
+
+/* line 149, ../sass/pages/_playSection.scss */
+.playerStatus {
+  font-weight: bold;
+  color: red;
+}
+
+/* line 154, ../sass/pages/_playSection.scss */
+.playerStatusWinner {
+  font-weight: bold;
+  color: white;
+}
+
+/* line 159, ../sass/pages/_playSection.scss */
+.dealerButton {
+  /* display: none; */
+  position: absolute;
+  border: 2px groove #503A2E;
+  border-radius: 5px;
+  background-color: #C85E25;
+  font-family: Calibri;
+  font-size: 120%;
+  height: 20px;
+  width: 20px;
+  z-index: 4;
+}
+
+/* line 171, ../sass/pages/_playSection.scss */
+#player0DealerButton {
+  top: 371px;
+  /* 400 -20- 5 */
+  left: 165px;
+  /* 150 + 5 -+5 */
+}
+
+/* line 175, ../sass/pages/_playSection.scss */
+#player1DealerButton {
+  top: 5px;
+  left: 165px;
+}
+
+/* line 179, ../sass/pages/_playSection.scss */
+#player2DealerButton {
+  top: 5px;
+  left: 455px;
+  /* 642- 150 - 5 - 5 */
+}
+
+/* line 183, ../sass/pages/_playSection.scss */
+#player3DealerButton {
+  top: 371px;
+  left: 455px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* line 188, ../sass/pages/_playSection.scss */
+.playerCard {
+  position: absolute;
+  /* display:none; */
+  height: 42px;
+  width: 30px;
+  z-index: 5;
+}
+
+/* line 195, ../sass/pages/_playSection.scss */
+.userCard {
+  position: absolute;
+  /* display:none; */
+  height: 70px;
+  width: 50px;
+  z-index: 5;
+}
+
+/* player cards go off the dealer */
+/* line 203, ../sass/pages/_playSection.scss */
+.player0Card1 {
+  top: 323px;
+  /* 400 - 80 - 20 - 5 - 5 */
+  left: 165px;
+  /* 150 + 5*3 */
+}
+
+/* line 207, ../sass/pages/_playSection.scss */
+.player0Card2 {
+  top: 323px;
+  /* 400 - 70 - 20 - 5 - 5 */
+  left: 200px;
+  /* card1 + 50 + 5 */
+}
+
+/* line 211, ../sass/pages/_playSection.scss */
+.player1Card1 {
+  top: 33px;
+  /* 5 + 20 + 5 */
+  left: 165px;
+}
+
+/* line 215, ../sass/pages/_playSection.scss */
+.player1Card2 {
+  top: 33px;
+  left: 200px;
+}
+
+/* line 219, ../sass/pages/_playSection.scss */
+.player2Card1 {
+  top: 33px;
+  left: 412px;
+  /* 642 - 150 - 5 - 5 - 5*/
+}
+
+/* line 223, ../sass/pages/_playSection.scss */
+.player2Card2 {
+  top: 33px;
+  left: 448px;
+  /* card1 - 50 - 5*/
+}
+
+/* line 227, ../sass/pages/_playSection.scss */
+.player3Card1 {
+  top: 323px;
+  left: 412px;
+}
+
+/* line 231, ../sass/pages/_playSection.scss */
+.player3Card2 {
+  top: 323px;
+  left: 448px;
+}
+
+/* user card */
+/* line 237, ../sass/pages/_playSection.scss */
+.player0UserCard1 {
+  top: 295px;
+  /* player card - 28 */
+  left: 165px;
+}
+
+/* line 241, ../sass/pages/_playSection.scss */
+.player0UserCard2 {
+  top: 295px;
+  left: 220px;
+  /* player card + 20 */
+}
+
+/* line 245, ../sass/pages/_playSection.scss */
+.player1UserCard1 {
+  top: 33px;
+  /* 5 + 20 + 5 */
+  left: 165px;
+}
+
+/* line 249, ../sass/pages/_playSection.scss */
+.player1UserCard2 {
+  top: 33px;
+  left: 220px;
+}
+
+/* line 253, ../sass/pages/_playSection.scss */
+.player2UserCard1 {
+  top: 33px;
+  left: 372px;
+  /* player card - 20 */
+}
+
+/* line 257, ../sass/pages/_playSection.scss */
+.player2UserCard2 {
+  top: 33px;
+  left: 428px;
+}
+
+/* line 261, ../sass/pages/_playSection.scss */
+.player3UserCard1 {
+  top: 295px;
+  left: 372px;
+  /* playercard1 412 - 40 */
+}
+
+/* line 265, ../sass/pages/_playSection.scss */
+.player3UserCard2 {
+  top: 295px;
+  left: 428px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* small markers on the back */
+/* line 272, ../sass/pages/_playSection.scss */
+.cardSmallMarker {
+  position: absolute;
+  display: none;
+  height: 21px;
+  /* 42 */
+  width: 15px;
+  /* 30 */
+  z-index: 7;
+}
+
+/* line 279, ../sass/pages/_playSection.scss */
+.player0Card1SmallMarker {
+  top: 342px;
+  /* + 323 + (42 - 21) - 2 */
+  left: 178px;
+  /* + 165 + (30 - 15) - 2 */
+}
+
+/* line 283, ../sass/pages/_playSection.scss */
+.player0Card2SmallMarker {
+  top: 342px;
+  left: 213px;
+  /* 200 + (30-15) - 2 */
+}
+
+/* line 287, ../sass/pages/_playSection.scss */
+.player1Card1SmallMarker {
+  top: 52px;
+  /* 33 + (42-21) -2 */
+  left: 178px;
+}
+
+/* line 291, ../sass/pages/_playSection.scss */
+.player1Card2SmallMarker {
+  top: 52px;
+  left: 213px;
+}
+
+/* line 295, ../sass/pages/_playSection.scss */
+.player2Card1SmallMarker {
+  top: 52px;
+  left: 426px;
+  /* 412 + (42 - 21) - 5 offset - 2 */
+}
+
+/* line 299, ../sass/pages/_playSection.scss */
+.player2Card2SmallMarker {
+  top: 52px;
+  left: 461px;
+  /* 448 + (30 - 15)- 2 */
+}
+
+/* line 303, ../sass/pages/_playSection.scss */
+.player3Card1SmallMarker {
+  top: 342px;
+  left: 426px;
+}
+
+/* line 307, ../sass/pages/_playSection.scss */
+.player3Card2SmallMarker {
+  top: 342px;
+  left: 461px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* large cheating marker */
+/* line 314, ../sass/pages/_playSection.scss */
+.cardLargeMarker {
+  position: absolute;
+  display: none;
+  /*
+  height: 30px;
+  width: 21px;
+  */
+  height: 42px;
+  width: 30px;
+  z-index: 6;
+}
+
+/* line 325, ../sass/pages/_playSection.scss */
+.player0Card1LargeMarker {
+  top: 333px;
+  /* 323 + (42-30) - 2*/
+  left: 172px;
+  /* 165 + (30-21) - 2*/
+}
+
+/* line 329, ../sass/pages/_playSection.scss */
+.player0Card2LargeMarker {
+  top: 333px;
+  left: 207px;
+  /* 200 + (30-21) - 2 */
+}
+
+/* line 333, ../sass/pages/_playSection.scss */
+.player1Card1LargeMarker {
+  top: 43px;
+  /* 33 + (42-30) - 2 */
+  left: 172px;
+}
+
+/* line 337, ../sass/pages/_playSection.scss */
+.player1Card2LargeMarker {
+  top: 43px;
+  left: 207px;
+}
+
+/* line 341, ../sass/pages/_playSection.scss */
+.player2Card1LargeMarker {
+  top: 43px;
+  left: 419px;
+  /* 412 + (42-30) -5 offset - 2 - 2*/
+}
+
+/* line 345, ../sass/pages/_playSection.scss */
+.player2Card2LargeMarker {
+  top: 43px;
+  left: 455px;
+  /* 448 + (30-21) - 2*/
+}
+
+/* line 349, ../sass/pages/_playSection.scss */
+.player3Card1LargeMarker {
+  top: 333px;
+  left: 419px;
+}
+
+/* line 353, ../sass/pages/_playSection.scss */
+.player3Card2LargeMarker {
+  top: 333px;
+  left: 455px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* bigger card sizes for user */
+/* player cards go off the dealer */
+/* line 361, ../sass/pages/_playSection.scss */
+.cardSmallUserMarker {
+  position: absolute;
+  display: none;
+  height: 24px;
+  width: 17px;
+  z-index: 7;
+}
+
+/* line 369, ../sass/pages/_playSection.scss */
+.player0Card1SmallUserMarker {
+  top: 336px;
+  /* 295 + (70-24) - 5 */
+  left: 193px;
+  /* 165 + (50-17) - 5 */
+}
+
+/* line 373, ../sass/pages/_playSection.scss */
+.player0Card2SmallUserMarker {
+  top: 336px;
+  left: 248px;
+  /* 220 + (50-17) - 5 */
+}
+
+/* line 377, ../sass/pages/_playSection.scss */
+.player1Card1SmallUserMarker {
+  top: 74px;
+  /* 33 + (70-24) - 5 */
+  left: 193px;
+}
+
+/* line 381, ../sass/pages/_playSection.scss */
+.player1Card2SmallUserMarker {
+  top: 74px;
+  left: 248px;
+}
+
+/* line 385, ../sass/pages/_playSection.scss */
+.player2Card1SmallUserMarker {
+  top: 74px;
+  left: 400px;
+  /* 372 + (50-17) - 5 */
+}
+
+/* line 389, ../sass/pages/_playSection.scss */
+.player2Card2SmallUserMarker {
+  top: 74px;
+  left: 456px;
+  /* 428 + (50-17) - 5 */
+}
+
+/* line 393, ../sass/pages/_playSection.scss */
+.player3Card1SmallUserMarker {
+  top: 336px;
+  left: 400px;
+}
+
+/* line 397, ../sass/pages/_playSection.scss */
+.player3Card2SmallUserMarker {
+  top: 336px;
+  left: 456px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* bigger card sizes for user */
+/* player cards go off the dealer */
+/* line 405, ../sass/pages/_playSection.scss */
+.cardLargeUserMarker {
+  position: absolute;
+  display: none;
+  height: 50px;
+  width: 36px;
+  z-index: 6;
+}
+
+/* line 412, ../sass/pages/_playSection.scss */
+.player0Card1LargeUserMarker {
+  top: 310px;
+  /* 295 + (70-50) - 5 */
+  left: 174px;
+  /* 165 + (50 - 36) - 5 */
+}
+
+/* line 416, ../sass/pages/_playSection.scss */
+.player0Card2LargeUserMarker {
+  top: 310px;
+  left: 229px;
+  /* 220 + (50 - 36) - 5 */
+}
+
+/* line 420, ../sass/pages/_playSection.scss */
+.player1Card1LargeUserMarker {
+  top: 48px;
+  /* 33 + (70-50) - 5 */
+  left: 174px;
+}
+
+/* line 424, ../sass/pages/_playSection.scss */
+.player1Card2LargeUserMarker {
+  top: 48px;
+  left: 229px;
+}
+
+/* line 428, ../sass/pages/_playSection.scss */
+.player2Card1LargeUserMarker {
+  top: 48px;
+  left: 381px;
+  /* 372 + (50-36) - 5 */
+}
+
+/* line 432, ../sass/pages/_playSection.scss */
+.player2Card2LargeUserMarker {
+  top: 48px;
+  left: 437px;
+  /* 428 + (50-36) - 5 */
+}
+
+/* line 436, ../sass/pages/_playSection.scss */
+.player3Card1LargeUserMarker {
+  top: 310px;
+  left: 381px;
+}
+
+/* line 440, ../sass/pages/_playSection.scss */
+.player3Card2LargeUserMarker {
+  top: 310px;
+  left: 437px;
+}
+
+/*************************************************************************************/
+/* line 445, ../sass/pages/_playSection.scss */
+.communityCard {
+  position: absolute;
+  display: none;
+  top: 150px;
+  height: 60px;
+  width: 43px;
+}
+
+/* line 452, ../sass/pages/_playSection.scss */
+#communityCard0 {
+  left: 212px;
+}
+
+/* line 455, ../sass/pages/_playSection.scss */
+#communityCard1 {
+  left: 260px;
+}
+
+/* line 458, ../sass/pages/_playSection.scss */
+#communityCard2 {
+  left: 308px;
+}
+
+/* line 461, ../sass/pages/_playSection.scss */
+#communityCard3 {
+  left: 356px;
+}
+
+/* line 464, ../sass/pages/_playSection.scss */
+#communityCard4 {
+  left: 404px;
+}
+
+/*************************************************************************************/
+/* this is the message at the center of the table */
+/* line 469, ../sass/pages/_playSection.scss */
+#centerMessageId {
+  display: block;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bolder;
+  color: white;
+  margin: 200px 0 0 0;
+}
+
+/* #boardTable input { */
+/* line 479, ../sass/pages/_playSection.scss */
+section#play-section input {
+  position: absolute;
+}
+
+/*************************************************************************************/
+/* line 483, ../sass/pages/_playSection.scss */
+#userCallAmount {
+  display: none;
+}
+
+/* line 486, ../sass/pages/_playSection.scss */
+#userRaiseAmount {
+  display: none;
+}
+
+/* line 489, ../sass/pages/_playSection.scss */
+.userButton {
+  position: absolute;
+  height: 28px;
+  display: inline-block;
+  border-radius: 0;
+  background-color: #7E8493;
+  border-style: outset;
+}
+
+/* line 497, ../sass/pages/_playSection.scss */
+#userRaiseButton {
+  width: 95px;
+}
+
+/* line 500, ../sass/pages/_playSection.scss */
+#userFoldButton {
+  width: 55px;
+}
+
+/* line 503, ../sass/pages/_playSection.scss */
+#userCallButton {
+  width: 95px;
+}
+
+/* line 506, ../sass/pages/_playSection.scss */
+#userCheckButton {
+  width: 55px;
+}
+
+/* line 509, ../sass/pages/_playSection.scss */
+.player0Raise {
+  top: 249px;
+  left: 5px;
+}
+
+/* line 513, ../sass/pages/_playSection.scss */
+.player0Fold {
+  top: 249px;
+  left: 103px;
+}
+
+/* line 517, ../sass/pages/_playSection.scss */
+.player0Check {
+  top: 279px;
+  left: 5px;
+}
+
+/* line 521, ../sass/pages/_playSection.scss */
+.player0Call {
+  top: 279px;
+  left: 63px;
+}
+
+/* player 1 positions */
+/* line 526, ../sass/pages/_playSection.scss */
+.player1Raise {
+  top: 90px;
+  left: 5px;
+}
+
+/* line 530, ../sass/pages/_playSection.scss */
+.player1Fold {
+  top: 90px;
+  left: 103px;
+}
+
+/* line 534, ../sass/pages/_playSection.scss */
+.player1Check {
+  top: 120px;
+  left: 5px;
+}
+
+/* line 538, ../sass/pages/_playSection.scss */
+.player1Call {
+  top: 120px;
+  left: 63px;
+}
+
+/* player 2 button positions */
+/* line 543, ../sass/pages/_playSection.scss */
+.player2Raise {
+  top: 90px;
+  left: 482px;
+}
+
+/* line 547, ../sass/pages/_playSection.scss */
+.player2Fold {
+  top: 90px;
+  left: 580px;
+  /* 482 + 98 */
+}
+
+/* line 551, ../sass/pages/_playSection.scss */
+.player2Check {
+  top: 120px;
+  left: 482px;
+}
+
+/* line 555, ../sass/pages/_playSection.scss */
+.player2Call {
+  top: 120px;
+  left: 540px;
+  /* 482 + 68 */
+}
+
+/* player 3 positions */
+/* line 560, ../sass/pages/_playSection.scss */
+.player3Raise {
+  top: 249px;
+  left: 482px;
+}
+
+/* line 564, ../sass/pages/_playSection.scss */
+.player3Fold {
+  top: 249px;
+  left: 580px;
+}
+
+/* line 568, ../sass/pages/_playSection.scss */
+.player3Check {
+  top: 279px;
+  left: 482px;
+}
+
+/* line 572, ../sass/pages/_playSection.scss */
+.player3Call {
+  top: 279px;
+  left: 540px;
+}
+
+/* 
+    Document   : SafeSaloon
+    Created on : Aug 13, 2012, 12:58:20 PM
+    Author     : Sahrah
+    Description:
+        Purpose of the stylesheet follows.
+*/
+/* 
+   TODO customize this sample style
+   Syntax recommendation http://www.w3.org/TR/REC-CSS2/
+*/
+/* CheatingSleeve.html*/
+/* line 14, ../sass/pages/_frontStreet.scss */
+section#front-street {
+  background-image: url("../../../images/SaloonSeedy.png");
+}
+
+/* line 17, ../sass/pages/_frontStreet.scss */
+.cImg {
+  border-radius: 3px;
+  border: 2px solid #B6BFD7;
+  width: 30px;
+  height: 42px;
+}
+
+/* line 23, ../sass/pages/_frontStreet.scss */
+#cardSelector {
+  float: left;
+}
+
+/* FrontStreet.php */
+/* line 28, ../sass/pages/_frontStreet.scss */
+.preCheatImg {
+  float: left;
+  width: 80px;
+  height: 35px;
+  padding: 5px;
+  border-style: outset;
+  border-color: green;
+  border-width: 5px;
+  border-radius: 2px;
+  background-color: #81B380;
+  vertical-align: text-bottom;
+  /* */
+}
+/* line 40, ../sass/pages/_frontStreet.scss */
+.preCheatImg .fade {
+  filter: alpha(opacity=70);
+  -moz-opacity: 0.7;
+  opacity: 0.7;
+}
+/* line 43, ../sass/pages/_frontStreet.scss */
+.preCheatImg .normal {
+  filter: alpha(opacity=100);
+  -moz-opacity: 1;
+  opacity: 1;
+}
+
+/* line 45, ../sass/pages/_frontStreet.scss */
+.preCheatDiv {
+  width: 400px;
+  height: 65px;
+  /* see image: 35 height + 2*10 padding */
+  margin: 0px 10px;
+}
+
+/* line 50, ../sass/pages/_frontStreet.scss */
+#cheatingOptionsHeader {
+  font-weight: bold;
+}
+
+/* line 53, ../sass/pages/_frontStreet.scss */
+#dialog-card-selector {
+  font-size: 0.7em;
+}
+
+/* line 56, ../sass/pages/_frontStreet.scss */
+#selectedCards {
+  float: right;
+  position: relative;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  background: #9CA3B5;
+  border: 2px solid #B6BFD7;
+  width: 60px;
+  height: 214px;
+  font-family: Comic Sans MS;
+  font-size: 0.7em;
+  overflow: auto;
+}
+
+/* tooltip is dynamically set */
+/* line 71, ../sass/pages/_frontStreet.scss */
+.tooltip {
+  display: none;
+  background: transparent url(../../../images/black_arrow.png);
+  font-size: 0.7em;
+  height: 40px;
+  width: 100px;
+  padding: 15px;
+  color: #eee;
+  text-align: center;
+}
+
+/* line 81, ../sass/pages/_frontStreet.scss */
+.sleeve {
+  display: none;
+  float: left;
+  background-color: #7E8493;
+  margin-left: 10px;
+  padding: 4px 4px;
+  width: 450px;
+  height: 65px;
+  border-radius: 3px;
+  border: 2px solid #B6BFD7;
+  color: #D9E1F5;
+  font-family: Comic Sans MS;
+  font-size: 0.8em;
+  overflow: auto;
+}
+
+/* line 1, ../sass/pages/_cheatingSection.scss */
+.cheatersCatalog {
+  position: absolute;
+}
+
+/* line 4, ../sass/pages/_cheatingSection.scss */
+.cheaterItemDetail {
+  position: relative;
+}
+
+/* not working, why? */
+/* line 8, ../sass/pages/_cheatingSection.scss */
+.cheaterItemDetail > div {
+  position: absolute;
+  left: 103px;
+}
+
+/* both sleeve and next card are hidden */
+/* line 13, ../sass/pages/_cheatingSection.scss */
+.hiddenCard {
+  background-color: #7E8493;
+  padding: 4px 4px;
+  width: 112px;
+  height: 108px;
+  border-radius: 3px;
+  border: 2px solid #B6BFD7;
+  color: #D9E1F5;
+  font-family: Comic Sans MS;
+  font-size: 0.8em;
+  overflow: auto;
+}
+/* line 24, ../sass/pages/_cheatingSection.scss */
+.hiddenCard .sleeveCard {
+  top: 0px;
+}
+/* line 27, ../sass/pages/_cheatingSection.scss */
+.hiddenCard .nextCard {
+  top: 325px;
+  z-index: 1;
+}
+
+/* line 32, ../sass/pages/_cheatingSection.scss */
+.cheatingItemAction {
+  display: none;
+  position: absolute;
+  top: 124px;
+  width: 117px;
+  height: 70px;
+  background-color: #F1F6FB;
+  display: table-cell;
+  vertical-align: middle;
+  margin-top: auto;
+  margin-bottom: auto;
+  border: 2px solid #B6BFD7;
+  border-radius: 3px;
+  overflow: auto;
+  padding: 1px 2px 2px 1px;
+  text-align: center;
+  font-size: small;
+}
+
+/* line 50, ../sass/pages/_cheatingSection.scss */
+.cheatingItemAction input {
+  display: inline-block;
+  width: 80px;
+  font-size: 0.8em;
+}
+
+/* line 55, ../sass/pages/_cheatingSection.scss */
+.cheatingItemDesc {
+  display: none;
+  top: 205px;
+  background-color: #F0F6F9;
+  font-size: small;
+  width: 200px;
+    /* height: 105px; 
+overflow: auto; */
+  padding: 2px 2px;
+  z-index: 10;
+  border: 2px solid #B6BFD7;
+  border-radius: 3px;
+}
+
+/* line 68, ../sass/pages/_cheatingSection.scss */
+.cheatImg {
+  border-radius: 3px;
+  border: 2px solid #B6BFD7;
+  width: 80px;
+  height: 35px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* line 75, ../sass/pages/_cheatingSection.scss */
+.cheatingCard {
+  /* display:none; */
+  height: 42px;
+  width: 30px;
+  z-index: 5;
+  margin: 2px;
+}

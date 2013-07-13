@@ -1,11 +1,5 @@
 <?php
 
-// Configure logging
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-
-require_once(dirname(__FILE__) . '/../Components/QueueManager.php');
-
 /* * ************************************************************************************* */
 
 /**
@@ -22,8 +16,8 @@ class GameSession {
     
     public function __construct($gSessionId, $playerId) {
         $this->log = Logger::getLogger(__CLASS__);
-        $this->id = $gSessionId;
-        $this->requestingPlayerId = $playerId;
+        $this->id = (int)$gSessionId;
+        $this->requestingPlayerId = (int)$playerId;
     }
 
     /**
@@ -56,12 +50,12 @@ class GameSession {
     /**
      * Communicates game started to the list of recipients. 
      * @param type $instanceSetupDto
-     * @param type $recipientPlayers
+     * @param Player[] $recipientPlayers Cannot be PlayerInstance because waiting players need to be communicated
      */
     function CommunicateGameStarted($gameStatusDto, $recipientPlayers) {
-        $QEx = Context::GetQEx();
+        $QEx = Context::GetExchangePlayer();
 
-        $eventType = EventType::GAME_STARTED;
+        $eventType = EventType::GameStarted;
         $instanceId = $gameStatusDto->gameInstanceId;
 
         for ($i = 0; $i < count($recipientPlayers); $i++) {
@@ -70,7 +64,7 @@ class GameSession {
 
             $message = new QueueMessage($eventType, $gameStatusDto);
             //$message->eventData = $instanceSetupDto;
-            QueueManager::QueueMessage($QEx, $playerId, json_encode($message));
+            QueueManager::SendToPlayer($QEx, $playerId, json_encode($message));
             //}
         }
     }

@@ -108,26 +108,6 @@ final class PokerActionType {
     const FOLDED = 'Folded';
 
 }
-
-final class EventType {
-    /* const GAME_END = 'GameEnd'; // GameResult
-      const NEW_CARDS = 'NewCards'; // array of 1 or 3 community cards. */
-
-    const PLAYER_MOVE = 'PlayerMove'; // PlayerStatus
-    //const FIRST_MOVE = 'FirstMove'; // PlayerStatus
-    const TIME_OUT = 'TimeOut';
-    const SEAT_OFFER = 'SeatOffer'; // int
-    const SEAT_TAKEN = 'SeatTaken';
-    const USER_JOINED = 'UserJoined';
-    const USER_LEFT = 'UserLeft';
-    const GAME_STARTED = 'GameStarted';
-    //const CHEATED_HANDS = 'CheatedHands';
-    //const CHEATED_CARDS = 'CheatedCards';
-    const CHEATED_HIDDEN = 'CheatedHidden';
-    //const CHEATED_NEXT = 'CheatedNext';
-
-}
-
 final class GameStatus {
 
     const IN_PROGRESS = 'InProgress';
@@ -139,44 +119,65 @@ final class GameStatus {
 
 final class ItemType {
 
+    const ACE_PUSHER = 'AcePusher'; // Sly McGuffin's Ace Pusher
     const HEART_MARKER = 'HeartMarker';
-    const LOAD_CARD_ON_SLEEVE = 'LoadCardOnSleeve';
+    const LOAD_CARD_ON_SLEEVE = 'LoadCardOnSleeve'; // Old Man Chalmers Reliable Card Pusher
     const USE_CARD_ON_SLEEVE = 'UseCardOnSleeve';
     const CLUB_MARKER = 'ClubMarker';
     const DIAMOND_MARKER = 'DiamondMarker';
+    const RIVER_SHUFFLER = 'LookRiverCard'; //Shelvin's Shuffler
+    const RIVER_SHUFFLER_USE = 'SwapRiverCard';
     const POKER_PEEKER = 'PokerPeeker';
     const SOCIAL_SPOTTER = 'SocialSpotter';
+/*
+    const HEART_MARKER_LOCK = 300; // 5 min
+    const CLUB_MARKER_LOCK = 60; // 1 min
+    const DIAMOND_MARKER_LOCK = 180; // 3 min
+    const RIVER_SHUFFLER_LOCK = 600; // 10 minutes
+    const POKER_PEEKER_LOCK = 900; // 15 min
+    const SOCIAL_SPOTTER_LOCK = 2700; // 45 minutes
+*/
+    // 4 not implemented
+    const TUCKER_TABLE_ACTIVATE = 'TableTuckerActivate';
+    const TUCKER_TABLE_SLIDE_UNDER = 'TableTuckerSlideUnder';
+    const TUCKER_TABLE_SLIDE_OUT = 'TableTuckerSlideOut';
     const SNAKE_OIL_MARKER = 'SnakeOilMarker';
-    const ACE_PUSHER = 'AcePusher';
-    const RIVER_SHUFFLER = 'LookRiverCard';
-    const RIVER_SHUFFLER_USE = 'SwapRiverCard';
-    const ACTIVATE_TUCKER_TABLE = 'TableTucker';
-    const SLIDE_UNDER_TABLE = 'SlideUnderTable';
-    const SLIDE_OUT_OF_TABLE = 'SlideOutOfTable';
+    const ANTI_OIL_MARKER = 'AntiOilMarker'; //Old Doc McSneaky Snake Liver Crazy Maker
     const KEEP_FACE_CARDS = 'FaceMelter';
-    const ANTI_OIL_MARKER = 'AntiOilMarker';
-
-}
+    // riverbend redo
+/*
+    const SNAKE_OIL_MARKER_LOCK = 1800; // 30 minutes
+    const ANTI_OIL_MARKER_LOCK = 3600; // 1 hr
+*/
+ }
 
 /* code passed to front-end */
 
 final class CheatDtoType {
 
-    const HANDS = 'CheatedHands';
-    const CARDS = 'CheatedCards';
-    const HIDDEN = 'CheatedHidden';
-    const NEXT = 'CheatedNext';
-
+    const CheatedHands = 'CheatedHands';
+    const CheatedCards = 'CheatedCards';
+    const CheatedHidden = 'CheatedHidden';
+    const CheatedNext = 'CheatedNext';
+    const ItemLog = "ItemLog";
+    const ItemUnlock = "ItemUnlock";
+    const ItemEnd = "ItemEnd";
+    const ItemLock = "ItemLock";
+    const CheatInfo = "CheatInfo";
 }
 
-final class CheatLogType {
+final class CheatInfoType {
 
     const ItemLog = "ItemLog";
     const ItemUnlock = "ItemUnlock";
     const ItemEnd = "ItemEnd";
-
+    const ItemLock = "ItemLock";
 }
 
+
+/**
+ * Actions that the user takes from the front-end
+ */
 final class ActionType {
     // table actions
 
@@ -189,6 +190,27 @@ final class ActionType {
     const MakePokerMove = "MakePokerMove";
     const EndRound = "EndRound";
     const Cheat = "Cheat";
+    const Chat = "Chat";
 }
+define ("PLAYER_MOVE", "PlayerMove");
+define ("GAME_STARTED", "GameStarted");
+
+/**
+ * Events (sync and asynch) from server to client
+ * user joined is not an event because given as REST response
+ */
+final class EventType {
+    const GameStarted = 'GameStarted';
+    const ChangeNextTurn = 'ChangeNextTurn'; // PlayerStatus
+    const SeatOffer = 'SeatOffer'; // int
+    const SeatTaken = 'SeatTaken';
+    const UserLeft = 'UserLeft';
+    //const CHEATED_HANDS = 'CheatedHands';
+    //const CHEATED_CARDS = 'CheatedCards';
+    const CHEATED_HIDDEN = 'CheatedHidden';
+    //const CHEATED_NEXT = 'CheatedNext';
+
+}
+
 
 ?>

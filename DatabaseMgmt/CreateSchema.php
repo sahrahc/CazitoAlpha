@@ -27,7 +27,7 @@ function CreateSchema() {
             NumberSeats int,
             LastUpdateDateTime timestamp,
             CurrentGameSessionId int,
-            SessionStartDateTime timestamp,
+            SessionStartDateTime timestamp null,
             PRIMARY KEY (Id)
         )";
     executeDDL($tableName, $sql);
@@ -52,11 +52,11 @@ function CreateSchema() {
             Name varchar(100),
             ImageUrl varchar(100),
             IsVirtual tinyint, 
-            LastUpdateDateTime timestamp,
+            LastUpdateDateTime timestamp null,
             CurrentCasinoTableId int,
             CurrentSeatNumber int,
             BuyIn int,
-            WaitStartDateTime timestamp,
+            WaitStartDateTime timestamp null,
             ReservedSeatNumber int,
             PRIMARY KEY (Id)
         )";
@@ -94,6 +94,7 @@ function CreateSchema() {
             Id int NOT NULL AUTO_INCREMENT,
             PRIMARY KEY (Id),
             GameSessionId int,
+            Status varchar(25),
             StartDateTime timestamp,
             LastUpdateDateTime timestamp,
 	    NumberPlayers int,
@@ -163,7 +164,7 @@ function CreateSchema() {
         (
             GameInstanceId int,
             DeckPosition int,
-            PRIMARY KEY (GameInstanceId, PlayerId),
+            PRIMARY KEY (GameInstanceId, DeckPosition),
             CardCode varchar(25),
             PlayerId int,
             PlayerCardNumber int,
@@ -197,7 +198,7 @@ function CreateSchema() {
     executeDDL($indexName, $sql);
 
     /* --------------------------------------------------------------------- */
-    // NextPokerMove
+    // ExpectedPokerMove
     //      Index: GameInstanceId and PlayerId
     // auto-increment because 
     $tableName = "ExpectedPokerMove";
@@ -206,8 +207,9 @@ function CreateSchema() {
             GameInstanceId int,
             PlayerId int,
             ExpirationDate timestamp,
-            PokerActionType varchar(10),
-            Amount int
+            CallAmount int,
+            CheckAmount int,
+            RaiseAmount int
         )";
     executeDDL($tableName, $sql);
     // create index on game instace id

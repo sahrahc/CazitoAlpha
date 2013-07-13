@@ -1,21 +1,6 @@
 <?php
 
-// Include Libraries
-include_once(dirname(__FILE__) . '/../../libraries/helper/WebServiceDecoder.php');
-include_once(dirname(__FILE__) . '/../../libraries/log4php/Logger.php');
-
-// Include Application Scripts
-require_once('Config.php');
-require_once('Components/EvalHelper.php');
-require_once('Components/QueueManager.php');
-require_once('DomainHelper/AllInclude.php');
-require_once('DomainEnhanced/AllInclude.php');
-require_once('DomainModel/AllInclude.php');
-require_once('Dto/AllInclude.php');
-
-// configure logging
-Logger::configure(dirname(__FILE__) . '/log4php.xml');
-$log = Logger::getLogger(__FILE__);
+include_once(dirname(__FILE__) . '/Config.php');
 
 $server = new WebServiceDecoder;
 
@@ -31,42 +16,39 @@ $server->initialize();
  * @return json GameStatusDto
  */
 function startPracticeSession($par) {
-    global $defaultTableMin;
-    global $numberSeats;
-    global $log;
-    $decodedPar = json_decode($par, true);
-    $playerId = $decodedPar["userPlayerId"];
+    //global $log;
 
-    $blindBetAmounts = array($defaultTableMin / 2, $defaultTableMin);
-        
+    $decodedPar = json_decode($par, true);
+    $playerId = $decodedPar["requestingPlayerId"];
+
     Context::Init();
 
     // sequencing of poker game start
     $practiceSession = EntityHelper::CreatePracticeSession($playerId);
-    $practiceSession->InitPlayers($playerId);
-
     $gameInstance = $practiceSession->InitNewPracticeInstance();
+    $practiceSession->InitPlayers($playerId, $gameInstance->id);
+
+    // resets the queue for the requesting player and creates one for game session
+    QueueManager::addPlayerQueue($playerId, Context::GetQCh());
+    QueueManager::addGameSessionQueue($practiceSession->id, Context::GetQCh());
+
+    $blindBetAmounts = $practiceSession->FindBlindBetAmounts();
+    $tableSize = $practiceSession->tableMinimum;
+
     $playerStatuses = $gameInstance->ResetActivePlayers(true);
 
     $gameInstance->InitInstanceWithDealerAndBlinds($blindBetAmounts, $playerStatuses);
     GameInstanceCards::InitDealGameCards($gameInstance);
-    $firstMove = ExpectedPokerMove::InitFirstMove($gameInstance, $defaultTableMin);
+    $firstMove = ExpectedPokerMove::InitFirstMoveConstraints($gameInstance, $tableSize, 1);
 
     // start populating the response
     $gameStatusDto = GameStatusDto::SetStartedGame($gameInstance);
     $updatedPlayerStates = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);
     $gameStatusDto->playerStatusDtos = PlayerStatusDto::MapPlayerStatuses($updatedPlayerStates, true);
+    $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $gameInstance->id);
 
-    $gameStatusDto->nextMoveDto = new PokerMoveDto($firstMove);
+    $gameStatusDto->nextMoveDto = new ExpectedPokerMoveDto($firstMove);
     $gameStatusDto->communityCards = CardHelper::getCommunityCardDtos($gameInstance->id, 3);
-
-    executeSQL("update GameInstance SET DealerPlayerId = $gameStatusDto->dealerPlayerId,
-            FirstPlayerId=$firstMove->playerId,
-            NextPlayerId=$firstMove->playerId, NumberPlayers = $numberSeats
-            WHERE id = $gameInstance->id", __FUNCTION__ . ":
-                Error updating practice game instance $gameInstance->id");
-
-    $practiceSession->CommunicateGameStarted($gameStatusDto);
 
     /* --------------------------------------------------------------------- */
     Context::Disconnect();
@@ -77,72 +59,120 @@ function startPracticeSession($par) {
 
 /* * ************************************************************************************** */
 
-/**
- * Add a user to a casino table. Create the user and table if they do not exist.
- * TODO: validate requesting player with cookie with active sessions
- * FIXME: enforce max number of players
- * This and the login service call are REST services, the queue
- * is set up after this service call.
- * @global Logger $log
- * @global timestamp $dateTimeFormat
- * @param json $par = { playerId : 2, isPractice : 0, casinoTableId : 5}
- * @return json $gameStatusDto
- */
-function JoinTable($par) {
-    global $defaultTableMin;
+function CreateTable($par) {
     global $log;
     $decodedPar = json_decode($par, true);
-    $casinoTableId = $decodedPar["casinoTableId"];
-    $playerId = $decodedPar["userPlayerId"];
+    $tableName = $decodedPar["tableName"];
     $tableSize = $decodedPar["tableSize"];
+    $playerId = $decodedPar["requestingPlayerId"];
     if (is_null($tableSize)) {
-        $tableSize = $defaultTableMin;
+        return "Error: Table size is required";
     }
 
+    if (is_null($tableName)) {
+        return "Error: Table name is required";
+    }
+
+    if (is_null($playerId)) {
+        return "Error: Player id is required";
+    }
+    Context::Init();
+    // Logic --------------------------------------------------------------------------------
+    try {
+    $casinoTableDto = TableCoordinator::SetupTable($playerId, $tableName, $tableSize);
+    }
+    catch(Exception $e) { 
+        $log->error($e->getMessage());
+        return($e->getMessage());
+    }
+    Context::Disconnect();
+    return json_encode($casinoTableDto);
+}
+
+/**
+ * Verifies a table exists and provides info to the user. A user does not
+ * actually join the table until ready to start playing game.
+ */
+function GetTable($par) {
+    $decodedPar = json_decode($par, true);
+    $tableName = $decodedPar["tableName"];
+    // TODO: tableCode generated on invite not implemented yet
+    $tableCode = $decodedPar["tableCode"];
+    $playerId = $decodedPar["requestingPlayerId"];
+
+    if (is_null($tableName)) {
+        return "Error: Table name is required";
+    }
+
+    if (is_null($tableCode)) {
+        return "Error: Table code is required";
+    }
+
+    if (is_null($playerId)) {
+        return "Error: Player id is required";
+    }
+    Context::Init();
+    // Logic --------------------------------------------------------------------------------
+    $casinoTableDto = TableCoordinator::GetTable($playerId, $tableName);
+
+    Context::Disconnect();
+    return json_encode($casinoTableDto);
+}
+
+/**
+ * A user joins a table, table status returned for display and other players
+ * notified.
+ * @param type $par
+ * @return type
+ */
+function JoinTable($par) {
+    $decodedPar = json_decode($par, true);
+    $casinoTableId = $decodedPar["casinoTableId"];
+    $playerId = $decodedPar["requestingPlayerId"];
+    $tableCode = $decodedPar["tableCode"];
     if (is_null($casinoTableId)) {
-        $casinoTableId = -1;
+        return "Error: Table id is required";
     }
 
+    if (is_null($playerId)) {
+        return "Error: Player id is required";
+    }
+
+    if (is_null($playerId)) {
+        return "Error: Table code is required";
+    }
     Context::Init();
     // Logic --------------------------------------------------------------------------------
     // 1. get or create a new table if it does not exist
-    $casinoTable = EntityHelper::getOrCreateCasinoTable($casinoTableId, $tableSize, $playerId);
-    $gameSession = new GameSession($casinoTable->currentGameSessionId);
-    /* 2. identify whether valid game session
-     * session has instances which are old - isStale = true, start new, don't update
-     */
-    if ($casinoTable->IsSessionStale()) {
-        // note that CasinoTable is updated
-        $gameSession = $casinoTable->ResetGameSession($playerId);
-    }
-    $players = EntityHelper::GetPlayersForCasinoTable($casinoTable->id);
+    $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
 
     // 3. update the player's casino
-    $requestingPlayer = TableCoordinator::AddUserToTable($playerId, $casinoTable, $players);
+    $gameStatusDto = TableCoordinator::AddUserToTable($playerId, $casinoTable);
     // --------------------------------------------------------------------------------------
-    // 4. return REST response for newly created user
-    $gameStatusDto = GameStatusDto::Init($requestingPlayer, $players, $casinoTable);
 
+    Context::Disconnect();
     return json_encode($gameStatusDto);
 }
 
 /* * ************************************************************************************** */
 
 /**
- * Nothing returned, no need for queues.
+ * Nothing returned, queue already deleted
+ * No option to logout in middle of game, user must leave game first, so
+ * no need to cleanup
  */
 function logout($par) {
     $decodedPar = json_decode($par, true);
-    $playerId = $decodedPar["userPlayerId"];
+    $playerId = $decodedPar["requestingPlayerId"];
 
     // --------------------------------------------------------------------------------------
-    $con = connectToStateDB();
-    global $dateTimeFormat;
-    $statusDateTime = date($dateTimeFormat);
-
+    connectToStateDB();
+    /*    global $dateTimeFormat;
+      $statusDateTime = date($dateTimeFormat);
+     */
     // 1. get, update or create the player first, so it can be added to the response player list
-    CheatingHelper::ResetSleeve($playerId);
-    CheatingHelper::ResetVisible($playerId);
+    PlayerHiddenCard::ResetSleeve($playerId);
+    PlayerVisibleCard::ResetVisible($playerId);
     // no need to send messages, user logging out.
     $status = 'OK';
     return json_encode($status);
@@ -159,6 +189,7 @@ function login($par) {
     $decodedPar = json_decode($par, true);
     $playerName = $decodedPar["playerName"];
 
+    Context::Init();
     // --------------------------------------------------------------------------------------
     global $dateTimeFormat;
     $statusDateTime = date($dateTimeFormat);
@@ -166,6 +197,8 @@ function login($par) {
     // 1. get, update or create the player first, so it can be added to the response player list
     $newPlayer = EntityHelper::getOrCreatePlayer($playerName, $statusDateTime);
     $player = array("userPlayerId" => $newPlayer->id, "playerName" => $newPlayer->name);
+
+    Context::Disconnect();
     return json_encode($player);
 }
 
@@ -175,14 +208,21 @@ function login($par) {
  * FE must call for this. Cannot automatically send info because FE may not be ready.
  */
 function cheatLoadSleeve($par) {
+    global $log;
     $decodedPar = json_decode($par, true);
     $playerId = $decodedPar["userPlayerId"];
+    $cardNameList = $decodedPar["cardNameList"];
+    $itemType = $decodedPar["itemType"];
+    if ($itemType !== ItemType::LOAD_CARD_ON_SLEEVE) {
+        $log->error("");
+        return;
+    }
 
-    Context::SetStatusDT();
-
+    Context::Init();
+    PlayerHiddenCard::AddHiddenCards($playerId, $cardNameList);
     $cardNames = CheatingHelper::GetHiddenCards($playerId);
 
-    //CheatingHelper::communicateCheatingResult($playerId, CheatDtoType::HIDDEN, $cardNames); // message?
+    Context::Disconnect();
     /* --------------------------------------------------------------------- */
     return json_encode($cardNames);
     // TODO: use queue?

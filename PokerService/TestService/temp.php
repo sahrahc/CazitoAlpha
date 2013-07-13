@@ -15,7 +15,7 @@ cleanUpPlayerById($conTest, 2);
 cleanUpPlayerById($conTest, 3);
 cleanUpPlayerById($conTest, 4);
 cleanUpOrphanCasino($conTest);
-$qConn = QueueManager::GetQueueConnection();
+$qConn = QueueManager::GetConnection();
 $qCh = QueueManager::GetChannel($qConn);
 $qEx = QueueManager::GetPlayerExchange($qCh);
 

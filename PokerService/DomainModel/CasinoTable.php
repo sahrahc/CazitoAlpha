@@ -1,12 +1,5 @@
 <?php
 
-// Configure logging
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-
-//include_once(dirname(__FILE__) . '/../Components/EventMessageProducer.php');
-include_once(dirname(__FILE__) . '/../Components/QueueManager.php');
-
 /* * ************************************************************************************** */
 
 /**
@@ -49,7 +42,7 @@ class CasinoTable {
     }
 
     public function IsSessionStale() {
-        if (!isset($_SESSION['isSessionStale'])) {
+        if (isset($_SESSION['isSessionStale'])) {
             return $_SESSION['isSessionStale'];
         }
         global $sessionExpiration;
@@ -63,7 +56,7 @@ class CasinoTable {
             // expiration date time is 24 hours after the last update
             $expirationDateTime = DateTime::createFromFormat($dateTimeFormat, $row[0]);
             $expirationDateTime->add(new DateInterval($sessionExpiration)); // 24 hours
-            self::log(" Last Update " . json_encode($expirationDateTime));
+            $this->log->warn(" Last Update " . json_encode($expirationDateTime));
             $isSessionStale = new DateTime() > $expirationDateTime ? true : false;
             $_SESSION['isSessionStale'] = $isSessionStale;
             return $isSessionStale;
@@ -90,7 +83,7 @@ class CasinoTable {
         $this->sessionStartDateTime = $statusDT;
         $this->lastUpdateDateTime = $statusDT;
         $this->_updateSessionForCasinoTable();
-        return new GameSession($$nextSessionId);
+        return new GameSession($nextSessionId, $playerId);
     }
 
     /**
@@ -102,7 +95,7 @@ class CasinoTable {
                 $this->id AND CurrentSeatNumber is null", __FUNCTION__ . ": Error select
                     count of waiting list on casino id $this->id");
         $row = mysql_fetch_array($result);
-        return $row[0];
+        return (int)$row[0];
     }
 
     /**
@@ -123,6 +116,16 @@ class CasinoTable {
 
     /*     * ***************************************************************************** */
 
+    public static function IsPlayerOnTableSession($gameSessionId, $playerId) {
+        $result = executeSQL("Select p.Id FROM Player p
+            INNER JOIN CasinoTable c on p.CurrentCasinoTableId = c.Id
+            WHERE c.CurrentGameSessionId = $gameSessionId AND
+                p.Id = $playerId", __FUNCTION__ . 
+                ": Error selecting Player $playerId on game session id $gameSessionId");
+     
+        if (mysql_num_rows($result) == 0) {return false;}
+        return true;
+    }
     /**
      * Find the player who is reserving or occupying a specific seat at a casino table.
      * @param int $seatNum The seat number being checked
@@ -132,7 +135,7 @@ class CasinoTable {
         if (is_null($seatNum)) {
             return null;
         }
-        $result = executeSQL("SELECT Id FROM Player WHERE CurrentCasinoTableId = $this->id
+        $result = executeSQL("SELECT p.Id FROM Player WHERE CurrentCasinoTableId = $this->id
                 AND (CurrentSeatNumber = $seatNum || ReservedSeatNumber = $seatNum)"
                 , __FUNCTION__ .
                 ": ERROR selecting FROM Player id $this->id, seatnumber $seatNum");
@@ -154,11 +157,11 @@ class CasinoTable {
         $takenSeats = null;
         for ($i = 0, $j = 0; $i < count($players); $i++) {
             // collect reserved seats
-            if ($players[$i]->reservedSeatNumber != null) {
+            if (!is_null($players[$i]->reservedSeatNumber)) {
                 $takenSeats[$j++] = $players[$i]->reservedSeatNumber;
             }
             // collect occupied seats
-            if ($players[$i]->currentSeatNumber != null) {
+            if (!is_null($players[$i]->currentSeatNumber)) {
                 $takenSeats[$j++] = $players[$i]->currentSeatNumber;
             }
         }
@@ -199,24 +202,22 @@ class CasinoTable {
      */
 
     public function CommunicateUserJoined($newPlayer, $allPlayers, $includeNewPlayer = true) {
-        $ex = Context::GetQEx;
-        $statusDT = Context::GetStatusDT();
-
+        $ex = Context::GetExchangePlayer();
+        
         // new user info returned as player includ name and image
-        $playerStatusDtos = PlayerStatusDto::mapPlayers($allPlayers, PlayerStatusType::WAITING, true);
-        $this->log->debug(__FUNCTION__ . ": Waiting list size " . $this->waitingListSize);
-        $playerStatusDtos[0]->waitingListSize = $this->waitingListSize;
+        $newPlayerStatusDto = PlayerStatusDto::mapPlayers(array($newPlayer), PlayerStatusType::WAITING, true);
+        $this->log->debug(__FUNCTION__ . ": Waiting list size " . $this->GetWaitingListSize());
+        $newPlayerStatusDto[0]->waitingListSize = $this->GetWaitingListSize();
         // dynamically adding this
-        $eventType = EventType::USER_JOINED;
+        $eventType = EventType::SeatTaken;
 
         for ($i = 0; $i < count($allPlayers); $i++) {
             // newly joined user to receive REST response to REST request
             if ($allPlayers[$i]->id != $newPlayer->id ||
                     ($includeNewPlayer && $allPlayers[$i]->id == $newPlayer->id)) {
-                $message = new EventMessage($this->currentGameSessionId, 
-                        $allPlayers[$i]->id, $eventType, $statusDT, $playerStatusDtos);
+                $message = new QueueMessage($eventType, $newPlayerStatusDto);
                 //$message->eventData = $playerStatusDtos;
-                QueueManager::QueueMessage($ex, $allPlayers[$i]->id, json_encode($message));
+                QueueManager::SendToPlayer($ex, $allPlayers[$i]->id, json_encode($message));
             }
         }
     }
@@ -227,36 +228,36 @@ class CasinoTable {
      * @param type $dto
      * @param type $playerDtos
      */
-    public function CommunicateUserLeft($departedPlayer, $allPlayers) {
-        $ex = Context::GetQEx;
+    public function CommunicateUserLeft($departedPlayerStatus, $allPlayers) {
+        $ex = Context::GetExchangePlayer();
         $waitingListSize = $this->GetWaitingListSize();
 
         // even though single player, send as array
-        $departedPlayerStatusDtos = PlayerStatusDto::mapPlayers(array($departedPlayer), PlayerStatusType::LEFT);
+        $departedPlayerStatusDtos = PlayerStatusDto::MapPlayerStatuses(array($departedPlayerStatus));
         $departedPlayerStatusDtos[0]->waitingListSize = $waitingListSize;
-        $eventType = EventType::USER_LEFT;
+        $eventType = EventType::UserLeft;
 
         for ($i = 0; $i < count($allPlayers); $i++) {
             // ignore user who left
-            if ($allPlayers[$i]->id != $departedPlayer->id) {
+            if ($allPlayers[$i]->id != $departedPlayerStatus->playerId) {
                 $message = new QueueMessage($eventType, $departedPlayerStatusDtos);
                 //$message->eventData = $playerStatusDtos;
-                QueueManager::QueueMessage($ex, $allPlayers[$i]->id, json_encode($message));
+                QueueManager::SendToPlayer($ex, $allPlayers[$i]->id, json_encode($message));
             }
         }
     }
 
     public function CommunicateSeatTaken($seatedPlayer, $allPlayers) {
-        $ex = Context::GetQEx;
+        $ex = Context::GetExchangePlayer();
         
         $seatedPlayerStatusDtos = PlayerStatusDto::mapPlayers(array($seatedPlayer), PlayerStatusType::WAITING, true);
-        $this->log->debug(__FUNCTION__ . ": Waiting list size " . $this->waitingListSize);
-        $seatedPlayerStatusDtos[0]->waitingListSize = $this->waitingListSize;
-        $eventType = EventType::SEAT_TAKEN;
+        $this->log->debug(__FUNCTION__ . ": Waiting list size " . $this->GetWaitingListSize());
+        $seatedPlayerStatusDtos[0]->waitingListSize = $this->GetWaitingListSize();
+        $eventType = EventType::SeatTaken;
 
         for ($i = 0; $i < count($allPlayers); $i++) {
             $message = new QueueMessage($eventType, $seatedPlayerStatusDtos);
-            QueueManager::QueueMessage($ex, $allPlayers[$i]->id, json_encode($message));
+            QueueManager::SendToPlayer($ex, $allPlayers[$i]->id, json_encode($message));
         }
     }
 
@@ -264,26 +265,44 @@ class CasinoTable {
         $ex = Context::GetQEx;
         
         // TODO: move this to CasinoTable communicate
-        $actionType = EventType::SEAT_OFFER;
+        $actionType = EventType::SeatOffer;
 
         $message = new QueueMessage($actionType, $seatNum);
         //$message->eventData = $seatNumber;
-        QueueManager::QueueMessage($ex, $waitingPlayerId, json_encode($message));
+        QueueManager::SendToPlayer($ex, $waitingPlayerId, json_encode($message));
     }
 
     /**
      * Also updates casino table
+     * $unusedDateTime = sessions that did not have any play for this period of time
      */
-    public function DeleteExpiredGameSessions($expirationDateTime) {
-        executeSQL("UPDATE CasinoTable
+    public static function DeleteExpiredGameSessions($expirationDateTime, $unusedDateTime) {
+        global $dateTimeFormat;
+        $endString = $expirationDateTime->format($dateTimeFormat);
+        $unusedString = $unusedDateTime->format($dateTimeFormat);
+        
+        executeSQL("UPDATE CasinoTable c LEFT JOIN 
+                GameInstance s on s.GameSessionId = c.CurrentGameSessionId
             SET CurrentGameSessionId = null, SessionStartDateTime = null
-            WHERE id in (SELECT c.id FROM CasinoTable c LEFT JOIN 
-                GameSession s on s.id = c.CurrentGameSessionId
-                WHERE s.LastUpdateDateTime <= $expirationDateTime", __FUNCTION__ . 
+            WHERE s.LastUpdateDateTime <= '$endString' OR 
+                (s.Id IS NULL AND c.SessionStartDateTime <= '$unusedString')", __FUNCTION__ . 
+                ": Error updating casino tables for game sessions that are expired");
+        executeSQL("DELETE GameSession FROM GameSession
+            LEFT JOIN GameInstance on GameInstance.GameSessionId = GameSession.Id
+            WHERE GameInstance.LastUpdateDateTime <= '$endString' OR 
+                (GameInstance.Id IS NULL AND GameSession.StartDateTime <= '$unusedString')", __FUNCTION__ . 
+                ": Error deleting game sessions that are expired");
+        $result = executeSQL("SELECT s.Id FROM GameSession s
+            LEFT JOIN GameInstance i on i.GameSessionId = s.Id
+            WHERE i.LastUpdateDateTime <= '$endString' OR 
+                (i.Id IS NULL AND s.StartDateTime <= '$unusedString')", __FUNCTION__ . 
                 ": Error selecting game sessions that are expired");
-        executeSQL("DELETE FROM GameSession WHERE StartDateTime <=
-            $expirationDateTime", __FUNCTION__ . ": Error deleting
-                expired game sessions");
+        $counter = 0;
+        $gameSessionIds = null;
+        while ($row=mysql_fetch_array($result)){
+            $gameSessionIds[$counter] = $row[0];
+        } 
+        return $gameSessionIds;
     }
     
     private function _updateSessionForCasinoTable() {

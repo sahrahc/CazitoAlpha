@@ -1,9 +1,5 @@
 <?php
 
-// Configure logging
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-
 /* * ************************************************************************************* */
 
 /**
@@ -19,6 +15,20 @@ class EntityHelper {
         return self::$log;
     }
 
+    private static function mapCasinoTableSqlRow($result) {
+        global $dateTimeFormat;
+        $row = mysql_fetch_array($result);
+        $obj = new CasinoTable();
+        $obj->id = (int) $row["Id"];
+        $obj->name = $row["Name"];
+        $obj->tableMinimum = (int) $row["TableMinimum"];
+        $obj->numberSeats = (int) $row["NumberSeats"];
+        $obj->lastUpdateDateTime = DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
+        $obj->currentGameSessionId = is_null($row["CurrentGameSessionId"]) ? null : (int) $row["CurrentGameSessionId"];
+        $obj->sessionStartDateTime = is_null($row["SessionStartDateTime"]) ? null : DateTime::createFromFormat($dateTimeFormat, $row["SessionStartDateTime"]);
+        return $obj;
+    }
+
     /**
      * Retrieves the casino table given the identifier or null if not found. Exception handling if not found to be decided by the calling operation.
      * @global type $dateTimeFormat
@@ -27,7 +37,6 @@ class EntityHelper {
      * @return CasinoTable 
      */
     public static function getCasinoTable($cTableId) {
-        global $dateTimeFormat;
         if (is_null($cTableId) || $cTableId == "") {
             return null;
         }
@@ -36,17 +45,26 @@ class EntityHelper {
         if (mysql_num_rows($result) == 0) {
             return null;
         }
-        $row = mysql_fetch_array($result);
-        $obj = new CasinoTable();
-        $obj->id = $row["Id"];
-        $obj->name = $row["Name"];
-        $obj->tableMinimum = $row["TableMinimum"];
-        $obj->numberSeats = $row["NumberSeats"];
-        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
-        $obj->currentGameSessionId = $row["CurrentGameSessionId"];
-        $obj->sessionStartDateTime = $row["SessionStartDateTime"];
-        // sets the stale indicator flag if no active sessions for the table
-        return $obj;
+        return self::mapCasinoTableSqlRow($result);
+    }
+
+    /**
+     * Retrieves the casino table given the identifier or null if not found. Exception handling if not found to be decided by the calling operation.
+     * @global type $dateTimeFormat
+     * @global type $sessionExpiration
+     * @param type $cTableId
+     * @return CasinoTable 
+     */
+    public static function getCasinoTableByName($tableName) {
+        if (is_null($tableName) || $tableName == "") {
+            return null;
+        }
+        $result = executeSQL("SELECT * FROM CasinoTable WHERE Name = '$tableName'", __FUNCTION__ .
+                ": Error selecting from CasinoTable casino $tableName");
+        if (mysql_num_rows($result) == 0) {
+            return null;
+        }
+        return self::mapCasinoTableSqlRow($result);
     }
 
     /**
@@ -60,17 +78,7 @@ class EntityHelper {
         if (mysql_num_rows($result) == 0) {
             return null;
         }
-        $row = mysql_fetch_array($result);
-        $obj = new CasinoTable();
-        $obj->id = $row["Id"];
-        $obj->name = $row["Name"];
-        $obj->tableMinimum = $row["TableMinimum"];
-        $obj->numberSeats = $row["NumberSeats"];
-        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
-        $obj->currentGameSessionId = $row["CurrentGameSessionId"];
-        $obj->sessionStartDateTime = $row["SessionStartDateTime"];
-
-        return $obj;
+        return self::mapCasinoTableSqlRow($result);
     }
 
     /**
@@ -80,45 +88,39 @@ class EntityHelper {
      * @global type $numberSeats
      * @global type $defaultTableMin
      * @param type $cTableId
-     * @param type $tableSize
-     * @param type $statusDT
+     * @param type $betSize
+     * @param type $statusString
      * @return CasinoTable 
      */
-    public static function getOrCreateCasinoTable($cTableId, $tableSize, $playerId) {
-        global $numberSeats;
-        global $defaultTableMin;
-        $statusDT = Context::GetStatusDT();
+    public static function createCasinoTable($tableName, $betSize, $numberSeats, $playerId) {
+        global $dateTimeFormat;
+        $statusString = Context::GetStatusDT()->format($dateTimeFormat);
 
-        $casinoTable = self::getCasinoTable($cTableId);
-        if (is_null($casinoTable)) {
-            if (is_null($tableSize)) {
-                $tableSize = $defaultTableMin;
-            }
-            // resetting the id
-            $nextTableId = getNextSequence('CasinoTable', 'Id');
-            $gameSessionId = getNextSequence('GameSession', 'Id');
-            // make the table name unique by attaching the id for now
-            $tableName = "Table" . $nextTableId;
-            // TODO: need business rules for setting table minimums.
-            executeSQL("INSERT INTO CasinoTable (Id, Name, TableMinimum, NumberSeats,
+        // resetting the id
+        $nextTableId = getNextSequence('CasinoTable', 'Id');
+        $gameSessionId = getNextSequence('GameSession', 'Id');
+        // TODO: need business rules for setting table minimums.
+        executeSQL("INSERT INTO CasinoTable (Id, Name, TableMinimum, NumberSeats,
                     LastUpdateDateTime, CurrentGameSessionId, SessionStartDateTime) VALUES
-                    ($nextTableId, '$tableName', $tableSize, $numberSeats, '$statusDT',
-                    $gameSessionId, '$statusDT')", __FUNCTION__ .
-                    ": Error inserting into casino with generated id $nextTableId");
-            executeSQL("INSERT INTO GameSession (Id, RequestingPlayerId,
+                    ($nextTableId, '$tableName', $betSize, $numberSeats, '$statusString',
+                    $gameSessionId, '$statusString')", __FUNCTION__ .
+                ": Error inserting into casino with generated id $nextTableId");
+        executeSQL("INSERT INTO GameSession (Id, RequestingPlayerId,
                 TableMinimum, NumberSeats, StartDateTime,
-                    IsPractice) VALUES ($gameSessionId, $playerId, $tableSize, $numberSeats,
-                    '$statusDT', 0)", __FUNCTION__ .
-                    ": Error inserting into GameSession with generated id $gameSessionId");
-            $casinoTable = new CasinoTable();
-            $casinoTable->id = $nextTableId;
-            $casinoTable->name = $tableName;
-            $casinoTable->tableMinimum = $tableSize;
-            $casinoTable->numberSeats = $numberSeats;
-            $casinoTable->lastUpdateDateTime = $statusDT;
-            $casinoTable->currentGameSessionId = $gameSessionId;
-            $casinoTable->sessionStartDateTime = $statusDT;
-        }
+                    IsPractice) VALUES ($gameSessionId, $playerId, $betSize, $numberSeats,
+                    '$statusString', 0)", __FUNCTION__ .
+                ": Error inserting into GameSession with generated id $gameSessionId");
+        $casinoTable = new CasinoTable();
+        $casinoTable->id = $nextTableId;
+        $casinoTable->name = $tableName;
+        $casinoTable->tableMinimum = $betSize;
+        $casinoTable->numberSeats = $numberSeats;
+        $casinoTable->lastUpdateDateTime = Context::GetStatusDT();
+        $casinoTable->currentGameSessionId = $gameSessionId;
+        $casinoTable->sessionStartDateTime = Context::GetStatusDT();
+
+        // creates queue for game session
+        QueueManager::addGameSessionQueue($gameSessionId, Context::GetQCh());
         return $casinoTable;
     }
 
@@ -128,19 +130,20 @@ class EntityHelper {
             return null;
         }
         $row = mysql_fetch_array($result);
-        $isPractice = $row["IsPractice"];
+        $isPractice = is_null($row["IsPractice"]) ? null : (int) $row["IsPractice"];
         if ($isPractice) {
             $gameSession = new PracticeSession($row["Id"], $row["RequestingPlayerId"]);
-            $gameSession->tableMinimum = $row["TableMinimum"];
-            $gameSession->numberSeats = $row["NumberSeats"];
+            $gameSession->tableMinimum = is_null($row["TableMinimum"]) ? null : (int) $row["TableMinimum"];
+            $gameSession->numberSeats = is_null($row["NumberSeats"]) ? null : (int) $row["NumberSeats"];
         } else {
-            $gameSession = new GameSession($row["Id"]);
+            $gameSession = new GameSession($row["Id"], $row["RequestingPlayerId"]);
         }
         return $gameSession;
     }
 
     public static function CreatePracticeSession($playerId) {
         global $numberSeats;
+        global $dateTimeFormat;
         global $defaultTableMin;
 
         $nextSessionId = getNextSequence('GameSession', 'Id');
@@ -148,13 +151,15 @@ class EntityHelper {
         $gameSession->startDateTime = Context::GetStatusDT();
         $gameSession->numberSeats = $numberSeats;
         $gameSession->tableMinimum = $defaultTableMin;
+        $startString = $gameSession->startDateTime->format($dateTimeFormat);
 
         executeSQL("INSERT INTO GameSession (Id, RequestingPlayerId,
             StartDateTime, TableMinimum, NumberSeats,
-                IsPractice) VALUES ($gameSession->Id, $gameSession->requestingPlayerId,
-                $gameSession->startDateTime, $gameSession->tableMinimum,
-                $gameSession->numberSeats, $gameSession->isPractice), "
+                IsPractice) VALUES ($gameSession->id, $gameSession->requestingPlayerId,
+                '$startString', $gameSession->tableMinimum,
+                $gameSession->numberSeats, $gameSession->isPractice) "
                 , __FUNCTION__ . ": ERROR insert into game session");
+        return $gameSession;
     }
 
     /**
@@ -165,26 +170,27 @@ class EntityHelper {
     public static function GetActiveGameSessionIds() {
         global $dateTimeFormat;
         global $sessionExpiration;
-        $expirationDateTime = DateTime::createFromFormat($dateTimeFormat, $row[0]);
-        $expirationDateTime->add(new DateInterval($sessionExpiration)); // 24 hours
+        $expirationDateTime = Context::GetStatusDT();
+        $expirationDateTime->sub(new DateInterval($sessionExpiration)); // 24 hours
+        $expString = $expirationDateTime->format($dateTimeFormat);
 
         $result = executeSQL("SELECT s.Id FROM GameSession s " .
-                " LEFT JOIN CasinoTable c on c.CurrentGameSessionId = s.Id " .
-                " INNER JOIN GameInstance i on s.GameInstanceId = i.Id" .
-                " WHERE s.LastUpdateDateTime < '$expirationDateTime' " .
-                ": Error selecting active practice and live game sessions");
+                " LEFT JOIN GameInstance i on s.Id = i.GameSessionId" .
+                " WHERE i.LastUpdateDateTime >= '$expString' OR " .
+                " (s.StartDateTime >= '$expString' AND i.Id is null)", ": Error selecting active practice and live game sessions");
         if (mysql_num_rows($result) == 0) {
             return null;
         }
         $gameSessionIds = null;
         $i = 0;
         while ($row = mysql_fetch_array($result)) {
-            $gameSessionIds[$i] = $row["Id"];
+            $gameSessionIds[$i] = (int) $row["Id"];
         }
         return $gameSessionIds;
     }
 
     public static function GetPlayersForCasinoTable($cTableId) {
+        global $dateTimeFormat;
         $result = executeSQL("SELECT * FROM Player WHERE CurrentCasinoTableId = $cTableId
             ORDER BY CurrentSeatNumber", __FUNCTION__ . ": ERROR selecting from CasinoTable id $cTableId");
         if (mysql_num_rows($result) == 0) {
@@ -193,12 +199,12 @@ class EntityHelper {
         $i = 0;
         while ($row = mysql_fetch_array($result)) {
             $players[$i] = new Player($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
-            $players[$i]->lastUpdateDateTime = $row["LastUpdateDateTime"];
-            $players[$i]->casinoTableId = $row["CurrentCasinoTableId"];
-            $players[$i]->currentSeatNumber = $row["CurrentSeatNumber"];
-            $players[$i]->reservedSeatNumber = $row["ReservedSeatNumber"];
-            $players[$i]->waitStartDateTime = $row["WaitStartDateTime"];
-            $players[$i]->buyIn = $row["BuyIn"];
+            $players[$i]->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
+            $players[$i]->casinoTableId = $row["CurrentCasinoTableId"] == null ? null : (int) $row["CurrentCasinoTableId"];
+            $players[$i]->currentSeatNumber = $row["CurrentSeatNumber"] == null ? null : (int) $row["CurrentSeatNumber"];
+            $players[$i]->reservedSeatNumber = $row["ReservedSeatNumber"] == null ? null : (int) $row["ReservedSeatNumber"];
+            $players[$i]->waitStartDateTime = $row["WaitStartDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["WaitStartDateTime"]);
+            $players[$i]->buyIn = $row["BuyIn"] == null ? null : (int) $row["BuyIn"];
 
             $i++;
         }
@@ -213,6 +219,7 @@ class EntityHelper {
      * @return GameInstance
      */
     public static function GetGameInstance($gInstId) {
+        global $dateTimeFormat;
         if (is_null($gInstId)) {
             return null;
         }
@@ -228,19 +235,19 @@ class EntityHelper {
 
         $row = mysql_fetch_array($result);
         $obj = new GameInstance($row["Id"]);
-        $obj->gameSessionId = $row["GameSessionId"];
+        $obj->gameSessionId = $row["GameSessionId"] == null ? null : (int) $row["GameSessionId"];
         $obj->status = $row["Status"];
-        $obj->startDateTime = $row["StartDateTime"];
-        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
-        $obj->numberPlayers = $row["NumberPlayers"];
-        $obj->dealerPlayerId = $row["DealerPlayerId"];
-        $obj->firstPlayerId = $row["FirstPlayerId"];
-        $obj->nextPlayerId = $row["NextPlayerId"];
-        $obj->currentPotSize = $row["CurrentPotSize"];
-        $obj->lastBetSize = $row["LastBetSize"];
-        $obj->numberCommunityCardsShown = $row['NumberCommunityCardsShown'];
-        $obj->lastInstancePlayNumber = $row['LastInstancePlayNumber'];
-        $obj->winningPlayerId = $row['WinningPlayerId'];
+        $obj->startDateTime = $row["StartDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["StartDateTime"]);
+        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
+        $obj->numberPlayers = $row["NumberPlayers"] == null ? null : (int) $row["NumberPlayers"];
+        $obj->dealerPlayerId = $row["DealerPlayerId"] == null ? null : (int) $row["DealerPlayerId"];
+        $obj->firstPlayerId = $row["FirstPlayerId"] == null ? null : (int) $row["FirstPlayerId"];
+        $obj->nextPlayerId = $row["NextPlayerId"] == null ? null : (int) $row["NextPlayerId"];
+        $obj->currentPotSize = $row["CurrentPotSize"] == null ? null : (int) $row["CurrentPotSize"];
+        $obj->lastBetSize = $row["LastBetSize"] == null ? null : (int) $row["LastBetSize"];
+        $obj->numberCommunityCardsShown = $row['NumberCommunityCardsShown'] == null ? null : (int) $row['NumberCommunityCardsShown'];
+        $obj->lastInstancePlayNumber = $row['LastInstancePlayNumber'] == null ? null : (int) $row['LastInstancePlayNumber'];
+        $obj->winningPlayerId = $row['WinningPlayerId'] == null ? null : (int) $row['WinningPlayerId'];
 
         return $obj;
     }
@@ -251,6 +258,7 @@ class EntityHelper {
      * @return GameInstance
      */
     public static function getSessionLastInstance($gSessionId) {
+        global $dateTimeFormat;
         // left join on casino table and practice session
         $result = executeSQL("SELECT g.*, c.TableMinimum AS CasinoMin, s.TableMinimum AS
                 PracticeMin, dp.TurnNumber AS DealerTurnNumber, np.TurnNumber AS NextTurnNumber
@@ -270,26 +278,28 @@ class EntityHelper {
 
         $row = mysql_fetch_array($result);
         $obj = new GameInstance($row["Id"]);
-        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
-        $obj->nextPlayerId = $row["NextPlayerId"];
-        $obj->nextTurnNumber = $row["NextTurnNumber"]; // via join
-        $obj->potSize = $row["PotSize"];
-        $obj->lastBetSize = $row["LastBetSize"];
-        $obj->numberCommunityCardsShown = $row['NumberCommunityCardsShown'];
-        $obj->lastInstancePlayNumber = $row['LastInstancePlayNumber'];
-        $obj->winningPlayerId = $row['WinningPlayerId'];
+        $obj->gameSessionId = $row["GameSessionId"] == null ? null : (int) $row["GameSessionId"];
+        $obj->status = $row["Status"];
+        $obj->startDateTime = $row["StartDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["StartDateTime"]);
+        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
 
-        $obj->gameSessionId = $row["GameSessionId"];
-        $obj->isPractice = $row["IsPractice"];
-        $obj->startDateTime = $row["StartDateTime"];
-        $obj->tableMinimum = $row["CasinoMin"]; // via join
-        if (is_null($obj->tableMinimum)) {
-            $obj->tableMinimum = $row["PracticeMin"];
-        }
-        $obj->numberPlayers = $row["NumberPlayers"];
-        $obj->dealerPlayerId = $row["DealerPlayerId"];
-        $obj->dealerTurnNumber = $row["DealerTurnNumber"]; // via join
-        $obj->firstPlayerId = $row["FirstPlayerId"];
+        $obj->numberPlayers = $row["NumberPlayers"] == null ? null : (int) $row["NumberPlayers"];
+        $obj->dealerPlayerId = $row["DealerPlayerId"] == null ? null : (int) $row["DealerPlayerId"];
+        $obj->firstPlayerId = $row["FirstPlayerId"] == null ? null : (int) $row["FirstPlayerId"];
+        $obj->nextPlayerId = $row["NextPlayerId"] == null ? null : (int) $row["NextPlayerId"];
+        $obj->currentPotSize = $row["CurrentPotSize"] == null ? null : (int) $row["CurrentPotSize"];
+        $obj->lastBetSize = $row["LastBetSize"] == null ? null : (int) $row["LastBetSize"];
+        $obj->numberCommunityCardsShown = $row['NumberCommunityCardsShown'] == null ? null : (int) $row['NumberCommunityCardsShown'];
+        $obj->lastInstancePlayNumber = $row['LastInstancePlayNumber'] == null ? null : (int) $row['LastInstancePlayNumber'];
+        $obj->winningPlayerId = $row['WinningPlayerId'] == null ? null : (int) $row['WinningPlayerId'];
+
+        /*
+          $obj->tableMinimum = $row["CasinoMin"] == null ? null : (int)$row["CasinoMin"]; // via join
+          if (is_null($obj->tableMinimum)) {
+          $obj->tableMinimum = $row["PracticeMin"] == null ? null : (int)$row["PracticeMin"];
+          }
+         * 
+         */
         return $obj;
     }
 
@@ -300,18 +310,21 @@ class EntityHelper {
      * @throws Exception
      */
     public static function getPracticeInstancePlayer($gInstId) {
+        global $dateTimeFormat;
 
         $result = executeSQL("SELECT p.* FROM Player p
             INNER JOIN PlayerState s on p.id = s.PlayerId
             INNER JOIN GameSession g on g.id = s.GameSessionId
-            WHERE g.IsPractice = 1 AND s.GameInstanceId = $gInstId", __FUNCTION__ . ": Error selecting Player on practice instance $gInstId");
+            WHERE g.IsPractice = 1 AND s.GameInstanceId = $gInstId
+                ORDER BY p.CurrentSeatNumber", __FUNCTION__ .
+                ": Error selecting Player on practice instance $gInstId");
 
         if (mysql_num_rows($result) == 0) {
             throw new Exception("Invalid game instance id");
         }
         $row = mysql_fetch_array($result);
         $obj = new Player($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
-        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
+        $obj->lastUpdateDateTime = DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
         /* $obj->casinoTableId = $row["CurrentCasinoTableId"];
           $obj->currentSeatNumber = $row["CurrentSeatNumber"];
           $obj->reservedSeatNumber = $row["ReservedSeatNumber"];
@@ -330,6 +343,7 @@ class EntityHelper {
      * @return Player, throws exception if not found
      */
     public static function getPlayer($playerId) {
+        global $dateTimeFormat;
 
         $result = executeSQL("SELECT * FROM Player WHERE Id = $playerId", __FUNCTION__ . ": Error selecting Player with player id $playerId");
 
@@ -338,12 +352,12 @@ class EntityHelper {
         }
         $row = mysql_fetch_array($result);
         $obj = new Player($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
-        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"];
-        $obj->casinoTableId = $row["CurrentCasinoTableId"];
-        $obj->currentSeatNumber = $row["CurrentSeatNumber"];
-        $obj->reservedSeatNumber = $row["ReservedSeatNumber"];
-        $obj->waitStartDateTime = $row["WaitStartDateTime"];
-        $obj->buyIn = $row["BuyIn"];
+        $obj->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
+        $obj->currentCasinoTableId = $row["CurrentCasinoTableId"] == null ? null : (int) $row["CurrentCasinoTableId"];
+        $obj->currentSeatNumber = $row["CurrentSeatNumber"] == null ? null : (int) $row["CurrentSeatNumber"];
+        $obj->reservedSeatNumber = $row["ReservedSeatNumber"] == null ? null : (int) $row["ReservedSeatNumber"];
+        $obj->waitStartDateTime = $row["WaitStartDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["WaitStartDateTime"]);
+        $obj->buyIn = $row["BuyIn"] == null ? null : (int) $row["BuyIn"];
 
         return $obj;
     }
@@ -354,6 +368,8 @@ class EntityHelper {
      * @return Player
      */
     public static function getPlayerByName($playerName) {
+        global $dateTimeFormat;
+
         $result = executeSQL("SELECT * FROM Player WHERE Name = '$playerName'", __FUNCTION__ . "
                 : Error selecting from Player with name $playerName ");
         if (mysql_num_rows($result) > 0) {
@@ -361,12 +377,12 @@ class EntityHelper {
             $playerId = $row["Id"];
             self::log()->debug(__FUNCTION__ . ": player found $playerId");
             $player = new Player($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
-            $player->lastUpdateDateTime = $row["LastUpdateDateTime"];
-            $player->casinoTableId = $row["CurrentCasinoTableId"];
-            $player->currentSeatNumber = $row['CurrentSeatNumber'];
-            $player->reservedSeatNumber = $row['ReservedSeatNumber'];
-            $player->waitStartDateTime = $row["WaitStartDateTime"];
-            $player->buyIn = $row["BuyIn"];
+            $player->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
+            $player->currentCasinoTableId = $row["CurrentCasinoTableId"] == null ? null : (int) $row["CurrentCasinoTableId"];
+            $player->currentSeatNumber = $row['CurrentSeatNumber'] == null ? null : (int) $row['CurrentSeatNumber'];
+            $player->reservedSeatNumber = $row['ReservedSeatNumber'] == null ? null : (int) $row['ReservedSeatNumber'];
+            $player->waitStartDateTime = $row["WaitStartDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["WaitStartDateTime"]);
+            $player->buyIn = $row["BuyIn"] == null ? null : (int) $row["BuyIn"];
             return $player;
         }
         return null;
@@ -376,12 +392,12 @@ class EntityHelper {
      * Create a new player - returns a DTO.
      * @global type $defaultAvatarUrl
      * @param string $playerName
-     * @param type $statusDT
      * @return Player
      */
     public static function createPlayer($playerName) {
         global $defaultAvatarUrl;
-        $statusDT = Context::GetStatusDT();
+        global $dateTimeFormat;
+        $statusString = Context::GetStatusDT()->format($dateTimeFormat);
         $nextPlayerId = getNextSequence('Player', 'Id');
         if ($playerName == 'Guest') {
             $playerName = 'Guest' . $nextPlayerId;
@@ -389,9 +405,9 @@ class EntityHelper {
         $imageUrl = $defaultAvatarUrl;
 
         executeSQL("INSERT INTO Player (Id, IsVirtual, Name, ImageUrl, CurrentCasinoTableId,
-            CurrentSeatNumber, BuyIn, LastUpdateDateTime, WaitStartDateTime)
+            CurrentSeatNumber, BuyIn, WaitStartDateTime, LastUpdateDateTime)
             VALUES ($nextPlayerId, 0, '$playerName', '$imageUrl', null,
-                null, null, '$statusDT', '$statusDT')", __FUNCTION__ . ": Error
+                null, null, null, '$statusString')", __FUNCTION__ . ": Error
                 inserting Player generated id $nextPlayerId");
         $player = new Player($nextPlayerId, $playerName, $imageUrl, 0);
         return $player;
@@ -404,27 +420,28 @@ class EntityHelper {
      * @global type $buyInMultiplier
      * @param type $playerName
      * @param type $seatNum
-     * @param type $statusDT
+     * @param type $statusString
      * @return Player
      */
     public static function createPracticePlayer($playerName, $seatNum) {
         global $defaultAvatarUrl;
         global $defaultTableMin;
+        global $dateTimeFormat;
         global $buyInMultiplier;
 
         $nextPlayerId = getNextSequence('Player', 'Id');
         $imageUrl = $defaultAvatarUrl;
         $buyIn = $defaultTableMin * $buyInMultiplier;
-        $statusDT = Context::GetStatusDT();
+        $statusString = Context::GetStatusDT()->format($dateTimeFormat);
 
         executeSQL("INSERT INTO Player (Id, IsVirtual, Name, ImageUrl, CurrentCasinoTableId,
             CurrentSeatNumber, BuyIn, LastUpdateDateTime, WaitStartDateTime)
             VALUES ($nextPlayerId, 1, '$playerName', '$imageUrl', null,
-                $seatNum, $buyIn, '$statusDT', '$statusDT')", __FUNCTION__ . ": Error
+                $seatNum, $buyIn, '$statusString', null)", __FUNCTION__ . ": Error
                 inserting Player generated id $nextPlayerId");
         $player = new Player($nextPlayerId, $playerName, $imageUrl, 1);
         $player->currentSeatNumber = $seatNum;
-        $player->lastUpdateDateTime = $statusDT;
+        $player->lastUpdateDateTime = Context::GetStatusDT();
         $player->buyIn = $buyIn;
         return $player;
     }
@@ -457,16 +474,21 @@ class EntityHelper {
      * @param type $pId
      * @return PlayerInstance
      */
-    public static function getPlayerInstance($gameId, $pId, $isSessionId = false) {
+    public static function getPlayerInstance($id, $pId, $isSessionId = false) {
+        global $dateTimeFormat;
         if ($isSessionId) {
             $result = executeSQL("SELECT *
                 FROM PlayerState
-                WHERE GameSessionId = $gameId and PlayerId = $pId ORDER BY SeatNumber", __FUNCTION__ . ": ERROR loading PlayerState with instance id $gameId
+                WHERE GameSessionId = $id and PlayerId = $pId 
+                    ORDER BY SeatNumber", __FUNCTION__ .
+                    ": ERROR loading PlayerState with game session id $id
                 and player id = $pId");
         } else {
             $result = executeSQL("SELECT *
                 FROM PlayerState
-                WHERE GameInstanceId = $gameId and PlayerId = $pId ORDER BY SeatNumber", __FUNCTION__ . ": ERROR loading PlayerState with instance id $gameId
+                WHERE GameInstanceId = $id and PlayerId = $pId 
+                    ORDER BY SeatNumber", __FUNCTION__ .
+                    ": ERROR loading PlayerState with game instance id $id
                 and player id = $pId");
         }
         // sorted by seat number
@@ -475,18 +497,18 @@ class EntityHelper {
         }
         $row = mysql_fetch_array($result);
         $playerStatus = new PlayerInstance();
-        $playerStatus->playerId = $row["PlayerId"];
-        $playerStatus->gameInstanceId = $row["GameInstanceId"];
-        $playerStatus->isVirtual = $row["IsVirtual"];
-        $playerStatus->gameSessionId = $row["GameSessionId"];
-        $playerStatus->lastUpdateDateTime = $row["LastUpdateDateTime"];
-        $playerStatus->seatNumber = $row["SeatNumber"];
-        $playerStatus->turnNumber = $row["TurnNumber"];
+        $playerStatus->playerId = $row["PlayerId"] == null ? null : (int) $row["PlayerId"];
+        $playerStatus->gameInstanceId = $row["GameInstanceId"] == null ? null : (int) $row["GameInstanceId"];
+        $playerStatus->isVirtual = $row["IsVirtual"] == null ? null : (int) $row["IsVirtual"];
+        $playerStatus->gameSessionId = $row["GameSessionId"] == null ? null : (int) $row["GameSessionId"];
+        $playerStatus->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
+        $playerStatus->seatNumber = $row["SeatNumber"] == null ? null : (int) $row["SeatNumber"];
+        $playerStatus->turnNumber = $row["TurnNumber"] == null ? null : (int) $row["TurnNumber"];
         $playerStatus->status = $row["Status"];
-        $playerStatus->currentStake = $row["CurrentStake"];
-        $playerStatus->lastPlayAmount = $row["LastPlayAmount"];
-        $playerStatus->lastPlayInstanceNumber = $row["LastPlayInstanceNumber"];
-        $playerStatus->numberTimeOuts = $row["NumberTimeOuts"];
+        $playerStatus->currentStake = $row["CurrentStake"] == null ? null : (int) $row["CurrentStake"];
+        $playerStatus->lastPlayAmount = $row["LastPlayAmount"] == null ? null : (int) $row["LastPlayAmount"];
+        $playerStatus->lastPlayInstanceNumber = $row["LastPlayInstanceNumber"] == null ? null : (int) $row["LastPlayInstanceNumber"];
+        $playerStatus->numberTimeOuts = $row["NumberTimeOuts"] == null ? null : (int) $row["NumberTimeOuts"];
 
         return $playerStatus;
     }

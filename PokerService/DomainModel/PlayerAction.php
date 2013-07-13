@@ -10,13 +10,16 @@ class PlayerAction {
     public $pokerActionType;
     public $actionTime;
     public $actionValue;
+    private $log;
+
 
     function __construct($gInstId, $pId, $actionType, $time, $value) {
         $this->gameInstanceId = $gInstId;
         $this->playerId = $pId;
         $this->pokerActionType = $actionType;
-        $this->actionTime = Context::GetStatusDT();
+        $this->actionTime = $time;
         $this->actionValue = $value;
+        $this->log = Logger::getLogger(__CLASS__);
     }
 
 
@@ -24,59 +27,57 @@ class PlayerAction {
      * Validates the move is valid. Returns the move id (so it can be deleted if successfully
      * @global type $log
      */
-    public function ValidateMove() {
-        global $log;
+    public function IsMoveValid() {
         $expectedMove = ExpectedPokerMove::GetExpectedMoveForInstance($this->gameInstanceId);
         $exceptionMsg = null;
 
-        // variables to keep objects easier to access
-        $action = $this->action;
-        $gameInstanceId = $this->gameInstanceId;
-
-        if (is_null($expectedMove)) {
-            $msg = __FUNCTION__ . ": No moves expected for game instance $gameInstanceId but 
-                   player id $this->playerId $this->pokerActionType";
-            $log->warn($msg);
-            $exceptionMsg = $msg;
+        if (!is_null($expectedMove) && $expectedMove->status == PlayerStatusType::LEFT) {
+            $msg = __FUNCTION__ . ": Move may be valid by $this->playerId for  
+                    $this->gameInstanceId. Expected move by $expectedMove->playerId
+                   obsolete because user left.";
+            $this->log->warn($msg);
+            // $exceptionMsg is null;
             //throw new Exception($exceptionMsg);
+            return null;
         }
-        if ($action->playerId != $expectedMove->playerId) {
+        if ($this->playerId != $expectedMove->playerId) {
             $msg = __FUNCTION__ . ": Wrong player attempting move for instance
                     $this->gameInstanceId actual player id $this->playerId but expected
                     player id $expectedMove->playerId";
-            $log->warn($msg);
+            $this->log->warn($msg);
             $exceptionMsg = is_null($exceptionMsg) ? $msg : $exceptionMsg;
         }
         if ($this->pokerActionType == PokerActionType::CALLED AND
-                $this->callAmount != $expectedMove->callAmount) {
+                $this->actionValue != $expectedMove->callAmount) {
 
             $msg = __FUNCTION__ . ": Call amount is wrong for instance $this->gameInstanceId
-                    by $this->playerId actual amount $this->callAmount expected
+                    by $this->playerId actual amount $this->actionValue expected
                     $expectedMove->callAmount";
-            $log->warn($msg);
+            $this->log->warn($msg);
             $exceptionMsg = is_null($exceptionMsg) ? $msg : $exceptionMsg;
         }
-        if ($action->pokerActionType == PokerActionType::CHECKED AND
-                is_null($expectedMove->checkAmount)) {
+        if ($this->pokerActionType == PokerActionType::CHECKED AND
+                is_null($expectedMove->isCheckAllowed)) {
 
-            $msg = __FUNCTION__ . ": Check is not allowed for instance $action->gameInstanceId
-                    but attempted by $action->playerId";
-            $log->warn($msg);
+            $msg = __FUNCTION__ . ": Check is not allowed for instance $this->gameInstanceId
+                    but attempted by $this->playerId";
+            $this->log->warn($msg);
             $exceptionMsg = is_null($exceptionMsg) ? $msg : $exceptionMsg;
         }
-        if ($action->pokerActionType == PokerActionType::RAISED AND
-                $this->raiseAmount != $expectedMove->raiseAmount) {
+        if ($this->pokerActionType == PokerActionType::RAISED AND
+                $this->actionValue != $expectedMove->raiseAmount) {
 
             $msg = __FUNCTION__ . ": Raise amount is wrong for instance $this->gameInstanceId
-                    by $this->playerId actual amount $this->raiseAmount but expected
+                    by $this->playerId actual amount $this->actionValue but expected
                     $expectedMove->raiseAmount";
-            $log->warn($msg);
+            $this->log->warn($msg);
             $exceptionMsg = is_null($exceptionMsg) ? $msg : $exceptionMsg;
         }
         if (!is_null($exceptionMsg)) {
+            return false;
             //throw new Exception($exceptionMsg);
         }
-        $this->id = $expectedMove->id;
+        return true;
     }
 
     /*     * ****************************************************************************** */
@@ -96,11 +97,11 @@ class PlayerAction {
             case PokerActionType::CALLED:
                 $entity->callAmount = $this->actionValue;
                 break;
-            case PokerActionType::CHECKED:
+            case PokerActionType::RAISED:
                 $entity->raiseAmount = $this->actionValue;
                 break;
-            case PokerActionType::RAISED:
-                $entity->checkAmount = $this->actionValue;
+            case PokerActionType::CHECKED:
+                $entity->isCheckAllowed = 1;
                 break;
         }
         

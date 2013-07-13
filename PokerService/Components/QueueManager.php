@@ -1,16 +1,5 @@
 <?php
 
-// Include Libraries
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-
-// Include Application Scripts
-include_once(dirname(__FILE__) . '/../../../libraries/helper/DataHelper.php');
-include_once(dirname(__FILE__) . '/../Config.php');
-
-// configure logging
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-$log = Logger::getLogger(__FILE__);
-
 /* * ********************************************************************** */
 
 class QueueManager {
@@ -20,7 +9,7 @@ class QueueManager {
      * Using default exchange, rename to getActiveConnection
      * @return AMQPConnection 
      */
-    public static function GetQueueConnection() {
+    public static function GetConnection() {
         /*global $amqp_port;
         global $amqp_host;
         global $amqp_vhost; 
@@ -45,16 +34,16 @@ class QueueManager {
      * @param type $conn
      * @return \AMQPChannel
      */
-    public static function GetChannel($conn) {
-        $ch = new AMQPChannel($conn);
+    public static function GetChannel($amqpConnection) {
+        $ch = new AMQPChannel($amqpConnection);
         return $ch;
     }
     
-    public static function GetPlayerExchange($ch) {
-        global $amqp_exchange;
+    public static function GetPlayerExchange($amqpChannel) {
+        global $amqp_player_exchange;
 
-        $ex = new AMQPExchange($ch);
-        $ex->setName($amqp_exchange);
+        $ex = new AMQPExchange($amqpChannel);
+        $ex->setName($amqp_player_exchange);
         $ex->setType(AMQP_EX_TYPE_DIRECT);
         //$ex->setFlags(AMQP_DURABLE | AMQP_PASSIVE);
         $ex->setFlags(AMQP_DURABLE);
@@ -62,27 +51,138 @@ class QueueManager {
         return $ex;
     }
 
+    public static function GetSessionExchange($amqpChannel) {
+        global $amqp_session_exchange;
+
+        $ex = new AMQPExchange($amqpChannel);
+        $ex->setName($amqp_session_exchange);
+        $ex->setType(AMQP_EX_TYPE_DIRECT);
+        //$ex->setFlags(AMQP_DURABLE | AMQP_PASSIVE);
+        $ex->setFlags(AMQP_DURABLE);
+        $ex->declare();
+        return $ex;
+    }
     
+    public static function GetChatExchange($amqpChannel) {
+        global $amqp_chat_exchange;
+
+        $ex = new AMQPExchange($amqpChannel);
+        $ex->setName($amqp_chat_exchange);
+        $ex->setType(AMQP_EX_TYPE_DIRECT);
+        //$ex->setFlags(AMQP_DURABLE | AMQP_PASSIVE);
+        $ex->setFlags(AMQP_DURABLE);
+        $ex->declare();
+        return $ex;
+    }
+
     /*     * ********************************************************************** */
 
     /**
-     * get an existing queue for continuing game. use AddOrResetPlayerQueue
-     * if the user is first joining a table so the queue is purged
+     * A queue that already exists is reset instead of added
+     * Create a queue for use by a user with the appropriate
+     * expiration and size configurations. Reuses an already existing
+     * queue. 
+     * Usage: when the player first sits in a table.
      */
-    public static function GetPlayerQueue($playerId, $ch) {
-        global $amqp_exchange;
+    public static function addPlayerQueue($playerId, $ch) {
+        global $amqp_player_exchange;
         $q = new AMQPQueue($ch);
         $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
+        //$q->setFlags(AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE);
         $q->setName('p' . $playerId);
-        //$q->declare();
-        $q->bind($amqp_exchange, 'p' . $playerId);
+        $q->declare();
+        $q->purge();
+        $q->bind($amqp_player_exchange, 'p' . $playerId);
         return $q;
     }
 
     /*     * ********************************************************************** */
 
-    public static function DisconnectQueue($conn) {
-        $conn->disconnect();
+    /* 
+     * A queue that already exists is reset instead of added
+     * Queue for the user/client to send requests to the server.
+     * Will replace the REST services
+     * May create additional queues to partition workload to server
+     * The client wil need to be given the server it goes to.
+    
+     */ 
+    public static function addGameSessionQueue($gameSessionId, $ch) {
+        global $amqp_session_exchange;
+        $q = new AMQPQueue($ch);
+        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
+        //$q->setFlags(AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE);
+        $q->setName('s' . $gameSessionId);
+        $q->declare();
+        $q->purge();
+        $q->bind($amqp_session_exchange, 's' . $gameSessionId);
+        return $q;
+    }
+    
+    /**
+     * Players can chat with each other if within the same table
+     * via the sessions's chat queue
+     * @global type $amqp_chat_exchange
+     * @param type $gameSessionId
+     * @param type $ch
+     * @return \AMQPQueue
+     */
+    public static function addSessionChatQueue($gameSessionId, $ch) {
+        global $amqp_chat_exchange;
+        $q = new AMQPQueue($ch);
+        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
+        //$q->setFlags(AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE);
+        $q->setName('i' . $gameSessionId);
+        $q->declare();
+        $q->purge();
+        $q->bind($amqp_chat_exchange, 'i' . $gameSessionId);
+        return $q;
+    }
+    
+    /**
+     * get an existing queue for continuing game. use AddOrResetPlayerQueue
+     * if the user is first joining a table so the queue is purged
+     */
+    public static function GetPlayerQueue($playerId, $ch) {
+        global $amqp_player_exchange;
+        $q = new AMQPQueue($ch);
+        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
+        $q->setName('p' . $playerId);
+        $q->declare();
+        $q->bind($amqp_player_exchange, 'p' . $playerId);
+        return $q;
+    }
+
+   /**
+     * get an existing queue
+     */
+    public static function GetGameSessionQueue($gameSessionId, $ch) {
+        global $amqp_session_exchange;
+        //$ex = QueueManager::getPlayerExchange($ch);
+        //$q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
+
+        $q = new AMQPQueue($ch);
+        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
+        $q->setName('s' . $gameSessionId);
+        $q->declare();
+        $q->bind($amqp_session_exchange, 's' . $gameSessionId);
+        return $q;
+    }
+
+    public static function GetSessionChatQueue($gameSessionId, $ch) {
+        global $amqp_chat_exchange;
+        //$ex = QueueManager::getPlayerExchange($ch);
+        //$q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
+
+        $q = new AMQPQueue($ch);
+        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
+        $q->setName('i' . $gameSessionId);
+        $q->declare();
+        $q->bind($amqp_chat_exchange, 'i' . $gameSessionId);
+        return $q;
+    }
+
+    public static function SendToPlayer($ex, $playerId, $msg) {
+        $ex->publish($msg, 'p' . $playerId);
     }
 
     /*     * ********************************************************************** */
@@ -92,83 +192,14 @@ class QueueManager {
      * messages from the other session do not interfere another session.
      * @param type $userId 
      */
-    public static function PurgeQueue($q) {
-        //$q = self::getOrAddUserQueue($userId, $ch);
-        $q->purge();
+    public static function DeleteQueue($q) {
+        $q->delete();
     }
 
     /*     * ********************************************************************** */
 
-    /**
-     * Create a queue for use by a user with the appropriate
-     * expiration and size configurations. Reuses an already existing
-     * queue. 
-     * Usage: when the player first sits in a table.
-    public static function addOrResetPlayerQueue($playerId, $ch) {
-        global $amqp_exchange;
-        $q = new AMQPQueue($ch);
-        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
-        //$q->setFlags(AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE);
-        $q->setName('p' . $playerId);
-        $q->declare();
-        $q->purge();
-        $q->bind($amqp_exchange, 'p' . $playerId);
-        return $q;
-    }
-    */
-
-    public static function GetTableQueue($casinoTableId, $ch) {
-        global $amqp_exchange;
-        $q = new AMQPQueue($ch);
-        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
-        $q->setName('t' . $casinoTableId);
-        //$q->declare();
-        $q->bind($amqp_exchange, 't' . $casinoTableId);
-        return $q;
-    }
-    
-    public static function QueueMessage($ex, $playerId, $msg) {
-        //$conn = self::getPlayerConnection();
-        //$ch = self::getPlayerChannel($conn);
-        //$ex = self::getPlayerExchange($ch);
-        $ex->publish($msg, 'p' . $playerId);
-    }
-
-    /*     * ********************************************************************** */
-    /*
-     * Queue for the user/client to send requests to the server.
-     * Will replace the REST services
-     * May create additional queues to partition workload to server
-     * The client wil need to be given the server it goes to.
-    public static function addOrResetTableQueue($casinoTableId, $ch) {
-        global $amqp_exchange;
-        $q = new AMQPQueue($ch);
-        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
-        //$q->setFlags(AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE);
-        $q->setName('t' . $casinoTableId);
-        $q->declare();
-        $q->purge();
-        $q->bind($amqp_exchange, 't' . $casinoTableId);
-        return $q;
-    }
-    */
-
-   /**
-     * get an existing queue
-     */
-    public static function GetGameSessionQueue($tableId) {
-        global $amqp_exchange;
-        $qConn = self::GetQueueConnection();
-        $ch = QueueManager::GetChannel($qConn);
-        //$ex = QueueManager::getPlayerExchange($ch);
-        //$q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
-
-        $q = new AMQPQueue($ch);
-        $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
-        $q->setName('s' . $tableId);
-        //$q->declare();
-        $q->bind($amqp_exchange, 's' . $tableId);
-        return $q;
+    public static function DisconnectQueue($conn) {
+        $conn->disconnect();
     }
 
 }

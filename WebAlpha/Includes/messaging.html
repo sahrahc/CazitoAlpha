@@ -1,0 +1,21 @@
+<section id="messaging-section">
+    <!-- remove the group messaging, use the same msg when implemented -->
+    <p>Group Messaging</p>
+    <div id="grpMsg" class="msg">
+        <p id="grpMsgOutput" class="msgText">message 1 <br/> message 2</p>
+        <form class="msgForm">
+            <input type="text" id="grpMsgInput" class="msgInput"/>
+            <input type="submit" class="msgSend" onclick="sendGroupMessage();" value="Send"/>
+        </form>
+    </div>
+    <p>Individual Messaging</p>
+    <!-- there could be multiple ones, id's created with jQuery later -->
+    <div id='indvMsg' class="msg">
+        <label id="recipientId" class="hiddenVariables"></label>
+        <p id="indvMsgOutput" class="msgText">message 1 <br/> message 2</p>
+        <form class="msgForm">
+            <input type="text" id="indvMsgInput" class="msgInput"/>
+            <input type="submit" class="msgSend" onclick="sendIndividualMessage();" value="Send"/>
+        </form>
+    </div>
+</section>

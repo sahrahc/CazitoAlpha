@@ -18,12 +18,12 @@ echo "Player hand before pushing ace: " . json_encode($playerHand) . "<br />";
 global $dateTimeFormat;
 $statusDT = date($dateTimeFormat);
 
-    $qConn = QueueManager::GetQueueConnection();
+    $qConn = QueueManager::GetConnection();
     $ch = QueueManager::GetChannel($qConn);
     $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
 
-    $dto = CheatingHelper::PushRandomAce($playerId, $gameInstance, 1, $statusDT);
+    $dto = CheatingHelper::PushRandomAce($playerId, $gameInstance, 1, $statusDT, ItemType::ACE_PUSHER);
     
     $playerHand = CardHelper::getPlayerHandDto($playerId, $gameInstanceId);
 echo "Player hand after pushing ace: " . json_encode($playerHand) . "<br />";

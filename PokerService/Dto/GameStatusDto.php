@@ -18,17 +18,20 @@
 class GameStatusDto {
 
     public $gameInstanceId;
+    public $casinoTableId;
     public $gameSessionId;
     public $gameStatus;
     public $statusDateTime;
     public $dealerPlayerId;
+    public $currentPotSize;
     public $playerStatusDtos;
-    public $updatePlayerStatusDto;
+    public $turnPlayerStatusDto;
     public $nextMoveDto;
     public $communityCards;
     public $newCommunityCards;
     public $waitingListSize; // not really part of the game but needed if new user
-    // user info 
+    // user info
+    public $userPlayerId;
     public $userPlayerHandDto; // if status=gameStarted or user comes back
     public $userSeatNumber; // for a user who just joins a table
     // if game ended:
@@ -51,33 +54,37 @@ class GameStatusDto {
      * @param type $casinoTable
      */
     public static function Init($requestingPlayer, $players, $casinoTable) {
+        global $dateTimeFormat;
         $gameStatusDto = new GameStatusDto();
 
         $gameStatusDto->gameSessionId = $casinoTable->currentGameSessionId;
-
+        $gameStatusDto->casinoTableId = $casinoTable->id;
         $userDto = new PlayerDto($requestingPlayer);
         $gameInstance = EntityHelper::getSessionLastInstance($casinoTable->currentGameSessionId);
 
         if ($gameInstance) {
             $gameStatusDto->gameInstanceId = $gameInstance->id;
             $gameStatusDto->gameStatus = $gameInstance->status;
-            $gameStatusDto->statusDateTime = $gameInstance->lastUpdateDateTime;
+            $gameStatusDto->statusDateTime = $gameInstance->lastUpdateDateTime->format($dateTimeFormat);
             $gameStatusDto->dealerPlayerId = $gameInstance->dealerPlayerId;
             $gameStatusDto->playerStatusDtos = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);
             $gameStatusDto->nextMoveDto = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstance->id);
-
+            $gameStatusDto->currentPotSize = $gameInstance->currentPotSize;
+            
             $gameStatusDto->communityCards = CardHelper::getCommunityCardDtos($gameInstance->id, $gameInstance->numberCommunityCardsShown);
-            $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($requestingPlayer->id, $casinoTable);
+            $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($requestingPlayer->id, $gameInstance->id);
             if ($gameInstance->status === GameStatus::ENDED) {
                 $gameStatusDto->winningPlayerId = $gameInstance->winningPlayerId;
                 $gameStatusDto->playerHandsDto = PlayerHandDto::mapPlayerHands($gameInstance->playerHands);
             }
         } else {
-            $gameStatusDto->playerStatusDtos = PlayerStatusDto::mapPlayers($players, GameStatus::NONE, true);
+            $gameStatusDto->gameStatus = GameStatus::NONE;
+            $gameStatusDto->statusDateTime = Context::GetStatusDT()->format($dateTimeFormat);
+            $gameStatusDto->playerStatusDtos = PlayerStatusDto::mapPlayers($players, PlayerStatusType::WAITING, true);
         }
         $gameStatusDto->userSeatNumber = $userDto->currentSeatNumber;
 
-        $gameStatusDto->waitingListSize = $casinoTable->getWaitingListSize;
+        $gameStatusDto->waitingListSize = $casinoTable->getWaitingListSize();
         return $gameStatusDto;
     }
 
@@ -85,15 +92,16 @@ class GameStatusDto {
      * 
      * @param type $entity
      * @param type $requestingPlayerId
-     * @param type $blindBetDtos
      */
     public static function SetStartedGame($gameInstance) {
+        global $dateTimeFormat;
         $gameStatusDto = new GameStatusDto();
         $gameStatusDto->gameSessionId = $gameInstance->gameSessionId;
         $gameStatusDto->gameInstanceId = $gameInstance->id;
         $gameStatusDto->gameStatus = GameStatus::STARTED;
-        $gameStatusDto->statusDateTime = Context::GetStatusDT();
+        $gameStatusDto->statusDateTime = Context::GetStatusDT()->format($dateTimeFormat);
         $gameStatusDto->dealerPlayerId = $gameInstance->dealerPlayerId;
+        $gameStatusDto->currentPotSize = $gameInstance->currentPotSize;
         return $gameStatusDto;
     }
 

@@ -14,8 +14,10 @@ echo "Testing Feature: Send Player Action <br /><br />";
 
 // mandatory variables, if not found PHP will raise an error
 $turnPlayerId = $_SESSION['param_turnPlayerId'];
+$gameSessionId = $_SESSION['param_gameSessionId'];
 $gameInstanceId = $_SESSION['param_gameInstanceId'];
 $pokerActionType = $_SESSION['param_pokerActionType'];
+$pokerActionValue = null;
 if ($pokerActionType == PokerActionType::CALLED ||
         $pokerActionType == PokerActionType::RAISED) {
     $pokerActionValue = $_SESSION['param_pokerActionValue'];
@@ -24,32 +26,21 @@ if ($pokerActionType == PokerActionType::CALLED ||
 ////////////////////////////////////////////////////////////
 
 global $dateTimeFormat;
-$date = date($dateTimeFormat);
-$par = json_encode(new PlayerAction(
-        $gameInstanceId, 
-        $turnPlayerId, 
-        $pokerActionType,
-        $date, 
-        $pokerActionValue));
+$currentDT = date($dateTimeFormat);
+$msg = json_encode(array(
+    "eventType" => ActionType::MakePokerMove,
+    "gameSessionId" => $gameSessionId,
+    "requestingPlayerId" => $turnPlayerId,
+    "gameInstanceId" => $gameInstanceId,
+    "eventData" => array(
+        "pokerActionType" => $pokerActionType,
+        "actionTime" => $currentDT,
+        "actionValue" => $pokerActionValue
+    )));
+//echo "Parameter In: $par <br /><br />";
 
-echo "Parameter In: $par <br /><br />";
-$actionResultDtoEncoded = sendPlayerAction($par);
-//$actionResultDto = json_decode($actionResultDtoEncoded);
-
-$qConn = QueueManager::GetQueueConnection();
+$qConn = QueueManager::GetConnection();
 $qCh = QueueManager::GetChannel($qConn);
-$qEx = QueueManager::GetPlayerExchange($qCh);
-$q = QueueManager::GetPlayerQueue($playerId, $qCh);
-
-while ($message = $q->get(AMQP_AUTOACK)) {
-    $messageBody = $message->getBody();
-    echo "Parameter Out (Queue): $messageBody <br /> <br />";
-    $messageObject = json_decode($messageBody);
-    if ($messageObject->eventType == EventType::PLAYER_MOVE) {
-        $actionResultDto = $messageObject->eventData;
-    }
-}
-
-echo "Parameter Out (REST): $actionResultDtoEncoded <br /> <br />";
-
+$qEx = QueueManager::GetSessionExchange($qCh);
+$qEx->publish($msg, 's' . $gameSessionId);
 ?>

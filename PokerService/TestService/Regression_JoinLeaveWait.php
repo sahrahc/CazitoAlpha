@@ -13,7 +13,6 @@ $name = 'Test0';
  * The user accepts the seat - verify message to all players
  */
 include('../PokerPlayerService.php');
-//include(dirname(__FILE__) . '/../EventMessageService.php');
 include('showObject.php');
 
 /* * ********************************************************************************

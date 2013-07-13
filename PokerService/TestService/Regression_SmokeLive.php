@@ -1,375 +1,304 @@
 <?php
 
+// prevent time out, this script runs for a long time
 ini_set('max_execution_time', 600);
 echo "exec time " . ini_get('max_execution_time') . "<br/>";
 
-echo '****************************************************** <br />';
-echo 'Smoke Test: 4 players join new table and play together <br />';
-echo '            All poker moves and time out tested until <br />';
-echo '            end of game with two remaining players.<br />';
-echo __FILE__ . "<br />";
+echo '********************************************************** <br />';
+echo '*' . __FILE__ . "<br />";
+echo '* Smoke Test: 4 players join new table and play together <br />';
+echo '*            Three rounds of play to test that turns are <br />';
+echo '*            reset properly when users leave and are added. <br />';
+echo '*            All poker moves and time out tested.<br />';
+echo '* TODO: COMPARISON FOR UPDATED PLAYER STAKE NOT WORKING <br />';
+echo '* TODO: Not comparing UserPlayerId yet';
+echo '********************************************************** <br />';
 
 // Setup ////////////////////////////////////////
-include('../PokerPlayerService.php');
-include_once(dirname(__FILE__) . '/../../../libraries/helper/DataHelper.php');
+include_once('../PokerPlayerService.php');
+include_once('../CoordinatorService.php');
+require_once('ValidateGameStatus.php');
 
-$conTest = connectToStateDB();
-
-$player1Name = 'Test1';
-$player2Name = 'Test2';
-$player3Name = 'Test3';
-$player4Name = 'Test4';
-$tableSize = 1000;
-$casinoTableId;
-$gameSessionId;
-$gameInstanceId;
-$player1Id;
-$player2Id;
-$player3Id;
-$player4Id;
-
-session_start();
-
-$qConn = QueueManager::GetQueueConnection();
-$qCh = QueueManager::GetChannel($qConn);
-$qEx = QueueManager::GetPlayerExchange($qCh);
-
-/////////////////////////////////////////////////
-// functions used in this test 
-
-function testLogin($playerName) {
-    $_SESSION['param_playerName'] = $playerName;
-    include('Feature_Login.php');
-    $localPlayerId = $_SESSION['param_playerId'];
-    // TODO: replace with ASSERT
-    if (is_null($localPlayerId)) {
-        echo "Warning: Login for $playerName did not return playerId <br/>";
-    }
-    return $localPlayerId;
-}
-
-function testJoinTable($playerId, $expectedSeatNumber, $expectedStatus) {
-    global $casinoTableId;
-    global $gameSessionId;
-    global $tableSize;
-    // $player Id and param_playerId and param_casinoTableId
-    // already set but set again to avoid implied values
-    // for readability and maintainability
-    $_SESSION['param_playerId'] = $playerId;
-    $_SESSION['param_casinoTableId'] = $casinoTableId;
-    $_SESSION['param_tableSize'] = $tableSize;
-    include('Feature_JoinTable.php');
-    // casino table id value should not change but get the
-    // value and test
-    $localCasinoId = $_SESSION['param_casinoTableId'];
-    $localGameSessionId = $_SESSION['param_gameSessionId'];
-    $localSeatNumber = $_SESSION['param_seatNumber'];
-    $localGameStatus = $_SESSION['param_gameStatus'];
-    // TODO: replace with assert
-    if (is_null($casinoTableId)){
-        $casinoTableId = $localCasinoId;
-    }
-    
-    //elseif ($casinoTableId != $localCasinoId) {
-    //    throw new Exception('Casino table id changed when joining');
-    //}
-    if (is_null($gameSessionId)) {
-        $gameSessionId = $gameSessionId;
-    }
-    //elseif ($gameSessionId != $localGameSessionId) {
-    //    throw new Exception('Game session id for table changed when joinin');
-    //}
-    if ($localSeatNumber != $expectedSeatNumber) {
-        echo "Wrong seat $localSeatNumber given to $playerId on joining table <br />";
-    }
-    if ($localGameStatus != $expectedStatus) {
-        echo "Wrong game status $localGameStatus given to $playerId on joining table <br />";
-    }
-}
-
-function verifyQMessage($playerId, $queue, $eventType) {
-    $message = $queue->get(AMQP_AUTOACK);
-    if (!$message) {
-        echo "Warning: no expected message $eventType received by $playerId <br />";
-    }
-    else {
-    $messageBody = $message->getBody();
-    echo "Info: Message for player id $playerId: $messageBody <br /> <br />";
-    $messageObject = json_decode($messageBody);
-    if ($messageObject->eventType != $eventType) {
-        echo "Warning: Player $playerId received message $messageObject->eventType instead of $eventType";
-    }
-    }
-}
-
-echo '****************************************************** <br />';
-echo 'PHASE 1: 4 players login and join table <br />';
-
-$player1Id = testLogin($player1Name);
-testJoinTable($player1Id, 0, GameStatus::INACTIVE);
-$q1 = QueueManager::GetPlayerQueue($player1Id, $qCh);
-verifyQMessage($player1Id, $q1, EventType::USER_JOINED);
-
-$player2Id = testLogin($player2Name);
-testJoinTable($player2Id, 1, GameStatus::INACTIVE);
-$q2 = QueueManager::GetPlayerQueue($player2Id, $qCh);
-// Verify player1 received message
-verifyQMessage($player1Id, $q1, EventType::USER_JOINED);
-verifyQMessage($player2Id, $q2, EventType::USER_JOINED);
-
-$player3Id = testLogin($player3Name);
-testJoinTable($player3Id, 2, GameStatus::INACTIVE);
-$q3 = QueueManager::GetPlayerQueue($player3Id, $qCh);
-// verify  player1, player2 received UserJoined communication
-verifyQMessage($player1Id, $q1, EventType::USER_JOINED);
-verifyQMessage($player2Id, $q2, EventType::USER_JOINED);
-verifyQMessage($player3Id, $q3, EventType::USER_JOINED);
-
-$player4Id = testLogin($player4Name);
-testJoinTable($player4Id, 3, GameStatus::INACTIVE);
-$q4 = QueueManager::GetPlayerQueue($player4Id, $qCh);
-// TODO: verify  player1, player2, player3 received UserJoined communication
-verifyQMessage($player1Id, $q1, EventType::USER_JOINED);
-verifyQMessage($player2Id, $q2, EventType::USER_JOINED);
-verifyQMessage($player3Id, $q3, EventType::USER_JOINED);
-verifyQMessage($player4Id, $q4, EventType::USER_JOINED);
-
-echo '****************************************************** <br />';
-echo 'PHASE 2: game start and blind bet verification <br />';
-
-$_SESSION['param_playerId'] = $player1Id;
-// no need to set param_gameSessionId
-$_SESSION['param_tableSize'] = $tableSize;
-
-include('Feature_StartLiveGame.php');
-
-$gameInstanceId = $_SESSION['param_gameInstanceId'];
-// verify
-$dealerPlayerId = $_SESSION['param_dealerPlayerId'];
-if ($dealerPlayerId != $player1Id) {
-    echo "Warning: Incorrect dealer assigned $dealerPlayerId instead of $player1Id<br/>";
-}
-$firstPlayerId = $_SESSION['param_firstPlayerId'];
-if ($firstPlayerId != $player4Id) {
-    echo "Warning: Incorrect first player id $firstPlayerId instead of $player4Id<br/>";
-}
-$blindBet1PlayerId = $_SESSION['param_blindBet1PlayerId'];
-if ($blindBet1PlayerId != $player2Id) {
-    echo "Warning: Incorrect first blind bet player $blindBet1PlayerId instead of $player2Id <br/>";
-}
-$blindBet1BetSize = $_SESSION['param_blindBet1Size'];
-if ($blindBet1BetSize != $tableSize/2) {
-    echo "Warning: Incorrect first blind bet size of $blindBet1BetSize instead of " . $tableSize/2 . "<br/>";
-}
-$blindBet2PlayerId = $_SESSION['param_blindBet2PlayerId'];
-if ($blindBet2PlayerId != $player3Id) {
-    echo "Warning: Incorrect second blind bet playerId $blindBet2PlayerId instead of $player3Id <br />";
-}
-$blindBet2BetSize = $_SESSION['param_blindBet2Size'];
-if ($blindBet2BetSize != $tableSize) {
-    echo "Warning: Incorrect second blind bet size $blindBet2BetSize instead of ". $tableSize . "<br/>";
-}
-$playerStatusDtos = json_decode($_SESSION['param_playerStatusDtos']);
-
-verifyQMessage($player1Id, $q1, EventType::GAME_STARTED);
-verifyQMessage($player3Id, $q3, EventType::GAME_STARTED);
-verifyQMessage($player4Id, $q4, EventType::GAME_STARTED);
-
-echo '****************************************************** <br />';
-echo 'PHASE 2: round 1 of poker player starting with first player <br />';
-
-$_SESSION['param_turnPlayerId'] = $player1Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::RAISED;
-$_SESSION['param_pokerActionValue'] = 500;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-
-$_SESSION['param_turnPlayerId'] = $player2Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::CALLED;
-$_SESSION['param_pokerActionValue'] = 500;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-
-$_SESSION['param_turnPlayerId'] = $player3Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::RAISED;
-$_SESSION['param_pokerActionValue'] = 1000;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-
-$_SESSION['param_turnPlayerId'] = $player4Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::RAISED;
-$_SESSION['param_pokerActionValue'] = 2000;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-
-echo '****************************************************** <br />';
-echo 'PHASE 3: round 2 of poker player, player 2 folds <br />';
-
-$_SESSION['param_turnPlayerId'] = $player1Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::CHECKED;
-$_SESSION['param_pokerActionValue'] = NULL;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-
-$_SESSION['param_turnPlayerId'] = $player2Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::FOLDED;
-$_SESSION['param_pokerActionValue'] = NULL;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-
-$_SESSION['param_turnPlayerId'] = $player3Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::RAISED;
-$_SESSION['param_pokerActionValue'] = 2000;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-
-$_SESSION['param_turnPlayerId'] = $player4Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::CALLED;
-$_SESSION['param_pokerActionValue'] = 1000;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-
-echo '****************************************************** <br />';
-echo 'PHASE 4: round 3 of poker player, player 4 time outs <br />';
-
-$_SESSION['param_turnPlayerId'] = $player1Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::CALLED;
-$_SESSION['param_pokerActionValue'] = 1000;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-/*
-$_SESSION['param_turnPlayerId'] = $player2Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::CHECKED;
-$_SESSION['param_pokerActionValue'] = NULL;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-*/
-$_SESSION['param_turnPlayerId'] = $player3Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::CHECKED;
-$_SESSION['param_pokerActionValue'] = NULL;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-
-//sleep(29);
-//checkExpiration();
-
-verifyQMessage($player1Id, $q1, EventType::TIME_OUT);
-verifyQMessage($player2Id, $q2, EventType::TIME_OUT);
-verifyQMessage($player3Id, $q3, EventType::TIME_OUT);
-verifyQMessage($player4Id, $q4, EventType::TIME_OUT);
-
-echo '****************************************************** <br />';
-echo 'PHASE 5: round 3 of poker player, final round of play two players <br />';
-
-$_SESSION['param_turnPlayerId'] = $player1Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::CHECKED;
-$_SESSION['param_pokerActionValue'] = NULL;
-include('Feature_SendPlayerAction.php');
-
-//verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-//verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-/*
-$_SESSION['param_turnPlayerId'] = $player2Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::FOLDED;
-$_SESSION['param_pokerActionValue'] = NULL;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-*/
-$_SESSION['param_turnPlayerId'] = $player3Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::RAISED;
-$_SESSION['param_pokerActionValue'] = 2000;
-include('Feature_SendPlayerAction.php');
-
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-//verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-//verifyQMessage($player4Id, $q4, EventType::PLAYER_MOVE);
-/*
-$_SESSION['param_turnPlayerId'] = $player4Id;
-$_SESSION['param_pokerActionType'] = PokerActionType::CALLED;
-$_SESSION['param_pokerActionValue'] = NULL;
-include('Feature_SendPlayerAction.php');
- 
-verifyQMessage($player1Id, $q1, EventType::PLAYER_MOVE);
-verifyQMessage($player2Id, $q2, EventType::PLAYER_MOVE);
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
- */
-echo 'PHASE 6: end of game <br />';
-
-verifyQMessage($player3Id, $q3, EventType::PLAYER_MOVE);
-
-echo '****************************************************** <br />';
-
-
-/**********************************************************************************/
-/* time out
- * get new move and compare it is different than previous move */
-/* check message:  player status changed */
-// FIXME: sleep while 30 seconds or there is a message;
-
-/* skip 2 more times
- * send play for user
- * verify community cards changed and nothing else
- */
-
-
-/////////////////////////////////////////////////
 // cleanup
 
 include_once("CleanUpGameSessionById.php");
 include_once("CleanUpPlayerById.php");
 include_once("CleanUpOrphanCasino.php");
 
-cleanUpGameSessionById($conTest, $gameSessionId);
-cleanUpPlayerById($conTest, $player1Id);
-cleanUpPlayerById($conTest, $player2Id);
-cleanUpPlayerById($conTest, $player3Id);
-cleanUpPlayerById($conTest, $player4Id);
-cleanUpOrphanCasino($conTest);
+//global $defaultTableMin;
+global $buyInMultiplier;
+//global $playExpiration;
+// Constants
+$playerNames = array('Test1', 'Test2', 'Test3', 'Test4', 'NewUser5');
+$playerIds = null;
+$q = null;
+$playerStatusDtos = null;
+$expectedDto = null; // will keep updating as the game progresses 
+$tableSize = 1000;
+$gameSessionId = null;
+$gameInstanceId = null;
+// expected game parameters
+$buyIn = $tableSize * $buyInMultiplier;
+$blind1Size = $tableSize / 2;
+$blind2Size = $blind1Size * 2;
 
-echo "CleanUp: deleting queues $player1Id, $player2Id, $player3Id, $player4Id <br />";
-$q1->delete();
-$q2->delete();
-$q3->delete();
-$q4->delete();
+session_start();
+
+$qConn = QueueManager::GetConnection();
+$qCh = QueueManager::GetChannel($qConn);
+
+echo '****************************************************** <br />';
+echo 'PHASE 1: 4 players login and join table <br />';
+
+$_SESSION['param_casinoTableId'] = null;
+$_SESSION['param_tableName'] = 'SmokeTest';
+$_SESSION['param_tableSize'] = $tableSize;
+$_SESSION['param_tableCode'] = 'X';
+// parameter is seat number
+// after each user joining test, verify message to already joined players
+$i = 0;
+
+for ($i=0; $i<4; $i++) {
+    $firstTest = false;
+    if ($i==0) { $firstTest = true;}
+    $playerIds[$i] = testPlayerEntry($playerNames[$i]);
+    testJoinTable($i, $playerIds[$i], $playerNames[$i], $buyIn, $firstTest);
+    $q[$i] = QueueManager::GetPlayerQueue($playerIds[$i], $qCh);
+    // verify previously joined users received message
+    for ($j=0; $j<$i;$j++) {
+        verifyQMessage($playerIds[$j], $q[$j], EventType::SeatTaken);
+    }
+}
+
+$numberPlayers = 4;
+
+echo '****************************************************** <br />';
+echo 'PHASE 2: game start and blind bet verification <br />';
+echo 'First player starts game instance';
+$_SESSION['param_playerId'] = $playerIds[0];
+
+// 0 is dealer, 1 and 2 are the blinds, 3 is the first play
+$expectedDto->dealerPlayerId = $playerIds[0];
+UpdatePlayerStatus(1, PlayerStatusType::BLIND_BET, $blind1Size, 0);
+UpdatePlayerStatus(2, PlayerStatusType::BLIND_BET, $blind2Size, 0);
+UpdatePlayerStatus(3, PlayerStatusType::WAITING, 0, 0);
+UpdatePlayerStatus(0, PlayerStatusType::WAITING, 0, 0);
+$expectedDto->firstPlayerId = $playerIds[3];
+$expectedDto->nextMoveDto = InitMove($gameInstanceId, $playerIds[3], $blind2Size, 0, $blind2Size * 2);
+$expectedDto->casinoTableId = null;
+$expectedDto->userSeatNumber = null;
+$expectedDto->currentPotSize = $blind1Size + $blind2Size;
+
+include('Feature_StartLiveGame.php');
+ConsumeTableQueue();
+
+/* player status order changes with turn number
+ $playerIds = ;
+$playerStatusDtos = array($expectedDto->playerStatusDtos[1],
+        $expectedDto->playerStatusDtos[2],
+    $expectedDto->playerStatusDtos[3],
+    $expectedDto->playerStatusDtos[0]);
+$expectedDto->playerStatusDtos = $playerStatusDtos;
+*/
+testGameStart(0, true);
+testGameStart(1);
+testGameStart(2);
+testGameStart(3);
+
+echo '****************************************************** <br />';
+$playerStatusDtos[0] = clone $expectedDto->playerStatusDtos[0];
+$playerStatusDtos[1] = clone $expectedDto->playerStatusDtos[1];
+$playerStatusDtos[2] = clone $expectedDto->playerStatusDtos[2];
+$playerStatusDtos[3] = clone $expectedDto->playerStatusDtos[3];
+$expectedDto->playerStatusDtos = null;
+$expectedDto->userPlayerHandDto = null;
+$expectedDto->gameStatus = GameStatus::IN_PROGRESS;
+$expectedDto->waitingListSize = null;
+// playNumber skips if user folded
+
+echo '****************************************************** <br />';
+echo 'PHASE 2: <br/><br/>';
+echo 'Game 1 Round 1 of poker player starting with first player <br />';
+
+$lastBet = $tableSize;
+echo ' Play 1 ********************************************************/<br/>';
+testMove(3, $playerIds[0], PokerActionType::RAISED, $lastBet*=2, 1);
+echo ' Play 2 ********************************************************/<br/>';
+testMove(0, $playerIds[1], PokerActionType::CALLED, $lastBet, 2);
+echo ' Play 3 ********************************************************/<br/>';
+testMove(1, $playerIds[2], PokerActionType::RAISED, $lastBet*=2, 3);
+echo ' Play 4 ********************************************************/<br/>';
+testMove(2, $playerIds[3], PokerActionType::CALLED, $lastBet, 4);
+
+echo '****************************************************** <br />';
+echo 'Game 1 Round 2 of poker player, player 2 folds <br />';
+echo ' Play 5 ********************************************************/<br/>';
+testMove(3, $playerIds[0], PokerActionType::CALLED, $lastBet, 5);
+echo ' Play 6 ********************************************************/<br/>';
+testMove(0, $playerIds[1], PokerActionType::FOLDED, NULL, 6);
+echo ' Play 7 ********************************************************/<br/>';
+testMove(1, $playerIds[2], PokerActionType::CHECKED, NULL, 7);
+echo ' Play 8 ********************************************************/<br/>';
+testMove(2, $playerIds[3], PokerActionType::CALLED, $lastBet, 8);
+
+echo '****************************************************** <br />';
+echo 'PHASE 4 Turn: round 3 of poker player, 4th player time outs <br />';
+
+echo ' Play 9 ********************************************************/<br/>';
+testMove(3, $playerIds[1], PokerActionType::CALLED, $lastBet, 9);
+//testMove(0, PokerActionType::FOLDED, NULL, 10);
+echo ' Play 11 ********************************************************/<br/>';
+testMove(1, $playerIds[2], PokerActionType::CALLED, $lastBet, 11);
+
+echo ' Play 12 ********************************************************/<br/>';
+echo '******* TIME OUT ************************************************/<br/>';
+sleep(29);
+ProcessExpiredPokerMoves();
+
+testMove(2, $playerIds[3], PlayerStatusType::SKIPPED, NULL, 12);
+
+echo '****************************************************** <br />';
+echo 'PHASE 5: round 3 of poker player, final round of play two players <br />';
+
+echo ' Play 13 ********************************************************/<br/>';
+testMove(3, $playerIds[1], PokerActionType::CHECKED, NULL, 13);
+//testMove(0, PokerActionType::FOLDED, NULL, 14);
+echo ' Play 15 ********************************************************/<br/>';
+echo ' ************(Play 14 skipped because user folded****************/<br/>';
+testMove(1, $playerIds[2], PokerActionType::CALLED, $lastBet, 15);
+echo ' Play 16 ********************************************************/<br/>';
+testMove(2, null, PokerActionType::CALLED, $lastBet, 16);
+
+echo '****************************************************** <br />';
+echo '****************************************************** <br />';
+echo '****************************************************** <br />';
+echo '****************************************************** <br />';
+echo '****************************************************** <br />';
+echo 'PHASE 6: Testing turns assigned correctly on second round <br />';
+echo '         and with players leaving, and new users getting  <br />';
+echo '         game status correctly without joining <br />';
+echo '         - Player 2 leaves and player 1 starts the game <br />';
+echo '         - Player 0 leaves in the middle of the game. <br />';
+echo '         - New player to join in the middle of game and should <br />';
+echo '         be included in third and last game <br />';
+
+// remove info since leaving in between games
+$leavingPlayerId = $playerIds[2];
+testPlayerLeaveTable(2, $leavingPlayerId, true);
+testPlayerLogout($leavingPlayerId);
+cleanUpPlayerById($leavingPlayerId);
+
+$numberPlayers--;
+
+// only 3 players, but still need to shift turns since first player didn't leave
+/* player status order changes with turn number, update player arrays to match turn numbers */
+/* put first player last */
+array_push($playerIds, $playerIds[0]);
+array_shift($playerIds);
+array_push($playerStatusDtos, $playerStatusDtos[0]);
+array_shift($playerStatusDtos);
+array_push($q, $q[0]);
+array_shift($q);
+// initialize
+$expectedDto->status = GameStatus::STARTED;
+$expectedDto->playerStatusDtos[0] = clone $playerStatusDtos[0];
+$expectedDto->playerStatusDtos[1] = clone $playerStatusDtos[1];
+$expectedDto->playerStatusDtos[2] = clone $playerStatusDtos[2];
+// 1 is dealer, 2 and 3 are the blinds, 1 is the first play, 0 fold
+$expectedDto->dealerPlayerId = $playerIds[0];
+UpdatePlayerStatus(1, PlayerStatusType::BLIND_BET, $blind1Size, 0);
+UpdatePlayerStatus(2, PlayerStatusType::BLIND_BET, $blind2Size, 0);
+UpdatePlayerStatus(0, PlayerStatusType::WAITING, 0, 0);
+$expectedDto->firstPlayerId = $playerIds[0];
+$expectedDto->nextMoveDto = InitMove($gameInstanceId, $playerIds[0], $blind2Size, 0, $blind2Size * 2);
+//$expectedDto->casinoTableId = null;
+$expectedDto->userSeatNumber = null;
+$expectedDto->currentPotSize = $blind1Size + $blind2Size;
+
+$_SESSION['param_playerId'] = $playerIds[1];
+include('Feature_StartLiveGame.php');
+ConsumeTableQueue();
+
+// game start initializes everyone's status
+$playerStatusDtos[0] = clone $expectedDto->playerStatusDtos[0];
+$playerStatusDtos[1] = clone $expectedDto->playerStatusDtos[1];
+$playerStatusDtos[2] = clone $expectedDto->playerStatusDtos[2];
+
+testGameStart(1, true);
+testGameStart(0);
+testGameStart(2);
+
+echo '****************************************************** <br />';
+$expectedDto->playerStatusDtos = null;
+$expectedDto->userPlayerHandDto = null;
+$expectedDto->gameStatus = GameStatus::IN_PROGRESS;
+$expectedDto->waitingListSize = null;
+// playNumber skips if user folded
+
+echo '****************************************************** <br />';
+echo 'Game 2 Round 1 of poker player <br />';
+
+$lastBet = $tableSize;
+echo ' Play 1 ********************************************************/<br/>';
+testMove(0, $playerIds[1], PokerActionType::RAISED, $lastBet*=2, 1);
+echo ' Play 2 ********************************************************/<br/>';
+testMove(1, $playerIds[2], PokerActionType::RAISED, $lastBet*=2, 2);
+echo ' Play 3 ********************************************************/<br/>';
+testMove(2, $playerIds[0], PokerActionType::CALLED, $lastBet, 3);
+
+echo ' New User joins ********************************************************/<br/>';
+// takes first seat, empty because user left
+$nextPlayerNumber = count($playerIds);
+$playerIds[$nextPlayerNumber] = testPlayerEntry($playerNames[$nextPlayerNumber]);
+testJoinTableMiddle($nextPlayerNumber, $playerIds[$nextPlayerNumber], $playerNames[$nextPlayerNumber], 2, $buyIn, 'RoundEnd');
+
+echo '****************************************************** <br />';
+echo 'Game 2 Round 2 of poker player, player 0 leaves after round <br />';
+echo ' Play 4 ********************************************************/<br/>';
+testMove(0, $playerIds[1], PokerActionType::CHECKED, NULL, 4);
+echo ' Play 5 ********************************************************/<br/>';
+testMove(1, $playerIds[2], PokerActionType::CHECKED, NULL, 5);
+echo ' Play 6 ********************************************************/<br/>';
+testMove(2, $playerIds[0], PokerActionType::CALLED, $lastBet, 6);
+
+echo ' User leaves ********************************************************/<br/>';
+testPlayerLeaveTable(0, $playerIds[0], false);
+
+echo '****************************************************** <br />';
+echo 'Game 2 Round 3 of poker player, 2nd player times out <br />';
+
+echo ' Play 8 ********************************************************/<br/>';
+testMove(1, $playerIds[2], PokerActionType::CALLED, $lastBet, 8);
+echo ' Play 9 ********************************************************/<br/>';
+echo '******* TIME OUT ************************************************/<br/>';
+sleep(29);
+ProcessExpiredPokerMoves();
+
+testMove(2, $playerIds[1], PlayerStatusType::SKIPPED, NULL, 9);
+
+echo '****************************************************** <br />';
+echo 'Game 2 Round 4 of poker player, final round of play two players <br />';
+
+//testMove(0, PokerActionType::FOLDED, NULL, 10);
+echo ' Play 11 ********************************************************/<br/>';
+testMove(1, $playerIds[2], PokerActionType::CALLED, $lastBet, 11);
+echo ' Play 12 ********************************************************/<br/>';
+testMove(2, null, PokerActionType::CALLED, $lastBet, 12);
+
+echo '****************************************************** <br />';
+/////////////////////////////////////////////////
+// cleanup
+
+connectToStateDB();
+
+echo 'GameSessionId : ' . $gameSessionId . '<br />';
+cleanUpGameSessionById($gameSessionId);
+for ($i=0;$i<count($playerIds);$i++) {
+    cleanUpPlayerById($playerIds[$i]);
+}
+// no need? clean up if something went wrong?
+cleanUpOrphanCasino();
+CleanUpAbandonedPlays();
+
 session_destroy();
-
-
 ?>

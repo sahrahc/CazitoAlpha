@@ -1,0 +1,25 @@
+nav.primary {
+    ul {
+        float: right;
+        margin: 0;
+        padding: 10px 0 0 0;
+        // width: 1750px;
+    
+    li {
+        float: left;
+
+	}
+    .activePlaying { 
+        disabled: "disabled";
+    }
+    }
+}
+
+.greetings li {
+    color:#868686;
+    display: block;
+    font: 16px/100% $fontFlamenco;
+    padding: 6px 10px;
+    text-decoration: none;
+    text-transform: lowercase;
+}

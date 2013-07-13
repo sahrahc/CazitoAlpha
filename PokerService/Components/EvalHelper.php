@@ -1,15 +1,5 @@
 <?php
 
-// Include Libraries
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-
-// Include Application Scripts
-include_once(dirname(__FILE__) . '/../../../libraries/helper/DataHelper.php');
-
-// configure logging
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-$log = Logger::getLogger(__FILE__);
-
 /* * ********************************************************************** */
 /**
  * Poker evaluator helper functions. All functions in this class are static.
@@ -61,7 +51,7 @@ class EvalHelper {
     public static function getHandValue($pCards) {
         global $dbName;
         $con = connectToStateDB();
-        mysql_select_db('cazito5_sprint3', $con);
+        mysql_select_db('cazito', $con);
         $p = 53;
         for ($i = 0; $i < 7; $i++) {
             self::log()->Debug(__FUNCTION__ . " - card index $i: " . $pCards[$i]);

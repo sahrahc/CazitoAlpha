@@ -4,10 +4,7 @@
 // IN: param_playerId
 //     param_casinoTableId
 //     param_tableSize (optional)
-// OUT: param_casinoTableId
-//      param_gameSessionId
-//      param_seatNumber
-//      param_gameStatus
+// OUT: param_gameStatusDto
 // 
 // Setup ///////////////////////////////////////////////////
 echo "////////////////////////////////////////////////////// <br />";
@@ -18,31 +15,40 @@ echo "Feature Test: Join Table <br /><br />";
 $playerId = $_SESSION['param_playerId'];
 $casinoTableId = $_SESSION['param_casinoTableId'];
 
-//// optional parameters
 if (isset($_SESSION['param_tableSize'])) {
     $tableSize = $_SESSION['param_tableSize'];
 }
-else {$tableSize = null;}
-
+if (isset($_SESSION['param_tableName'])) {
+    $tableName = $_SESSION['param_tableName'];
+}
+if (isset($_SESSION['param_tableCode'])) {
+    $tableCode = $_SESSION['param_tableCode'];
+}
 ////////////////////////////////////////////////////////////
 // test 
 
+if (is_null($casinoTableId)) {
 $par = json_encode(array(
-    "casinoTableId"=>$casinoTableId, 
-    "userPlayerId"=>$playerId, 
+    "tableName"=>$tableName, 
+    "requestingPlayerId"=>$playerId, 
     "tableSize"=>$tableSize));
 
-echo "Parameter In: $par <br /><br />";
+//echo "Parameter In: $par <br /><br />";
+$gameStatusDtoEncoded = CreateTable($par);    
+//echo "Parameter Out (REST): $gameStatusDtoEncoded <br /> <br />";
+}
+else {
+$par = json_encode(array(
+    "casinoTableId"=>$casinoTableId, 
+    "requestingPlayerId"=>$playerId, 
+    "tableCode"=>$tableCode));
 $gameStatusDtoEncoded = JoinTable($par);
-echo "Parameter Out (REST): $gameStatusDtoEncoded <br /> <br />";
-
+}
 $gameStatusDto = json_decode($gameStatusDtoEncoded);
 
 ////////////////////////////////////////////////////////////
 // parmeter out
 
-$_SESSION['param_casinoTableId'] = $gameStatusDto->casinoTableId;
-$_SESSION['param_gameSessionId'] = $gameStatusDto->gameSessionId;
-$_SESSION['param_seatNumber'] = $gameStatusDto->userSeatNumber;
-$_SESSION['param_gameStatus'] = $gameStatusDto->gameStatus;
+$_SESSION['param_gameStatusDto'] = $gameStatusDto;
+// how do you che
 ?>

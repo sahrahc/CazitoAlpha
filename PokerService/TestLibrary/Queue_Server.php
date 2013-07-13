@@ -85,7 +85,7 @@ echo "Testing message sent and receive </br>";
 echo "Open Queue_Client on browser to see message being received on client <br />";
 // dont use consume $msg = $q1->consume('processMessage');
 // see note on Queue_Server_Receive.php
-$msg=$q2->get(AMQP_AUTOACK);
+$msg=$q1->get(AMQP_AUTOACK);
 if (is_null($msg)) {
     echo 'No message found...<br/>';
 }

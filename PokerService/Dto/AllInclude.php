@@ -1,12 +1,10 @@
 <?php
-include_once('BetDto.php');
-include_once('CardNameListDto.php');
-include_once('CasinoTableDto.php');
-include_once('CheatRequestDto.php');
-include_once('CheaterCardDto.php');
-include_once('GameStatusDto.php');
-include_once('NextPokerMoveDto.php');
-include_once('PlayerDto.php');
-include_once('PlayerHandDto.php');
-include_once('PlayerStatusDto.php');
+include_once(dirname(__FILE__) . '/CasinoTableDto.php');
+include_once(dirname(__FILE__) . '/CheatRequestDto.php');
+include_once(dirname(__FILE__) . '/CheaterCardDto.php');
+include_once(dirname(__FILE__) . '/ExpectedPokerMoveDto.php');
+include_once(dirname(__FILE__) . '/GameStatusDto.php');
+include_once(dirname(__FILE__) . '/PlayerDto.php');
+include_once(dirname(__FILE__) . '/PlayerHandDto.php');
+include_once(dirname(__FILE__) . '/PlayerStatusDto.php');
 ?>

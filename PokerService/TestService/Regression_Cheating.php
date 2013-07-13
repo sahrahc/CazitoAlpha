@@ -29,7 +29,7 @@ echo "Player hand before pushing ace: " . json_encode($playerHand) . "<br />";
 global $dateTimeFormat;
 $statusDT = date($dateTimeFormat);
 
-    $qConn = QueueManager::GetQueueConnection();
+    $qConn = QueueManager::GetConnection();
     $ch = QueueManager::GetChannel($qConn);
     $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
@@ -50,7 +50,8 @@ $cCards = CardHelper::getCommunityCardDtos($gameInstanceId, 5);
 echo "Community card after swap: " . json_encode($cCards) . "<br /><br />";
 
 // social spotter test - assume new user
-$activeItems = CheatingHelper::getPlayersActivelyMarking($gameInstance->gameSessionId);
+$itemType = ItemType::SOCIAL_SPOTTER;
+$activeItems = PlayerActiveItem::GetPlayersWithItemType($gameInstance->gameSessionId, $itemType);
 echo "Active Player items before test: " . json_encode($activeItems) . "<br /><br />";
 /*
  * 1) cheat operation (
@@ -67,11 +68,11 @@ echo "visible card are (should be null): " . json_encode($dto) . "<br />";
 echo "... and should match instance's community cards: " . json_encode($gameCards->communityCards) . "<br />";
 echo "... plus the instance's player cards" . json_encode($gameCards->playerHands) . "<br />";
 // after end game
-$visibleList = CheatingHelper::getVisibleCardCodes($playerId, $gameSessionId);
+$visibleList = PlayerVisibleCard::getVisibleCardCodes($playerId, $gameSessionId);
 echo "Visible cards " . json_encode($visibleList) . "<br />";
 echo "... and should match instance's community cards: " . json_encode($gameCards->communityCards) . "<br />";
 echo "... plus the instance's player cards" . json_encode($gameCards->playerHands) . "br />";
-$visibleList = CheatingHelper::getVisibleCardCodes($playerId, $gameSessionId);
+$visibleList = PlayerVisibleCard::getVisibleCardCodes($playerId, $gameSessionId);
 echo "Visible cards " . json_encode($visibleList) . "<br />";
 
 ?>

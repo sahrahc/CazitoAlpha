@@ -6,8 +6,10 @@ class ExpectedPokerMove {
     public $playerId;
     public $expirationDate;
     public $callAmount;
-    public $checkAmount;
+    public $isCheckAllowed;
     public $raiseAmount;
+    // not on db
+    public $status;
     private $log;
 
     /*     * ****************************************************************************** */
@@ -20,11 +22,11 @@ class ExpectedPokerMove {
      * @param type $firstPlayerId
      * @param type $tableMin
      */
-    public static function InitFirstMove($gameInstance, $tableMin) {
+    public static function InitFirstMoveConstraints($gameInstance, $tableMin, $isPractice = 0) {
         global $playExpiration;
         global $practiceExpiration;
         $expirationDateTime = new DateTime();
-        if ($this->isPractice == 1) {
+        if ($isPractice == 1) {
             $expirationDateTime->add(new DateInterval($practiceExpiration)); // 2 seconds
         } else {
             $expirationDateTime->add(new DateInterval($playExpiration)); // 20 seconds
@@ -32,7 +34,7 @@ class ExpectedPokerMove {
 
         $raiseAmount = $tableMin * 2;
         $pokerMove = new ExpectedPokerMove();
-        $pokerMove->gameInstanceId = $this->id;
+        $pokerMove->gameInstanceId = $gameInstance->id;
         $pokerMove->playerId = $gameInstance->firstPlayerId;
         $pokerMove->expirationDate = $expirationDateTime;
         $pokerMove->callAmount = $tableMin;
@@ -49,14 +51,19 @@ class ExpectedPokerMove {
      * Restrictions: updateNextPlayerIdAndTurn must have been called before.
      * @return ExpectedPokerMove
      */
-    public static function FindNextExpectedMove($gameInstance, $curTurn) {
+    public static function FindNextExpectedMoveForInstance($gameInstance, $curTurn) {
         global $playExpiration;
         global $practiceExpiration;
+        global $defaultTableMin;
         $pokerMove = new ExpectedPokerMove();
 
-        $gameInstance->_getNextPlayerIdAndTurn($curTurn);
+        $gameInstance->GetNextPlayerIdAndTurn($curTurn);
+        if (is_null($gameInstance->nextPlayerId)) {
+            return null;
+        }
         $expirationDateTime = new DateTime();
-        if ($gameInstance->isNextPlayerVirtual == 1) {
+        $player = EntityHelper::getPlayer($gameInstance->nextPlayerId);
+        if ($player->isVirtual) {
             $expirationDateTime->add(new DateInterval($practiceExpiration)); // 2 seconds
         } else {
             $expirationDateTime->add(new DateInterval($playExpiration)); // 20 seconds
@@ -71,9 +78,9 @@ class ExpectedPokerMove {
         // find move sizes - instance has not updated yet.
         // see if check allowed ---------------------------------------
         // Rule: not allowed on first round except for player who placed blind bet.
-        $pokerMove->checkAmount = null;
+        $pokerMove->isCheckAllowed = 0;
         if ($gameInstance->lastInstancePlayNumber >= $gameInstance->numberPlayers - 1) {
-            $pokerMove->checkAmount = 0;
+            $pokerMove->isCheckAllowed = 1;
         }
         // call size  -----------------------------------------------
         $pokerMove->callAmount = $gameInstance->lastBetSize;
@@ -81,36 +88,47 @@ class ExpectedPokerMove {
         // see how much raise is enabled by ---------------------------
         // Rule: first player on first round can only raise by 2*bigblind, but that is taken
         // care of on initFirstMove.
-        $pokerMove->raiseAmount = $gameInstance->tableMinimum + $gameInstance->lastBetSize;
+        $tableMin = $defaultTableMin;
+        $casinoTable = EntityHelper::getCasinoTableForSession($gameInstance->gameSessionId);
+        if (!is_null($casinoTable)) {
+            $tableMin = $casinoTable->tableMinimum;
+        }
+        else {
+            $practiceSession = EntityHelper::GetGameSession($gameInstance->gameSessionId);
+            if (!is_null($practiceSession)) {
+            $tableMin = $practiceSession->tableMinimum;
+            }
+        }
+        //$pokerMove->raiseAmount = $tableMin + $gameInstance->lastBetSize;
+        $pokerMove->raiseAmount = 2 * $gameInstance->lastBetSize;
 
         $pokerMove->Insert();
         return $pokerMove;
     }
 
     /**
-     * Retrieves the next move from the queue. Log warning if more than one found.
+     * Retrieves the next move but checks whether the user left.
      * @param type $gInstanceId
      * @return ExpectedPokerMove
      */
     public static function GetExpectedMoveForInstance($gInstanceId) {
-        $result = executeSQL("SELECT * FROM NextPokerMove WHERE GameInstanceId = $gInstanceId
-                AND IsDeleted = 0 ORDER BY ExpirationDate DESC LIMIT 1", __FUNCTION__ . "
-                : Error selecting from NextPokerMove for instance $gInstanceId");
+        $result = executeSQL("SELECT e.*, s.Status FROM ExpectedPokerMove e
+            LEFT JOIN PlayerState s on e.Playerid = s.PlayerId
+            WHERE e.GameInstanceId = $gInstanceId
+                ORDER BY ExpirationDate DESC LIMIT 1", __FUNCTION__ . "
+                : Error selecting from ExpectedPokerMove for instance $gInstanceId");
         $row = mysql_fetch_array($result);
         if (mysql_num_rows($result) == 0) {
             return null;
         }
         $pokerMove = new ExpectedPokerMove();
-        $pokerMove->id = $row["Id"];
         $pokerMove->gameInstanceId = $row["GameInstanceId"];
-        $pokerMove->isPractice = $row["IsPractice"];
         $pokerMove->playerId = $row["PlayerId"];
-        $pokerMove->turnNumber = $row["TurnNumber"];
         $pokerMove->expirationDate = $row["ExpirationDate"];
-        $pokerMove->isEndGameNext = $row["IsEndGameNext"];
         $pokerMove->callAmount = $row["CallAmount"];
-        $pokerMove->checkAmount = $row["CheckAmount"];
+        $pokerMove->isCheckAllowed = $row["CheckAmount"];
         $pokerMove->raiseAmount = $row["RaiseAmount"];
+        $pokerMove->status = $row["Status"];
         return $pokerMove;
     }
 
@@ -118,11 +136,11 @@ class ExpectedPokerMove {
         //$currentTimeString = $statusDateTime->format($dateTimeFormat);
         // check if expiration
         $result = executeSQL("SELECT m.*, s.IsVirtual
-            FROM NextPokerMove m LEFT JOIN PlayerState s
+            FROM ExpectedPokerMove m LEFT JOIN PlayerState s
             ON m.gameInstanceId = s.GameInstanceId AND m.PlayerId = s.PlayerId
             WHERE ExpirationDate <= '$expirationDateTime'
                 ORDER BY GameInstanceId, ExpirationDate DESC", __FUNCTION__ . "
-                 : ERROR selecting all of NextPokerMove");
+                 : ERROR selecting all of ExpectedPokerMove");
         // only the last record for every game instance id is processed
         // this won't be needed when only one move is stored (out of database)
         $i = 0;
@@ -133,7 +151,7 @@ class ExpectedPokerMove {
             $expectedPokerMoves[$i]->gameInstanceId = $row["GameInstanceId"];
             $expectedPokerMoves[$i]->playerId = $row["PlayerId"];
             $expectedPokerMoves[$i]->expirationDate = $row['ExpirationDate'];
-            $expectedPokerMoves[$i]->checkAmount = $row["CheckAmount"];
+            $expectedPokerMoves[$i]->isCheckAllowed = $row["CheckAmount"];
             $expectedPokerMoves[$i]->callAmount = $row["CallAmount"];
             $expectedPokerMoves[$i]->raiseAmount = $row["RaiseAmount"];
         }
@@ -143,7 +161,7 @@ class ExpectedPokerMove {
     public function Insert() {
         global $dateTimeFormat;
         $checkAmt = 0;
-        if (is_null($this->checkAmount)) {
+        if (is_null($this->isCheckAllowed)) {
             $checkAmt = "null";
         }
         $expirationString = $this->expirationDate->format($dateTimeFormat);
@@ -159,7 +177,7 @@ class ExpectedPokerMove {
     }
 
     public function Delete() {
-        executeSQL("DELETE FROM NextPokerMove WHERE playerId = $this->playerId
+        executeSQL("DELETE FROM ExpectedPokerMove WHERE playerId = $this->playerId
             AND GameInstanceId = $this->gameInstanceId", __FUNCTION__ . "
                 :ERROR - Error deleting move for player $this->playerId and
                 and game instance $this->gameInstanceId");

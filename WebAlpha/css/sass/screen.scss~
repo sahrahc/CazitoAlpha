@@ -1,0 +1,69 @@
+/*!
+* Description: CSS Styles. 
+*/
+/**
+* These include the SASS files and output them to a CSS file. All the styles
+* should make a small css file that can be downloaded once and cached to
+* improve the end user experience. If the outputted file is found to be too
+* large, it can be broken up into smaller files.
+*/
+
+@import 'core/colors';
+@import 'core/fonts';
+
+// Include the external files/plugins
+@import 'plugins/css3';
+@import 'plugins/boilerplate';
+@import 'plugins/normalize';
+@import 'plugins/warning';
+
+/*!
+* Line break
+*/
+/**
+* These are the site core stylings. Things like global a, h1, p stylings 
+* should and default page structure go in here. Anything specific to a single 
+* page or override should go in the pages sections.
+*/
+@import 'core/mediaqueries';
+@import 'core/html';
+@import 'core/forms';
+@import 'core/structure';
+@import 'core/header';
+@import 'core/navigation';
+@import 'core/footer';
+@import 'core/temporary_hidden_pre_release';
+ 
+/*!
+* Line break
+*/
+/**
+* These are the styles that are page specific. In an ideal world; these would
+* not exist as all pages would be similiar.
+*
+* notes below so files can be either linked to or included globally later if possible
+ */
+@import 'pages/contact';
+@import 'pages/about';
+@import 'pages/recycle';
+@import 'pages/home';
+@import 'pages/productos';
+@import 'pages/productsListing';
+@import 'pages/recetas';
+@import 'pages/vegetariosLanding';
+@import 'pages/organizando';
+@import 'pages/paises';
+@import 'pages/aLaParilla';
+@import 'pages/videos';
+@import 'pages/portal';
+@import 'pages/loginRegisterEditProfile';
+@import 'pages/comments';
+
+
+/* Include this last so it overrides settings form pages */
+//@import 'plugins/jqui-custom';
+
+/*!
+* Line break
+*/
+@import 'core/print';

@@ -26,7 +26,7 @@ $playerHand = CardHelper::getPlayerCard($playerId, $gameInstanceId, 1);
 global $dateTimeFormat;
 $statusDT = date($dateTimeFormat);
 
-    $qConn = QueueManager::GetQueueConnection();
+    $qConn = QueueManager::GetConnection();
     $ch = QueueManager::GetChannel($qConn);
     $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);

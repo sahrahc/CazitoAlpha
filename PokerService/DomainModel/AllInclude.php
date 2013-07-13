@@ -1,13 +1,13 @@
 <?php
-include_once('CasinoTable.php');
-include_once('EventMessage.php');
-include_once('GameInstanceCards.php');
-include_once('GameInstance.php');
-include_once('GameSession.php');
-include_once('Player.php');
-include_once('PlayerHand.php');
-include_once('PlayerInstance.php');
-include_once('GameCard.php');
-include_once('ExpectedPokerMove.php');
-include_once('PracticeSession.php');
+include_once(dirname(__FILE__) . '/CasinoTable.php');
+include_once(dirname(__FILE__) . '/ExpectedPokerMove.php');
+include_once(dirname(__FILE__) . '/GameCard.php');
+include_once(dirname(__FILE__) . '/GameInstance.php');
+include_once(dirname(__FILE__) . '/GameInstanceCards.php');
+include_once(dirname(__FILE__) . '/GameSession.php');
+include_once(dirname(__FILE__) . '/Player.php');
+include_once(dirname(__FILE__) . '/PlayerAction.php');
+include_once(dirname(__FILE__) . '/PlayerHand.php');
+include_once(dirname(__FILE__) . '/PlayerInstance.php');
+include_once(dirname(__FILE__) . '/PracticeSession.php');
 ?>

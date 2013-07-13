@@ -11,15 +11,15 @@ echo "////////////////////////////////////////////////////// <br />";
 echo __FILE__ . "<br />";
 echo "Testing Feature: Take Seat <br /><br />";
 
-$playerId = $_POST['param_playerId'];
+$playerId = $_SESSION['param_playerId'];
 if (is_null($playerId)) {
     echo "Missing required parameter param_playerId <br /><br />";
 }
-$gameSessionId = $_POST['param_gameSessionId'];
+$gameSessionId = $_SESSION['param_gameSessionId'];
 if (is_null($gameSessionId)) {
     echo "Missing required parameter param_gameSessionId <br /><br />";
 }
-$seatNumber = $_POST['param_seatNumber'];
+$seatNumber = $_SESSION['param_seatNumber'];
 if (is_null($seatNumber)) {
     echo "Missing required parameter param_seatNumber <br /><br />";
 }

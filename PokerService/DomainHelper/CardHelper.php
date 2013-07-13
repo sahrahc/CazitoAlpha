@@ -1,11 +1,5 @@
 <?php
 
-// Configure logging
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-
-include_once(dirname(__FILE__) . '/../Components/EvalHelper.php');
-
 /* * ************************************************************************************** */
 
 /**
@@ -59,17 +53,17 @@ class CardHelper {
      * @param PlayerHand $playerHand The player information, which gets updated and returned
      * @return PlayerHand The updated player hand.
      */
-    public static function identifyPlayerHand($cards, $playerHand) {
+    public static function identifyPlayerHand($cards, &$playerHand) {
         self::log()->debug(__FUNCTION__ . " - cards given " . json_encode($cards));
         self::log()->debug(__FUNCTION__ . " - player hands given " . json_encode($playerHand));
-        $pH = $playerHand;
+        //$pH = $playerHand;
 
-        $pH->handInfo = EvalHelper::getHandValue($cards);
-        $pH->handCategory = EvalHelper::urshift($playerHand->handInfo, 12); // 12
-        $pH->pokerHandType = EvalHelper::findHandName($playerHand->handCategory);
-        $pH->rankWithinCategory = $pH->handInfo & 0x00000FFF;
+        $playerHand->handInfo = EvalHelper::getHandValue($cards);
+        $playerHand->handCategory = EvalHelper::urshift($playerHand->handInfo, 12); // 12
+        $playerHand->pokerHandType = EvalHelper::findHandName($playerHand->handCategory);
+        $playerHand->rankWithinCategory = $playerHand->handInfo & 0x00000FFF;
 
-        return $pH;
+        //return $pH;
     }
 
     /**
@@ -183,12 +177,12 @@ class CardHelper {
      * Only used once, to get all the cards in order to identify the winner and publish everyone's hands at the end of the game.
      * @return GameInstanceCards 
      */
-    public static function getGameCardsForInstance($gInstId) {
+    public static function getGameCardsForInstance($gInstId, $excludeFoldCondition = false) {
         // get all the cards, order with community cards first.
-        $result = executeSQL("SELECT g.*, ps.status AS Status FROM GameCard g 
+        $result = executeSQL("SELECT g.*, ps.Status AS Status FROM GameCard g 
                 LEFT JOIN PlayerState ps ON g.GameInstanceId = ps.GameInstanceId
                 AND g.PlayerId = ps.PlayerId WHERE g.GameInstanceId = $gInstId
-                AND g.playerId is not null
+                AND g.PlayerId is not null
                 ORDER BY g.PlayerId, PlayerCardNumber", __FUNCTION__ . "
                 : Error selecting all GameCard for instance id $gInstId");
 
@@ -200,12 +194,14 @@ class CardHelper {
         $prevPlayerId = null;
         // this won't work if $result is not sorted by playerid
         while ($rowCard = mysql_fetch_array($result)) {
+            $isNotFolded = $rowCard["Status"] != PlayerStatusType::FOLDED;
+            if ($excludeFoldCondition) {$isNotFolded = true;}
             if ($rowCard["PlayerId"] == -1) {
                 // process community cards
                 $communityCards[$ccIndex] = GameCard::InitPlayerCard($rowCard['PlayerCardNumber'], $rowCard['DeckPosition'], $rowCard['CardCode']);
-                $communityCards[$ccIndex++] = $rowCard["CardIndex"];
-            } else if ($rowCard["Status"] != PlayerStatusType::FOLDED &&
-                    $rowCard["Status"] != PlayerStatusType::LEFT) {
+                $communityCards[$ccIndex++]->cardIndex = $rowCard["CardIndex"];
+            } else if ($rowCard["Status"] != PlayerStatusType::LEFT &&
+                    $isNotFolded) {
                 // one entity for both cards.
                 if (is_null($prevPlayerId) || $prevPlayerId != $rowCard["PlayerId"]) {
                     $playerIndex = is_null($prevPlayerId) ? 0 : $playerIndex + 1;

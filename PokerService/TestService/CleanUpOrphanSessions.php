@@ -10,7 +10,7 @@
 //	  
 //	    GameCard
 //	    PlayerAction
-//	    NextPokerMove
+//	    ExpectedPokerMove
 //	    PlayerState
 //	    GameInstance
 //	    GameSession
@@ -23,19 +23,30 @@
 function cleanUpOrphanCasino($conTest) {
     echo "-----CleanUpOrphanSessions-----------------------------------<br/>";
     
-    // how performant is this?
-    $sql = "DELETE GameSession
+    $result = executeSQL("SELECT GameSession.id 
 	    FROM GameSession
 	    LEFT JOIN PlayerState on GameSession.ID = PlayerState.GameSessionId
-	    WHERE PlayerState.GameSessionId is null";	
-    executeSQL($sql, "Error Deleting from GameSession with id's not in player state");
+	    WHERE PlayerState.GameSessionId is null",
+            "Error selecting from GameSession with id's not in player state");
+    $qConn = QueueManager::GetConnection();
+    $qCh = QueueManager::GetChannel($qConn);
+    while ($row= mysql_fetch_array($result)) {
+        $q = QueueManager::GetGameSessionQueue($row[0], $qCh);
+        QueueManager::DeleteQueue($q);
+    }
+    // how performant is this?
+    executeSQL("DELETE GameSession
+	    FROM GameSession
+	    LEFT JOIN PlayerState on GameSession.ID = PlayerState.GameSessionId
+	    WHERE PlayerState.GameSessionId is null",
+            "Error Deleting from GameSession with id's not in player state");
     echo "Info: " . mysql_affected_rows() . " GameSession rows deleted for session.<br/>";
 
-    $sql = "DELETE GameInstance
+    executeSQL("DELETE GameInstance
 	    FROM GameInstance
 	    LEFT JOIN PlayerState on GameInstance.ID = PlayerState.GameInstanceId
-	    WHERE PlayerState.GameInstanceId is null";	
-    executeSQL($sql, "Error Deleting from GameInstance with id's not in player state");
+	    WHERE PlayerState.GameInstanceId is null",
+            "Error Deleting from GameInstance with id's not in player state");
     echo "Info: " . mysql_affected_rows() . " GameInstance rows deleted for session.<br/>";
 
     echo "-----CleanUpOrphanSessions-----------------------------------<br />";

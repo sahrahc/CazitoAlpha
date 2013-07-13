@@ -1,0 +1,100 @@
+<section id="play-section">
+    <div class="hiddenVariables" >
+        <ul>
+            <li id="userPlayerId"></li>
+            <li id="casinoTableId"></li>
+            <li id="gameSessionId"></li>
+            <li id="isPractice"></li>
+            <li id="gameSessionStart"></li>
+            <li id="gameInstanceId"></li>
+            <li id="gameStatus"></li>
+            <li id="currentDealerId"></li>
+            <li id="nextPlayerId"></li>
+            <!--<li id="nextCommunityCardPosition"></li>-->
+        </ul>
+    </div>
+    <p id="centerMessageId"></p>
+    <ul class="hiddenVariables">
+        <li id="player0Id"></li>
+        <li id="player0Card1"></li>
+        <li id="player0Card2"></li>
+        <li id="player1Id"></li>
+        <li id="player1Card1"></li>
+        <li id="player1Card2"></li>
+        <li id="player2Id"></li>
+        <li id="player2Card1"></li>
+        <li id="player2Card2"></li>
+        <li id="player3Id"></li>
+        <li id="player3Card1"></li>
+        <li id="player3Card2"></li>
+    </ul>
+    <div id ="player0Info" class="playerInfo playerInfoNormal">
+        <p class="playerName" id="player0Name">Empty Seat</p>
+        <img class="avatarImg" id="player0Image" src="../../../images/Avatar_user0.jpeg" />
+        <p class="playerStake" id="player0Stake" >0</p>
+        <p class="playerStatus" id ="player0Status" >Waiting</p>
+    </div>
+    <label class="dealerButton" id="player0DealerButton">D</label>
+    <img class="playerCard player0Card1" id="player0Card1Image" src="../../../images/PokerCard_back_small.png" />
+    <img class="playerCard player0Card2" id="player0Card2Image" src="../../../images/PokerCard_back_small.png" />
+    <!-- default values for markers, only one marker per card -->
+    <img class="cardSmallMarker player0Card1SmallMarker" id="player0Card1Marker" src=""/>
+    <img class="cardSmallMarker player0Card2SmallMarker" id="player0Card2Marker" src=""/>
+    <div id="player1Info" class="playerInfo playerInfoNormal">
+        <p class="playerName" id="player1Name">Empty Seat</p>
+        <img class="avatarImg" id="player1Image" src="../../../images/Avatar_user0.jpeg" />
+        <p class="playerStake" id="player1Stake" ></p>
+        <p class="playerStatus" id ="player1Status" ></p>
+    </div>
+    <label class="dealerButton" id="player1DealerButton">D</label>
+    <img class="playerCard player1Card1" id="player1Card1Image" src="../../../images/PokerCard_back_small.png" />
+    <img class="playerCard player1Card2" id="player1Card2Image" src="../../../images/PokerCard_back_small.png" />
+    <!-- default values for markers, only one marker per card -->
+    <img class="cardSmallMarker player1Card1SmallMarker" id="player1Card1Marker" src=""/>
+    <img class="cardSmallMarker player1Card2SmallMarker" id="player1Card2Marker" src=""/>
+    <div id ="player2Info" class="playerInfo playerInfoNormal">
+        <p class="playerName" id="player2Name">Empty Seat</p>
+        <img class="avatarImg" id="player2Image" src="../../../images/Avatar_user0.jpeg" />
+        <p class="playerStake" id="player2Stake" ></p>
+        <p class="playerStatus" id ="player2Status" ></p>
+    </div>
+    <label class="dealerButton" id="player2DealerButton">D</label>
+    <img class="playerCard player2Card1" id="player2Card1Image" src="../../../images/PokerCard_back_small.png" />
+    <img class="playerCard player2Card2" id="player2Card2Image" src="../../../images/PokerCard_back_small.png" />
+    <!-- default values for markers, only one marker per card -->
+    <img class="cardSmallMarker player2Card1SmallMarker" id="player2Card1Marker" src=""/>
+    <img class="cardSmallMarker player2Card2SmallMarker" id="player2Card2Marker" src=""/>
+    <div id="player3Info" class="playerInfo playerInfoNormal">
+        <p class="playerName" id="player3Name">Empty Seat</p>
+        <img class="avatarImg" id="player3Image" src="../../../images/Avatar_user0.jpeg" />
+        <p class="playerStake" id="player3Stake" ></p>
+        <p class="playerStatus" id ="player3Status" ></p>
+    </div>
+    <label class="dealerButton" id="player3DealerButton">D</label>
+    <img class="playerCard player3Card1" id="player3Card1Image" src="../../../images/PokerCard_back_small.png" />
+    <img class="playerCard player3Card2" id="player3Card2Image" src="../../../images/PokerCard_back_small.png" />
+    <!-- default values for markers, only one marker per card -->
+    <img class="cardSmallMarker player3Card1SmallMarker" id="player3Card1Marker" src=""/>
+    <img class="cardSmallMarker player3Card2SmallMarker" id="player3Card2Marker" src=""/>
+
+    <!-- community cards -->
+    <img id="communityCard0" class="communityCard" src="../../../images/PokerCard_back_small.png" />
+    <img id="communityCard1" class="communityCard" src="../../../images/PokerCard_back_small.png" />
+    <img id="communityCard2" class="communityCard" src="../../../images/PokerCard_back_small.png" />
+    <img id="communityCard3" class="communityCard" src="../../../images/PokerCard_back_small.png" />
+    <img id="communityCard4" class="communityCard" src="../../../images/PokerCard_back_small.png" />
+
+    <!--  user buttons; the default position is user at seat 0 -->
+    <label id="userCallAmount" style="position:absolute;display:none" ></label>
+    <label id="userRaiseAmount" style="position:absolute;display:none" ></label>
+    <input type="submit" id="userRaiseButton" class="userButton player0Raise" onclick="clickRaise()"
+           value="Raise" />
+    <input type="submit" id="userCheckButton" class="userButton player0Check" onclick="clickCheck()"
+           value="Check" />
+    <input type="submit" id="userCallButton" class="userButton player0Call" onclick="clickCall()"
+           value="Call" />
+    <input type="submit" id="userFoldButton" class="userButton player0Fold" onclick="clickFold()" value="Fold" />
+    <label id="seatNumber"></label>
+    <input type="submit" id="takeSeatButton" onclick="takeSeat()" value="Click to take this seat" />
+    <canvas id="playSectionCanvas" height="400" width="642">Your browser does not support the canvas element.</canvas>
+</section>

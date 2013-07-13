@@ -49,15 +49,18 @@
             connect_callback = function(data) {
                 O("outputId").innerHTML = "Connected to queue... <br />";
 
-                client.subscribe("/queue/user2", message_callback);
+                // if user queue created by client
+                //client.subscribe("/queue/user2", message_callback);
+                // if user queue created by server
+                client.subscribe("/amq/queue/user2", message_callback);
 
                 /*client.disconnect(function() {
                  O("outputId").innerHTML = O("outputId").innerHTML + "Disconnected.. \n";
                  }); */
-            }
+            };
 
             client.connect('guest', 'guest', connect_callback, error_callback, '/');
-            O("outputId").innerHTML = O("outputId").innerHTML + '\n Log started...'
+            O("outputId").innerHTML = O("outputId").innerHTML + '\n Log started...';
 
         var currentDate = new Date();
             function sendMessage() {

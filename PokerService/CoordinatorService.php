@@ -4,27 +4,40 @@
  * The coordinator service is a background service that checks for
  * timed events, including servicing the queue
  */
-// Include Libraries
-include_once(dirname(__FILE__) . '/../../libraries/log4php/Logger.php');
-include_once(dirname(__FILE__) . '/../../libraries/helper/DataHelper.php');
+include_once(dirname(__FILE__) . '/Config.php');
 
-// TODO: too much business logic here.
-// Include Application Scripts
-require_once(dirname(__FILE__) . '/Config.php');
-require_once(dirname(__FILE__) . '/Components/QueueManager.php');
-require_once(dirname(__FILE__) . '/Components/CheatingHelper.php');
-include_once(dirname(__FILE__) . '/DomainHelper/AllInclude.php');
-include_once(dirname(__FILE__) . '/DomainModel/AllInclude.php');
-include_once(dirname(__FILE__) . '/Dto/AllInclude.php');
-
-// configure logging
-Logger::configure(dirname(__FILE__) . '/log4php.xml');
-$log = Logger::getLogger("CoordinatorService");
 /*
  * Script run by the scheduled job.
  *
  */
 /* * ***************************************************************************************************** */
+
+/**
+ * Find if message is stale by looking at game session, game instance
+ * This function updates the context with game session and instance 
+ * information.
+ * @param type $params
+ */
+function isValid($playerId, $gameSessionId, $gameInstanceId) {
+    if (!is_null($gameInstanceId)) {
+        $playerStatus = EntityHelper::getPlayerInstance($gameInstanceId, $playerId);
+        if (is_null($playerStatus)) {
+            throw new Exception("Invalid game instance $gameInstanceId for player $playerId");
+        }
+        return true;
+    }
+    $gameSession = EntityHelper::GetGameSession($gameSessionId);
+    if ($gameSession->isPractice) {
+        $playerSession = EntityHelper::getPlayerInstance($gameSessionId, $playerId, true);
+        // there must have been an instance if practice session
+        if (is_null($playerSession)) {
+            throw new Exception("Unknown player $playerId on practice game session $gameSessionId");
+        }
+    } else if (!CasinoTable::IsPlayerOnTableSession($gameSessionId, $playerId)) {
+        throw new Exception("Unknown player $playerId on casino table game session $gameSessionId");
+    }
+    return true;
+}
 
 /**
  * No need for extra cleanup
@@ -40,23 +53,26 @@ function ProcessExpiredPokerMoves() {
     $statusDateTime = date($dateTimeFormat);
 
     $expiredMoves = ExpectedPokerMove::GetExpiredPokerMoves($statusDateTime);
+    if (is_null($expiredMoves)) {
+        return;
+    }
     foreach ($expiredMoves as $move) {
         $gameInstanceId = $move->gameInstanceId;
         $gameInstance = EntityHelper::GetGameInstance($gameInstanceId);
-        $gameSession = EntityHelper::GetGameSession($gameInstance->gameSessionId);
+        $player = EntityHelper::getPlayer($move->playerId);
         // FIXME : should be logged
         // game does not exist or is ended, then remove obsolete expected poker move
-        if (is_null($gameInstance) || !is_null($gameInstance->winningPlayerId)) {
+        if (!is_null($gameInstance) && !is_null($gameInstance->winningPlayerId)) {
             $log->warn(__FUNCTION__ . " - Expected move found for non-existing or ended game instance id " . $gameInstanceId . "<br />");
             $move->Delete();
             // no need to clean up queues, clean up job does it.
             continue;
         }
-        if ($gameSession->isPractice == 1) {
+        if ($player->isVirtual) {
             $practiceSession = EntityHelper::GetGameSession($gameInstance->gameSessionId);
             $playerAction = $practiceSession->generateRandomAction($move);
             $log->warn(__FUNCTION__ . " - Generated PlayerAction is " . json_encode($playerAction) . "<br />");
-            PokerCoordinator::MakePokerMove($playerAction);
+            PokerCoordinator::MakePokerMove($playerAction, false);
         } else {
             $log->warn(__FUNCTION__ . " - Expired move for Game instance " . json_encode($gameInstance));
             //$playerAction = new PlayerAction($gameInstanceId, $playerId, null, $move->expirationDate, null);
@@ -75,43 +91,82 @@ function ProcessExpiredPokerMoves() {
  *      don't remove queue for casino table
  * 
  */
+
 function CleanUpAbandonedPlays() {
     global $playerTimeOut;
     global $instanceTimeOut;
-    global $log;
+    global $waitSessionExpiration;
 
-    $conn = QueueManager::GetQueueConnection();
+    $conn = QueueManager::GetConnection();
     $ch = QueueManager::GetChannel($conn);
     $playerExpiration = new DateTime();
     $playerExpiration->sub(new DateInterval($playerTimeOut)); // 20 minutes
     $instanceExpiration = new DateTime();
     $instanceExpiration->sub(new DateInterval($instanceTimeOut)); // 20 minutes
-    
+    $unusedSessionExpiration = new DateTime();
+    $unusedSessionExpiration->sub(new DateInterval($waitSessionExpiration));
+
     // get list of all abandoned player instances
     $abandonedPlayerStates = PlayerInstance::DeleteExpiredPlayerInstances($playerExpiration);
-    foreach ($abandonedPlayerStates as $player) {
-        $q = QueueManager::GetPlayerQueue($player->id, $ch);
-        QueueManager::PurgeQueue($q);
+
+    if (!is_null($abandonedPlayerStates)) {
+        foreach ($abandonedPlayerStates as $player) {
+            $q = QueueManager::GetPlayerQueue($player->id, $ch);
+            QueueManager::DeleteQueue($q);
+        }
     }
-    
+
     // delete all abandoned game instances including the poker moves
     GameInstance::DeleteExpiredInstances($instanceExpiration);
-    
+
     // delete game sessions and update casino; queues remain
-    $inactiveCasinoTables = CasinoTable::DeleteExpiredGameSessions($instanceExpiration);
-    foreach ($inactiveCasinoTables as $casinoTable) {
-        $q = QueueManager::GetTableQueue($casinoTable->id, $ch);
-        QueueManager::PurgeQueue($q);
+    // FIXME: 
+    $expiredGameSessionIds = CasinoTable::DeleteExpiredGameSessions($instanceExpiration, $unusedSessionExpiration);
+    if (!is_null($expiredGameSessionIds)) {
+        foreach ($expiredGameSessionIds as $gameSessionId) {
+            $q = QueueManager::GetGameSessionQueue($gameSessionId, $ch);
+            QueueManager::DeleteQueue($q);
+        }
     }
 }
 
 /**
- * Checks time and sets items to expired or ended if needed.
+ * Traverses the list of active items and sets status flags such as isActive and isAvailable
+ * Any items that are changed generate an queued event for the change only
+ * Asynchronous - NEEDS TO COMMUNICATE
  */
-function ProcessTimedCheatingItems() {
+function ProcessEndedCheatingItems() {
 
-    CheatingHelper::UpdateEndedItems();
-    CheatingHelper::UpdateUnlockedItems();
+    $endedItems = PlayerActiveItem::GetEndedItems();
+    if (is_null($endedItems)) {
+        return;
+    }
+    foreach ($endedItems as $item) {
+        if ($item->playerSessionId == $item->gameSessionId && $item->playerStatus != PlayerStatusType::LEFT) {
+            $info = "$item->itemType has ended. You may use this again after $item->lockEndDateTime";
+            $messagesOut = array(new CheatOutcomeDto(CheatDtoType::ItemEnd, $info));
+            CheatingHelper::_communicateCheatingOutcome($item->playerId, $messagesOut);
+        }
+        $item->SetItemToInactive();
+    }
+}
+
+/* if locked end reached: delete record          */
+
+function ProcessUnlockedCheatingItems() {
+    $leftStatus = PlayerStatusType::LEFT;
+    $unlockedItems = PlayerActiveItem::GetLockEndedItems();
+    if (is_null($unlockedItems)) {
+        return;
+    }
+    foreach ($unlockedItems as $item) {
+        if ($item->playerSessionId == $item->gameSessionId && $item->playerStatus != $leftStatus) {
+            $info = "$item->itemType is available again.";
+            $messagesOut = array(new CheatOutcomeDto(CheatDtoType::ItemUnlock, $info));
+            CheatingHelper::_communicateCheatingOutcome($item->playerId, $messagesOut);
+        }
+        $item->Delete();
+    }
 }
 
 /* * ***************************************************************************************************** */
@@ -127,41 +182,56 @@ function ProcessTimedCheatingItems() {
  * from this service: endPokerRound, addUser
  */
 function ConsumeTableQueue() {
+    Context::Init();
     // get all the active tables
-    $activeSessionIds = GameSession::GetActiveGameSessionIds();
+    $activeSessionIds = EntityHelper::GetActiveGameSessionIds();
+    if (is_null($activeSessionIds)) {
+        echo "No active game session founds.<br/>";
+        Context::Disconnect();
+        exit;
+    }
     foreach ($activeSessionIds as $activeSessionId) {
-        Context::Init();
         // add casino, session
         // get the queue and all messages for the table
-        $qt = QueueManager::GetGameSessionQueue($activeSessionId);
+        $qt = QueueManager::GetGameSessionQueue($activeSessionId, Context::GetQCh());
         while ($msg = $qt->get(AMQP_AUTOACK)) {
-            $decodedMsg = json_decode($msg, true);
+            $decodedMsg = json_decode($msg->getBody(), true);
             $eventType = $decodedMsg["eventType"];
-            $decodedPar = $decodedMsg["eventData"];
-            $gameSessionId = $decodedPar["gameSessionId"];
-            $requestingPlayerId = $decodedPar["requestingPlayerId"];
+            $gameSessionId = $decodedMsg["gameSessionId"];
+            $requestingPlayerId = $decodedMsg["requestingPlayerId"];
             // the following is optional so it may be null
-            $gameInstanceId = $decodedPar["gameInstanceId"];
+            $gameInstanceId = null;
+            if (isset($decodedMsg["gameInstanceId"])) {
+                $gameInstanceId = $decodedMsg["gameInstanceId"];
+            }
+
+            // request parameter may be a json encoded named-array or a 
+            // scalar.
+            $reqParam = null;
+            if (isset($decodedMsg["eventData"])) {
+                $reqParam = $decodedMsg["eventData"];
+            }
             // ignore stale messages
-            if (isValid($requestingPlayerId, $gameSessionId, $gameInstanceId)) {
+            if (!isValid($requestingPlayerId, $gameSessionId, $gameInstanceId)) {
                 // FIXME: log invalid message
                 continue;
             }
 
             switch ($eventType) {
                 case ActionType::StartGame:
-                    PokerCoordinator::startGame($gameSessionId, $requestingPlayerId);
+                    PokerCoordinator::StartGame($gameSessionId, $requestingPlayerId);
                     break;
                 case ActionType::StartPracticeGame:
-                    PokerCoordinator::startPracticeGame($gameSessionId, $requestingPlayerId);
+                    PokerCoordinator::StartPracticeGame($gameSessionId);
                     break;
                 case ActionType::MakePokerMove:
+                    $requestDto = $reqParam;
                     $playerAction = new PlayerAction(
-                            $gameInstanceId, $requestingPlayerId, $decodedPar['pokerActionType'], $decodedPar['actionTime'], $decodedPar['actionValue']);
-                    PokerCoordinator::makePokerMove($playerAction);
+                            $gameInstanceId, $requestingPlayerId, $requestDto['pokerActionType'], $requestDto['actionTime'], $requestDto['actionValue']);
+                    PokerCoordinator::makePokerMove($playerAction, true);
                     break;
                 case ActionType::TakeSeat:
-                    $seatNumber = $decodedPar["seatNumber"];
+                    $seatNumber = $reqParam;
                     TableCoordinator::SeatUserOnTable($gameSessionId, $seatNumber, $requestingPlayerId);
                     break;
                 case ActionType::LeaveTable:
@@ -174,37 +244,13 @@ function ConsumeTableQueue() {
                     }
                     break;
                 case ActionType::Cheat:
-                    $cheatRequestDto = json_decode($decodedPar);
-                    PokerCoordinator::Cheat($gameSessionId, $requestingPlayerId, $gameInstanceId, $cheatRequestDto);
+                    $cheatRequestDto = $reqParam;
+                    PokerCoordinator::Cheat($gameSessionId, $requestingPlayerId, $cheatRequestDto, $gameInstanceId);
                     break;
             }
         }
         Context::Disconnect();
     }
-
-    /**
-     * Find if message is stale by looking at game session, game instance
-     * This function updates the context with game session and instance 
-     * information.
-     * @param type $params
-     */
-    function isValid($playerId, $gameSessionId, $gameInstanceId) {
-        if ($gameInstanceId) {
-            $playerStatus = EntityHelper::getPlayerInstance($gameInstanceId, $playerId);
-            if (is_null($playerStatus)) {
-                throw new Exception("Invalid game instance $gameInstanceId for player $playerId");
-            }
-            if ($playerStatus && $playerStatus->gameSessionId != $gameSessionId) {
-                throw new Exception("Game Session id $gameSessionId invalid for instance $gameInstanceId and player $playerId");
-            }
-            return true;
-        }
-        $playerStatus = EntityHelper::getPlayerInstance($gameInstanceId, $playerId, true);
-        if (is_null($playerStatus)) {
-            throw new Exception("Unknown player $playerId on game session $gameSessionId");
-        }
-    }
-
 }
 
 /* * ***************************************************************************************************** */

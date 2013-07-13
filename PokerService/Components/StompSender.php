@@ -1,15 +1,5 @@
 <?php
 
-// Include Libraries
-include_once(dirname(__FILE__) . '/../../../libraries/log4php/Logger.php');
-
-// Include Application Scripts
-include_once(dirname(__FILE__) . '/../../../libraries/Helper/DataHelper.php');
-
-// configure logging
-Logger::configure(dirname(__FILE__) . '/../log4php.xml');
-$log = Logger::getLogger(__FILE__);
-
 /* * ********************************************************************** */
 /**
  * Handles SENDs to STOMP
