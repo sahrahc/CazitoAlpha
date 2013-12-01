@@ -1,0 +1,16 @@
+/* Position the major areas. Because of reset, all the sizes must add up*/
+/* layout **************************************************************/
+/* the main part, may be contain left and right frames 
+/* dimensions and positioning for the header and footer on respective css files */
+.region {
+    position: absolute;
+    top: $header-height;
+    height: $region-height;
+    padding: $region-padding-vertical $region-padding-horizontal;
+}
+/* header **************************************************************/
+/* ul on the top area is for session information only hence no display */
+.hiddenVariables {
+    display:none;
+}
+.dialog-modal {display: none;}

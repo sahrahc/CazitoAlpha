@@ -1,0 +1,228 @@
+<!-- There are four parts to the list of cheating items:
+     1) the carousel with a list of images 
+     2) details, which dynamically appear and disappaer
+	2.1) on mouseover, description div: disappears when clicked
+	2.2) on click, action div: detailed name and buttons to activate
+     3) sleeve card (why part of item detail?)
+     4) next part (why part of item detail?)
+-->
+<div id="region-cheating" class="region">
+    <ul id="cheatingCatalogCarousel" class="jcarousel-list jcarousel-skin-tango">
+	<li onmouseover="showDescription('AcePusher');"
+	    onclick="showAction('AcePusher');">
+	    <img class="cheatImg" src="../../../images/cheatItem1.png" 
+		 id="AcePusher" alt="Ace Pusher" /></li>
+	<li onmouseover="showDescription('HeartMarker');"
+	    onclick="showAction('HeartMarker');">
+	    <img class="cheatImg" src="../../../images/cheatItem2.png" 
+		 id="HeartMarker" alt="Heart Marker" /></li>
+	<li onmouseover="showDescription('UseCardOnSleeve');"
+	    onclick="showAction('UseCardOnSleeve');">
+	    <img class="cheatImg" src="../../../images/cheatItem3.png" 
+		 alt="Old Man Chalmers" /></li>
+	<li onmouseover="showDescription('ClubMarker');"
+	    onclick="showAction('ClubMarker');">
+	    <img class="cheatImg" src="../../../images/cheatItem4.png" 
+		 alt="Club Thumb" /></li>
+	<li onmouseover="showDescription('DiamondMarker');"
+	    onclick="showAction('DiamondMarker');">
+	    <img class="cheatImg" src="../../../images/cheatItem5.png" 
+		 alt="Diamond Detector" /></li>
+	<li onmouseover="showDescription('LookRiverCard');"
+	    onclick="showAction('LookRiverCard');">
+	    <img class="cheatImg" src="../../../images/cheatItem6.png" 
+		 alt="River Shuffler" /></li>
+	<li onmouseover="showDescription('PokerPeeker');"
+	    onclick="showAction('PokerPeeker');">
+	    <img class="cheatImg" src="../../../images/cheatItem7.png" 
+		 id="PokerPeeker" alt="Peeker" /></li>
+	<li onmouseover="showDescription('TableTucker');"
+	    onclick="showAction('TableTucker');">
+	    <img class="cheatImg" src="../../../images/cheatItem8.png" 
+		 alt="Table Tucker" /></li>
+	<li onmouseover="showDescription('SocialSpotter');"
+	    onclick="showAction('SocialSpotter');">
+	    <img class="cheatImg" src="../../../images/cheatItem9.png" 
+		 alt="Social Spotters" /></li>
+	<li onmouseover="showDescription('SnakeOilMarker');"
+	    onclick="showAction('SnakeOilMarker');">
+	    <img class="cheatImg" src="../../../images/cheatItem10.png" 
+		 alt="Snake Oil Markers" /></li>
+	<li onmouseover="showDescription('AntiOilMarker');"
+	    onclick="showAction('AntiOilMarker');">
+	    <img class="cheatImg" src="../../../images/cheatItem11.png" 
+		 alt="Liver Crazy Marker" /></li>
+	<li onmouseover="showDescription('FaceMelter');"
+	    onclick="showAction('FaceMelter');">
+	    <img class="cheatImg" src="../../../images/cheatItem12.png" 
+		 alt="Face Melter" /></li>
+    </ul>
+    <div class="cheaterItemDetail">
+        <!-- list 1: item actions are in a div to allow vertical centering -->
+	<div class="cheatingItemAction" id="AcePusher-Act" 
+	     onclick="hideAction('AcePusher');">
+	    <p>Sly McGuffin's Ace Pusher (5,000)</p>
+	    <input id="AcePusher-submit1" type="submit" value="Card 1"
+		   onclick="cheat({itemType:'AcePusher',playerCardNumber:1});" />
+	    <input id="AcePusher-submit2" type="submit" value="Card 2"
+		   onclick="cheat({itemType:'AcePusher',playerCardNumber:2});" />
+	</div>
+	<div class="cheatingItemAction" id="HeartMarker-Act" 
+	     onclick="hideAction('HeartMarker');">
+	    <p>Miss Molly McSneaky's Heart Marker (10,000)</p>
+	    <input id ="HeartMarker-submit" type="submit" value="Apply"
+		   onclick="cheat({itemType:'HeartMarker'});" />
+	</div>
+	<div class="cheatingItemAction" id="UseCardOnSleeve-Act" 
+	     onclick="hideAction('UseCardOnSleeve');">
+	    <p>Old Man Chalmers (50,000)</p>
+	    <p>Drag and drop sleeve card to one of your cards</p>
+	</div>
+	<div class="cheatingItemAction" id="ClubMarker-Act" 
+	     onclick="hideAction('ClubMarker');">
+	    <p>Young Quick Draw Charlie's Club Thumb (15,000)</p>
+	    <input id ="ClubMarker-submit" type="submit" value="Apply"
+		   onclick="cheat({itemType:'ClubMarker'});" />
+	</div>
+	<div class="cheatingItemAction" id="DiamondMarker-Act" 
+	     onclick="hideAction('DiamondMarker');">
+	    <p>Dotty's Diamond Detector (20,000)</p>
+	    <input id ="DiamondMarker-select" type="submit" value="Apply"
+		   onclick="cheat({itemType:'DiamondMarker'});"/>
+	</div>
+	<div class="cheatingItemAction" id="LookRiverCard-Act" 
+	     onclick="hideAction('LookRiverCard');">
+	    <p>Shelvin's Shuffler (100,000)</p>
+	    <input id ="LookRiverCard-input" type="submit" value="Look"
+		   onclick="cheat({itemType:'LookRiverCard'});" />
+	    <img id ="SwapRiverCard-image" class='riverCard' src="" 
+		   onclick="cheat({itemType:'SwapRiverCard'});" />
+	</div>
+	<div class="cheatingItemAction"  id="PokerPeeker-Act" 
+	     onclick="hideAction('PokerPeeker');">
+	    <p>Peter Peester's Poker Peeker (150,000)</p>
+	    <p>Right click on opponent to use this on</p>
+	</div>
+	<div class="cheatingItemAction"  id="TableTucker-Act" 
+	     onclick="hideAction('TableTucker');">
+	    <p>Tommy's Table Tucker (200,000)</p>
+	    <input id ="TableTucker-under" type="submit" value="Load"
+		   onclick="showCardSelector();" />
+	</div>
+	<div class="cheatingItemAction"  id="SocialSpotter-Act" 
+	     onclick="hideAction('SocialSpotter');">
+	    <p>Sally's Social Spotters (250,000)</p>
+	    <input id ="SocialSpotter-select" type="submit" value="Apply"
+		   onclick="cheat({itemType:'SocialSpotter'});" />
+	</div>
+	<div class="cheatingItemAction"  id="SnakeOilMarker-Act" 
+	     onclick="hideAction('SnakeOilMarker');">
+	    <p>Young Doc McSneaky Jr's Snake Oil Markers (750,000)</p>
+	    <input id ="SnakeOilMarker-select" type="submit" value="Apply"
+		   onclick="cheat({itemType:'SnakeOilMarker'});" />
+	</div>
+	<div class="cheatingItemAction"  id="AntiOilMarker-Act" 
+	     onclick="hideAction('AntiOilMarker');">
+	    <p>Old Doc McSneaky Snake Liver Crazy Maker (1,000,000)</p>
+	    <p>Right click on the player you want to use it on</p>
+	</div>
+	<div class="cheatingItemAction"  id="FaceMelter-Act" 
+	     onclick="hideAction('FaceMelter');">
+	    <p>Old Fashioned Face Melter (1,250,000)</p>
+	    <input id ="FaceMelter-select" type="submit" value="Apply"
+		   onclick="cheat({itemType:'FaceMelter'});" />
+	</div>
+	<!-- *************************** descriptions ****************** -->
+        <div class="cheatingItemDesc" id="AcePusher-Desc" 
+	     onclick="hideDescription('AcePusher');">
+            <h5>Sly McGuffin's Ace Pusher (5,000)</h5>
+            <p>Can drop an ace into a player's hand, random suit, removing an 
+		old card into a hidden sleeve. 
+		Warning: TWO ACES MAY APPEAR IN THE SAME HAND!</p>
+	    <p>Drag and drop to one of your hands.</p>
+        </div>
+        <div class="cheatingItemDesc" id="HeartMarker-Desc" 
+	     onclick="hideDescription('HeartMarker');">
+            <h5>Miss Molly McSneaky's Heart Marker (10,0000)</h5>
+            <p>The heart Marker has a symbol on the corner of all hearts in play. 
+		Can be used to determine what suite people have. 
+		Usable every 5 minutes.</p>
+	    <p>Click to use.</p>
+        </div>
+        <div class="cheatingItemDesc" id="UseCardOnSleeve-Desc" 
+	     onclick="hideDescription('UseCardOnSleeve');">
+            <h5>Old Man Chalmers (50,000)</h5>
+            <p>Click to show cards on sleeve.</p>
+        </div>
+        <div class="cheatingItemDesc" id="ClubMarker-Desc" 
+	     onclick="hideDescription('ClubMarker');">
+            <h5>Young Quick Draw Charlie's Club Thumb (15,000)</h5>
+            <p>Knows which cards are Clubs. Can be used once every minute.</p>
+	    <p>Click to use.</p>
+        </div>
+        <div class="cheatingItemDesc" id="DiamondMarker-Desc" 
+	     onclick="hideDescription('DiamondMarker');">
+            <h5>Dotty's Diamond Detector (20,000)</h5>
+            <p>Knows which cards are Diamonds. Can be used once every 3 minutes.</p>
+	    <p>Click to use.</p>
+        </div>
+        <div class="cheatingItemDesc" id="LookRiverCard-Desc" 
+	     onclick="hideDescription('LookRiverCard');">
+            <h5>Shelvin's Shuffler (100,000)</h5>
+            <p>Can look at the river card, and swap the river card with the next 
+		card in the deck once every 10 minutes.</p>
+	    <p>Click to look.</p>
+        </div>
+        <div class="cheatingItemDesc" id="PokerPeeker-Desc" 
+	     onclick="hideDescription('PokerPeeker');">
+            <h5>Peter Peester's Poker Peeker (150,000)</h5>
+            <p>Puffs a gentle draft of air to reveal an opponent's card to a 
+		spotter behind your opponent. Usable once every 15 minutes.</p>
+	    <p>Drag and drop on opponent.</p>
+        </div>
+        <div class="cheatingItemDesc" id="TableTucker-Desc" 
+	     onclick="hideDescription('TableTucker');">
+            <h5>Tommy's Table Tucker (200,000)</h5>
+            <p>Tommy's Table Tucker lets the player slide cards into and out of 
+		the groove under the table. One card every 10 levels. Add card
+		first, then drag and drop added cards to one of your cards.
+		WARNING: CARD DUPLICATES CAN APPEAR.</p>
+	    <p>Click to load cards.</p>
+        </div>
+        <div class="cheatingItemDesc" id="SocialSpotter-Desc" 
+	     onclick="hideDescription('SocialSpotter');">
+            <h5>Sally's Social Spotters (250,000)</h5>
+            <p>Each card that has been seen by the player gets marked. It is 
+		usable once an hour, and lasts for 45 minutes.</p>
+	    <p>Click to use.</p>
+        </div>
+        <div class="cheatingItemDesc" id="SnakeOilMarker-Desc" 
+	     onclick="hideDescription('SnakeOilMarker');">
+            <h5>Young Doc McSneaky Jr's Snake Oil Markers (750,000) Coming Soon</h5>
+            <p>Marks all the cards with dots that are nearly imperceptible, 
+		showing what all the cards are in the game. Players can 
+		substitute this marked deck with the dealer once every 30 
+		minutes until leaving the table.</p>
+	    <p>Click to use.</p>
+        </div>
+        <div class="cheatingItemDesc" id="AntiOilMarker-Desc" 
+	     onclick="hideDescription('AntiOilMarker');">
+            <h5>Old Doc McSneaky Snake Liver Crazy Maker (1,000) Coming Soon</h5>
+            <p>Randomizes someone else's Snake Oil Markers on 50% of the cards. 
+		Usable once every hour and it makes Snake Oil Markers 
+		impossible to detect. NOTE: CAN BE USED ON SELF!</p>
+	    <p>Drag and drop to opponent.</P
+        </div>
+        <div class="cheatingItemDesc" id="FaceMelter-Desc" 
+	     onclick="hideDescription('FaceMelter');">
+            <h5>Old Fashioned Face Melter (1,250,000) Coming Soon</h5>
+            <p>Can be used to push a face card down in the deck when cards are 
+		being dealt and replace them with other cards that are not face 
+		cards. Can choose to prevent other players from getting face 
+		cards, and keep stacked into player's own hand.</p>
+	    <p>Click to use.</p>
+        </div>
+    </div>
+</div>
+<div class="hiddenCard" id="sleeveCards"><p>Sleeve:</p></div>
+<div class="hiddenCard" id="grooveCards"><p>Table Groove:</p></div>

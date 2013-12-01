@@ -1,0 +1,36 @@
+footer#textLinks {
+    //background: url(/themes/Todos/img/footer/bg-footer.png);
+    background-color: $footer-color;
+    height: $footer-height;
+    color: $black;
+    font-size: 0.9em;
+    // need to fix sticky footer: margin-top: -27px;
+    position: absolute;
+    //top: $region-height; //+ $log-height 
+    top: $header-height + $region-height; 
+    width: 100%;
+
+    /* columns in the left hold logo and date*/
+    .left {
+	padding-left: 21px;
+	padding-top: 6px;
+    }
+
+    /*holds text links*/
+    p {
+        margin-top: 0;
+        margin-bottom: 0;
+        padding:0;
+
+        a {
+            display: inline;
+            color: $black;
+            margin: 0 8px;
+            text-decoration: none;
+        }
+        a:hover {
+            color: $red;
+        }
+    }
+
+}

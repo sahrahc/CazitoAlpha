@@ -1,0 +1,213 @@
+
+/** ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ * Initialize board table items to values appropriate before a game starts.
+ * 1) community cards set to hidden, shown number to zero.
+ * 2) all player cards set to hidden
+ * 3) hide dealer button
+ * 4) user status boxes to normal color
+ * 5) center message
+ * 6) player's mesages to none and to normal size and color
+ *
+ */
+function resetBoardItemsDisplay() {
+
+    O('centerMessageId').innerHTML = "";
+
+    S('player0Card1Image').display = 'none';
+    S('player0Card2Image').display = 'none';
+
+    S('player1Card1Image').display = 'none';
+    S('player1Card2Image').display = 'none';
+
+    S('player2Card1Image').display = 'none';
+    S('player2Card2Image').display = 'none';
+
+    S('player3Card1Image').display = 'none';
+    S('player3Card2Image').display = 'none';
+
+    // hide dealer buttons
+    // FIXME: single button, move with CSS class
+    S('player0DealerButton').display = 'none';
+    S('player1DealerButton').display = 'none';
+    S('player2DealerButton').display = 'none';
+    S('player3DealerButton').display = 'none';
+
+    O('player0Info').setAttribute("class", "playerInfo playerInfoNormal");
+    O('player1Info').setAttribute("class", "playerInfo playerInfoNormal");
+    O('player2Info').setAttribute("class", "playerInfo playerInfoNormal");
+    O('player3Info').setAttribute("class", "playerInfo playerInfoNormal");
+
+    O('player0Status').setAttribute("class", "playerStatus");
+    O('player1Status').setAttribute("class", "playerStatus");
+    O('player2Status').setAttribute("class", "playerStatus");
+    O('player3Status').setAttribute("class", "playerStatus");
+
+    // user should be known before a game starts
+    var userTag = getPlayerPositionTag(O('userPlayerId').innerHTML);
+    if (userTag !== null) {
+        O(userTag + 'Info').setAttribute("class", 'playerInfo playerInfoUser');
+    }
+    // display status
+    //O('nextCommunityCardPosition').value = 0;
+
+    // erase any previous message
+    /*
+     O('player0Message').value = "";
+     O('player1Message').value = "";
+     O('player2Message').value = "";
+     O('player3Message').value = "";
+     */
+    O('userRaiseButton').disabled = true;
+    O('userCheckButton').disabled = true;
+    O('userCallButton').disabled = true;
+    O('userFoldButton').disabled = true;
+
+    // everything is hidden
+    S('communityCard0').display = 'none';
+    S('communityCard1').display = 'none';
+    S('communityCard2').display = 'none';
+    S('communityCard3').display = 'none';
+    S('communityCard4').display = 'none';
+
+    hideCardMarkers();
+}
+/** ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ * Set up a new game including user's cards, blind bets, dealer and player statuses
+ * Two types: game is ongoing or not.
+ * START POLLING
+ * 1) start practice session
+ * 2) user joins a table and there is no game in session (blinds, hands and dealer skipped)
+ * 3) user starts new game
+ * 4) polled message returns new game
+ */
+/**
+ * Displays the all the player data in the browser based on playerStatusDtos
+ * @param {type} playerStatusDtos
+ * @returns {undefined}
+ */
+function resetPlayersCardsDisplay(playerStatusDtos) {
+    for (var i = 0, l = playerStatusDtos.length; i < l; i++) {
+        var seatNumber = playerStatusDtos[i].seatNumber;
+        S('player' + seatNumber + 'Card1Image').display = 'block';
+        S('player' + seatNumber + 'Card2Image').display = 'block';
+        O('player' + seatNumber + 'Card1Image').src = "../../../images/PokerCard_back_small.png";
+        O('player' + seatNumber + 'Card2Image').src = "../../../images/PokerCard_back_small.png";
+    }
+    hideCardMarkers();
+}
+
+function displayUserHands(userPlayerHandDto) {
+        var playerElement;  
+        playerElement = getPlayerPositionTag($.cookies.get('userPlayerId'));
+        O(playerElement + 'Card1').innerHTML = gameStatusDto.userPlayerHandDto.pokerCard1Code;
+        O(playerElement + 'Card2').innerHTML = gameStatusDto.userPlayerHandDto.pokerCard2Code;
+        showPlayerCard(playerElement, 1, gameStatusDto.userPlayerHandDto.pokerCard1Code);
+        showPlayerCard(playerElement, 2, gameStatusDto.userPlayerHandDto.pokerCard2Code);
+ 
+        // enable cheating items
+        disableInstanceItems(true);
+}
+
+function displayDealer() {}
+/**
+ * Sets up the entire table based on game status
+ * @param {GameStatusDto} gameStatusDto
+ * @returns {undefined}
+ */
+function setupTable(gameStatusDto) {
+    // active game portion
+    O('gameInstanceId').innerHTML = gameStatusDto.gameInstanceId;
+
+    // update everyone's statuses, which should include the blind bets
+    resetPlayersCardsDisplay(gameStatusDto.playerStatusDtos);
+    setupPlayerStatuses(gameStatusDto.playerStatusDtos);
+
+     if (gameStatusDto.userPlayerHandDto !== null) {
+        var playerElement;  
+        playerElement = getPlayerPositionTag($.cookies.get('userPlayerId'));
+        O(playerElement + 'Card1').innerHTML = gameStatusDto.userPlayerHandDto.pokerCard1Code;
+        O(playerElement + 'Card2').innerHTML = gameStatusDto.userPlayerHandDto.pokerCard2Code;
+        showPlayerCard(playerElement, 1, gameStatusDto.userPlayerHandDto.pokerCard1Code);
+        showPlayerCard(playerElement, 2, gameStatusDto.userPlayerHandDto.pokerCard2Code);
+ 
+        // enable cheating items
+        disableInstanceItems(true);
+    }
+    // check is disabled when a game first starts
+    if (gameStatusDto.nextMoveDto !== null) {
+        processNextPlayer(gameStatusDto.nextMoveDto, false);
+    }
+    // dealer designation
+    var dealerPlayerTag = getPlayerPositionTag(gameStatusDto.dealerPlayerId);
+    //O('dealerPlayerId').innerHTML = resp.dealerPlayerId;
+    O('currentDealerId').innerHTML = gameStatusDto.dealerPlayerId;
+    // show dealer button
+
+    S(dealerPlayerTag + 'DealerButton').display = 'block';
+
+}
+
+/********************************************************************************************/
+/**
+ * Show the back of game cards for only the players who are actively in the game
+ */
+function hideCardMarkers() {
+    S('player0Card1Marker').display = 'none';
+    S('player0Card2Marker').display = 'none';
+
+    S('player1Card1Marker').display = 'none';
+    S('player1Card2Marker').display = 'none';
+
+    S('player2Card1Marker').display = 'none';
+    S('player2Card2Marker').display = 'none';
+
+    S('player3Card1Marker').display = 'none';
+    S('player3Card2Marker').display = 'none';
+	
+}
+
+/********************************************************************************************/
+/*
+ * Update player data - this is not to be used for players who left the table
+ */
+function updatePlayerStatus(playerStatusDto) {
+    
+    
+    foldPlayerCards = function(playerId) {
+    var playerTag = getPlayerPositionTag(playerId);
+    S(playerTag + 'Card1Image').display = 'none';
+    S(playerTag + 'Card2Image').display = 'none';
+	
+    };
+
+    // updates status
+    var playerPosition = playerStatusDto.seatNumber;
+    O('player' + playerPosition + 'Stake').innerHTML = playerStatusDto.stake;
+    O('player' + playerPosition + 'Status').innerHTML = playerStatusDto.status;
+    if (playerStatusDto.status === "Folded" || playerStatusDto.status === "Left") {
+        foldPlayerCards(playerStatusDto.playerId);
+    }
+    else {
+        O('player' + playerPosition + 'Id').innerHTML = playerStatusDto.playerId;
+        if (playerStatusDto.playerName !== null) {
+            O('player' + playerPosition + 'Name').innerHTML = playerStatusDto.playerName;
+        }
+        O('player' + playerPosition + 'Image').innerHTML = playerStatusDto.playerImageUrl;
+        if (playerStatusDto.status === "Called" || playerStatusDto.status === "Raised") {
+            O('player' + playerPosition + 'Status').innerHTML = playerStatusDto.status + ' ' + playerStatusDto.playAmount;
+        }
+    }
+}
+
+/*-------------------------------------------------------------------------------------------
+ * Update the player statuses data on the browser; used both when there is an ongoing game or
+ * when a user joins a table.
+ */
+function setupPlayerStatuses(playerStatusDtos) {
+    var playerCount = playerStatusDtos.length;
+    for (var i=0; i<playerCount; i++) {
+        if (playerStatusDtos[i].seatNumber !== null) {
+            updatePlayerStatus(playerStatusDtos[i]);
+        }
+    }
+}

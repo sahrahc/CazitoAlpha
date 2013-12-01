@@ -1,0 +1,35 @@
+/*!
+*/
+@import 'core/sizes';
+@import 'core/colors';
+@import 'core/fonts';
+@import 'core/footer';
+@import 'core/header';
+@import 'core/html';
+@import 'core/layout';
+@import 'core/messaging';
+@import 'core/onlineFriends';
+@import 'core/pokerPlay';
+
+/*!
+* Line break
+*/
+// Include the external files/plugins
+
+@import 'plugins/jcarousel-skin-tango';
+@import 'plugins/jquery-ui-popup';
+@import 'plugins/reset';
+@import 'plugins/skin-cazito';
+@import 'plugins/cardItems-skin';
+@import 'plugins/cheatingItems-skin';
+
+/*!
+* Line break
+*/
+/**
+* Page specific CSS
+*/
+@import 'pages/home';
+@import 'pages/frontStreet';
+@import 'pages/cheatingSection';
+

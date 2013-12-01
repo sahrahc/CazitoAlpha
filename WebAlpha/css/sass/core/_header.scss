@@ -1,0 +1,36 @@
+header#main {
+    //background: url(/themes/Todos/img/header/bg-header.png) 0 0 repeat-x;
+    position: relative; // allows contained elements to be absolute
+    vertical-align: middle;
+    height: $header-height;
+    background-color:khaki;
+    padding: 0;
+    z-index:101;
+    // 'a' and 'img' the logo is the first of two elements in the header
+    a {
+	float: left;
+    }
+    img {
+	padding: 5px;
+	width: $logo-width; 
+	height: $header-height - 10px;
+    }
+    .greetings {
+	float: left;
+	//display: none; //display:block;
+	position: relative;
+	width: 400px;
+	padding-top: 8px;
+    }
+    nav {
+	float: right;
+	li {
+	  width: 80px;  
+	  display:inline;//none; // inline
+	}
+    }
+}
+
+// dialogs are all closed to start
+#dialog-login { display:none;}
+#dialog-register {display:none;}

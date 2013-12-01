@@ -1,0 +1,29 @@
+/* 
+    Document   : home
+    Created on : Jun 19, 2013, 4:07:20 PM
+    Author     : cazito
+    Description:
+        Purpose of the stylesheet follows.
+*/
+#region-choices {
+    width: $region-main-width;
+    left: $region-social-width;  
+        z-index:-1;
+    background-image:url('../../../images/window-bg.png');
+    background-repeat:no-repeat;
+    border-style: outset;
+    border-color: green;
+    border-width:2px;
+    /* center the options */
+    table {
+	margin: 0 auto;
+	td {
+	    height: 70px;
+	    width: 240px; 
+	    input { height: 96%;
+	    width: 98%;
+	    white-space: normal;
+	    text-align: center;}
+	}
+    }
+}

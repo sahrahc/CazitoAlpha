@@ -1,0 +1,21 @@
+// common elements
+body {
+    font-size: 12px;
+    //background: $color-body;
+    h1 {
+	font-size: 200%;
+	color: $cazito-color;
+    }
+    h2 {
+	font-size: 120%;
+    }
+    h5 {
+	font-size: 100%;
+	font-weight: bold;
+    }
+    strong {
+	font-weight:bold;
+    }
+    a:active {color: lime}
+}
+
