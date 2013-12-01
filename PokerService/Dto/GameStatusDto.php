@@ -15,7 +15,7 @@ class GameStatusDto {
     public $nextPlayerId;
     public $userPlayerId; // because request had the name only, not the id
     public $userSeatNumber; // for a user who just joins a table
-    public $userPlayerHand; // if a user is returning after closing browser
+    public $userPlayerHandDto; // if a user is returning after closing browser
     public $communityCards;
     public $playerStatusDtos;
     public $gameResultDto;

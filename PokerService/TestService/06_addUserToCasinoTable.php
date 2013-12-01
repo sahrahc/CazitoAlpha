@@ -26,7 +26,12 @@ mysql_query("Delete from PlayerState");
 echo '******************************************************<br />';
 
 echo 'TEST CASE 6.1: unknown player MM with new table<br />';
-$par = json_encode(array("casinoTableId"=>null, "playerName"=>"MM", "tableSize"=>null));
+$par = json_encode(array("playerName"=>"MM"));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>null, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
 $gameStatusDto = addUserToCasinoTable($par);
 showGameStatusDto($par, $gameStatusDto);
 
@@ -34,24 +39,31 @@ echo '****************************************************** <br />';
 echo 'TEST: 6.2 known player MM with known casino table 1 should not create duplicates. <br />';
 // anonymous
 
-$par = json_encode(array("casinoTableId"=>$casinoTableId1, "playerName"=>"MM", "tableSize"=>null));
+$par = json_encode(array("casinoTableId"=>$casinoTableId1, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
 $gameStatusDto = addUserToCasinoTable($par);
 showGameStatusDto($par, $gameStatusDto);
 
 
 echo '****************************************************** <br />';
 echo 'TEST 6.3: second unknown player NN with known casino 1 <br />';
-// anonymous
-$par = json_encode(array("casinoTableId"=>$casinoTableId1, "playerName"=>"NN", "tableSize"=>null));
+$par = json_encode(array("playerName"=>"NN"));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId2 = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>$casinoTableId1, "userPlayerId"=>$userPlayerId2, "tableSize"=>null));
 $gameStatusDto = addUserToCasinoTable($par);
 showGameStatusDto($par, $gameStatusDto);
 
 
 echo '****************************************************** <br />';
 echo 'TEST 6.4: third unknown player OO with unknown casino 2 <br />';
-// anonymous
+$par = json_encode(array("playerName"=>"OO"));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId3 = $user->userPlayerId;
 
-$par = json_encode(array("casinoTableId"=>$casinoTableId2, "playerName"=>"OO", "tableSize"=>null));
+$par = json_encode(array("casinoTableId"=>$casinoTableId2, "userPlayerId"=>$userPlayerId3, "tableSize"=>null));
 $gameStatusDto = addUserToCasinoTable($par);
 showGameStatusDto($par, $gameStatusDto);
 
@@ -59,7 +71,7 @@ echo '****************************************************** <br />';
 echo 'TEST 6.5: move third player OO with to casino 1 <br />';
 // anonymous
 
-$par = json_encode(array("casinoTableId"=>$casinoTableId1, "playerName"=>"OO", "tableSize"=>null));
+$par = json_encode(array("casinoTableId"=>$casinoTableId1, "userPlayerId"=>$userPlayerId3, "tableSize"=>null));
 $gameStatusDto = addUserToCasinoTable($par);
 showGameStatusDto($par, $gameStatusDto);
 
@@ -69,7 +81,8 @@ echo 'TEST CASE 6.6: start a new game instance for casino 1 <br />';
 $gameStatusDecoded = json_decode($gameStatusDto);
 $par = json_encode(array("gameSessionId"=>$gameStatusDecoded->gameSessionId,
     "requestingPlayerId"=>$gameStatusDecoded->userPlayerId,
-    "isPractice"=>0, "tableSize"=>null));
+    "isPractice"=>0,
+    "tableSize"=>null));
 echo "Parameter: $par <br />";
 $gameInstanceSetupDto = startGame($par);
 showGameInstanceSetupValues($par, $gameInstanceSetupDto);
@@ -78,7 +91,8 @@ echo '****************************************************** <br />';
 echo 'TEST CASE 6.7: restart a new game instance for casino 1 <br />';
 $par = json_encode(array("gameSessionId"=>$gameStatusDecoded->gameSessionId,
     "requestingPlayerId"=>$gameStatusDecoded->userPlayerId,
-    "isPractice"=>0, "tableSize"=>null));
+    "isPractice"=>0,
+    "tableSize"=>null));
 echo "Parameter: $par <br />";
 $gameInstanceSetupDto = startGame($par);
 showGameInstanceSetupValues($par, $gameInstanceSetupDto);

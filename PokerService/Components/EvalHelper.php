@@ -11,8 +11,9 @@ Logger::configure(dirname(__FILE__) . '/../log4php.xml');
 $log = Logger::getLogger(__FILE__);
 
 /* * ********************************************************************** */
-/* Helper functions for poker card management */
-
+/**
+ * Poker evaluator helper functions. All functions in this class are static.
+ */
 class EvalHelper {
 
     private static $log = null;
@@ -23,42 +24,45 @@ class EvalHelper {
         return self::$log;
     }
 
-    public static function dealAllCards($numberPlayers) {
+    /**
+     * Get a deck of 52 cards randomly shuffled for use in a game. There is an index value for the card order after shuffling. This original order may be changed at the seedy saloon.
+     * @return PokerCard array
+     */
+    public static function shuffleDeck() {
         // FIXME: cache these!
         $DECK = self::init_deck();
 
-        // total number of cards is 2* number of players + five community cards
-        $totalCards = 2 * $numberPlayers + 5;
         $indexArray = range(1, 52);
         shuffle($indexArray);
-        /* self::log()->Debug(__FUNCTION__ . " - *** The shuffled deck is: ");
-          foreach ($indexArray as $number) {
-          self::log()->Debug(__FUNCTION__ . " - ***     $number ");
-          }
-         */
-        // already shuffled, take the top $totalCards
-        $cardIndex = array();
-        for ($i = 0; $i < $totalCards; $i++) {
-            $cardIndex = array_merge($cardIndex, array($indexArray[$i]));
-        }
-        self::log()->Debug(__FUNCTION__ . " - *** The picked cards are: ");
-        foreach ($cardIndex as $number) {
-            self::log()->Debug(__FUNCTION__ . " - ***     $number ");
-        }
-        for ($i = 0; $i < $totalCards; $i++) {
-            $card[$i] = self::findCardName($DECK[$cardIndex[$i]]);
-            $returnList[$i] = new PokerCard($i+1, $cardIndex[$i], $card[$i]);
+        for ($i = 1; $i <= 52; $i++) {
+            
+            $cardCode = self::findCardCode($DECK[$indexArray[$i-1]]);
+
+            $returnList[$i] = new PokerCard(null, $i, $cardCode);
+            $returnList[$i]->cardIndex = $indexArray[$i-1];
         }
         return $returnList;
     }
 
     /**
-     * Given a group of 7 cards, return the hand category & rank. Let pCards be (a pointer to) an array of seven integers, each with a value between 1 and 52.
-     * @param type $pCards
+     * Given the list of card codes, identify the hand
+     * @param type $cardCodes
+     * @return string
+     */
+    public static function evalHand($cardCodes) {return "2 Pair";}
+
+    /**
+     * 2+2 EVALUATOR ONLY
+     * Given a group of 7 cards, return the hand info. Let pCards be (a pointer to) an array of seven integers, each with a value between 1 and 52.
+     * FIXME: This function is to be replaced by a system that calculates hands first
+     * and then compares relative values if the hands are the same.
+     * @param type $pCards: array of integers range 1-52 which represent a card value in 2+2 Poker Evaluator
      * @return type
      */
     public static function getHandValue($pCards) {
+        global $dbName;
         $con = connectToStateDB();
+        mysql_select_db('cazito5_sprint3', $con);
         $p = 53;
         for ($i = 0; $i < 7; $i++) {
             self::log()->Debug(__FUNCTION__ . " - card index $i: " . $pCards[$i]);
@@ -73,10 +77,12 @@ class EvalHelper {
             $p = $row["v"];
             self::log()->Debug(__FUNCTION__ . " - retrieved value is: $p");
         }
+        mysql_select_db($dbName, $con);
         return $p;
     }
 
     /**
+     * 2+2 EVALUATOR ONLY
      * Find the name of the hand category
      * @param type $handCategory
      * @return type
@@ -107,6 +113,13 @@ class EvalHelper {
          */
     }
 
+    /**
+     * 2+2 EVALUATOR ONLY
+     * Simulates an unsigned right shift in PHP which is a bitwise operation not natively supported.
+     * @param type $integerValue
+     * @param type $shiftBy
+     * @return type
+     */
     public static function urshift($integerValue, $shiftBy) {
         return ($integerValue >= 0) ? ($integerValue >> $shiftBy) :
                 (($integerValue & 0x7fffffff) >> $shiftBy) |
@@ -116,6 +129,7 @@ class EvalHelper {
     /*     * ********************************************************************** */
 
     /**
+     * 2+2 EVALUATOR ONLY
      * ported from array.h
      * #define	RANK(x)		((x >> 8) & 0xF)
      * @param type $x
@@ -176,6 +190,11 @@ class EvalHelper {
 //   b = bit turned on depending on rank of card
 //
 // JMD: added "void" return type
+    /**
+     * 2+2 EVALUATOR ONLY
+     *
+     * @return type 
+     */
     public static function init_deck() {
         $n = 1;
         $suit = 0x8000;
@@ -211,21 +230,21 @@ class EvalHelper {
 // ported from pokerlib.cpp
 // slightly modified to print rank and suite for single card not an entire hand
 // returns string value in suit underscore rank format (e.g., 'spades_7')
-    private static function findCardName($deckValue) {
-        $rank = array('2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A');
+    private static function findCardCode($deckValue) {
+        $rank = array('2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A');
 
         //$r = ($deckValue >> 8) & 0xF;
         $r = (self::urshift($deckValue, 8)) & 0xF;
         if ($deckValue & 0x8000)
-            $suit = 'clubs';
+            $suit = 'c';
         else if ($deckValue & 0x4000)
-            $suit = 'diamonds';
+            $suit = 'd';
         else if ($deckValue & 0x2000)
-            $suit = 'hearts';
+            $suit = 'h';
         else
-            $suit = 'spades';
+            $suit = 's';
 
-        return $suit . '_' . $rank[$r];
+        return $rank[$r] . $suit;
     }
 
 }

@@ -30,27 +30,28 @@ class GameInstanceStatus {
     public $lastInstancePlayNumber;    // updated by PlayerMove
     public $winningPlayerId;
     public $gameInstanceSetup;
-    private $log;
     public $playerHands;
-    
+    private $log;
+
     public function __construct($id) {
         $this->log = Logger::getLogger(__CLASS__);
         $this->id = $id;
     }
 
     /*     * ***************************************************************************** */
-    /* private methods */
+    /* instance cards and hands */
 
     /**
      * Only used once, to get all the cards in order to identify the winner and publish everyone's hands at the end of the game.
-     * @return GameCards
-     */
-    public function getAllGameCards() {
+     * @return GameCards 
+    */
+    public function getInstanceGameCards() {
         // get all the cards, order with community cards first.
         $result = executeSQL("SELECT g.*, ps.status AS Status FROM GameCard g 
                 LEFT JOIN PlayerState ps ON g.GameInstanceId = ps.GameInstanceId
                 AND g.PlayerId = ps.PlayerId WHERE g.GameInstanceId = $this->id
-                ORDER BY g.PlayerId, CardNumber", __FUNCTION__ . "
+                AND g.playerId is not null
+                ORDER BY g.PlayerId, PlayerCardNumber", __FUNCTION__ . "
                 : Error selecting all GameCard for instance id $this->id");
 
         // initialize
@@ -58,29 +59,34 @@ class GameInstanceStatus {
         $ccIndex = 0;     // index on array of community cards
         $playerHands = null;
         $communityCards = null;
-
-        // instantiate objects to be returned with the data
+        $prevPlayerId = null;
+        // this won't work if $result is not sorted by playerid
         while ($rowCard = mysql_fetch_array($result)) {
             if ($rowCard["PlayerId"] == -1) {
                 // process community cards
-                $communityCards[$ccIndex++] = new PokerCard($rowCard['CardNumber'],
-                                $rowCard['CardIndex'], $rowCard['CardName']);
+                $communityCards[$ccIndex] = new PokerCard($rowCard['PlayerCardNumber'],
+                                $rowCard['DeckPosition'], $rowCard['CardCode']);
+                $communityCards[$ccIndex++]->cardIndex = $rowCard['CardIndex'];
             } else if ($rowCard["Status"] != PlayerStatusType::FOLDED &&
-                    $rowCard["Status"] != PlayerStatusType::LEFT) {
+                  $rowCard["Status"] != PlayerStatusType::LEFT) {
                 // one entity for both cards.
-                if ($rowCard['CardNumber'] == 1) {
+                if (is_null($prevPlayerId) || $prevPlayerId != $rowCard["PlayerId"]) {
+                    $playerIndex = is_null($prevPlayerId) ? 0 : $playerIndex + 1;
+                    // Not validating playercardnumber, in poker there is only two
+                    // and the insert needs to make sure the values are only 1 and 2 and
+                    // both are present. Anything else is data becoming corrupted.
                     $playerHands[$playerIndex] = new PlayerHand($rowCard['PlayerId'],
-                                    new PokerCard($rowCard['CardNumber'],
-                                            $rowCard['CardIndex'], $rowCard['CardName']),
-                                    null);
+                                    new PokerCard($rowCard['PlayerCardNumber'],
+                                            $rowCard['DeckPosition'], $rowCard['CardCode']), null);
+                    $playerHands[$playerIndex]->pokerCard1->cardIndex = $rowCard['CardIndex'];
                 } else {
                     $playerHands[$playerIndex]->pokerCard2 = new PokerCard(
-                                    $rowCard['CardNumber'], $rowCard['CardIndex'],
-                                    $rowCard['CardName']);
-                    ;
+                                    $rowCard['PlayerCardNumber'], $rowCard['DeckPosition'],
+                                    $rowCard['CardCode']);
+                    $playerHands[$playerIndex]->pokerCard2->cardIndex = $rowCard['CardIndex'];
                     // increase index when second and last card is found
-                    $playerIndex++;
                 }
+                $prevPlayerId = $rowCard["PlayerId"];
             }
         }
 
@@ -88,8 +94,45 @@ class GameInstanceStatus {
     }
 
     /**
+     * Returns player hand Dtos.
+     * @return PlayerHandDto
+     */
+    function getInstancePlayerHandDtos() {
+        $result = executeSQL("SELECT gc.*, HandType, HandInfo, HandCategory,
+                HandRankWithinCategory
+                FROM GameCard gc INNER JOIN PlayerState ps
+                ON gc.GameInstanceId = ps.GameInstanceId AND gc.PlayerId = ps.PlayerId
+                WHERE gc.gameInstanceId = $this->id AND gc.PlayerId > -1
+                ORDER BY gc.PlayerId, gc.PlayerCardNumber", __FUNCTION__ . "
+                : Error selecting from player state with instance id $this->id");
+        $playerHandDtos = null;
+        $counter = 0;
+        while ($row = mysql_fetch_array($result)) {
+            $playerId = $row["PlayerId"];
+            $pokerCard1Dto = new PokerCardDto($row["PlayerCardNumber"], $row["CardCode"]);
+            // get second card within the loop
+            $row = mysql_fetch_array($result);
+            $pokerCard2Dto = new PokerCardDto($row["PlayerCardNumber"], $row["CardCode"]);
+
+            $playerHandDtos[$counter] = new PlayerHandDto($playerId, $pokerCard1Dto, $pokerCard2Dto);
+            $playerHandDtos[$counter]->pokerHandType = $row["HandType"];
+            $playerHandDtos[$counter]->handInfo = $row["HandInfo"];
+            $playerHandDtos[$counter]->handCategory = $row["HandCategory"];
+            $playerHandDtos[$counter]->rankWithinCategory = $row["HandRankWithinCategory"];
+            if ($this->winningPlayerId == $playerId) {
+                $playerHandDtos[$counter]->isWinningHand = 1;
+            } else {
+                $playerHandDtos[$counter]->isWinningHand = 0;
+            }
+            $counter++;
+        }
+        return $playerHandDtos;
+    }
+
+    /**
      * Updates all calculated player hands portion of the PlayerStates, part of finding the winner.
-     * @param array(PlayerHand) $playerHands
+     * @param type $playerHands
+     * @param type $statusDT 
      */
     private function updateStatePlayerHands($playerHands, $statusDT) {
         for ($i = 0; $i < count($playerHands); $i++) {
@@ -108,7 +151,7 @@ class GameInstanceStatus {
     /**
      * Evalate whether community cards need to be dealt on table based on turns.
      */
-    private function dealCommunityCards($actionPlayerId, $playerPlayNumber) {
+    private function dealGetCommunityCardDtos($actionPlayerId, $pPlayNum) {
         // fold
         $previousNumberCards = $this->numberCommunityCardsShown;
         $numberCards = $previousNumberCards;
@@ -135,7 +178,7 @@ class GameInstanceStatus {
         }
         // get the new cards if more this time.
         if ($previousNumberCards != $numberCards) {
-            $allCards = CardHelper::getCommunityCards($this->id, $numberCards);
+            $allCards = CardHelper::getCommunityCardDtos($this->id, $numberCards);
             $length = $numberCards == 3 ? 3 : 1;
             $cardsToSend = array_slice($allCards, $previousNumberCards, $length);
         }
@@ -143,20 +186,23 @@ class GameInstanceStatus {
         return $cardsToSend;
     }
 
+    /*     * ***************************************************************************** */
+    /* update instance status */
+
     /**
      * When a game is first started, the dealer and blinds are identified based on the dealer of the last instance.
      * Must be called after turns reset.
      * @param array(int, int) blindAmts The size of the small and large blinds.
      * @param int $lastDealerSN
-     * @param PlayerInstanceStatus[] $playerStatuses The index is the turn number because reset makes them so.
+     * @param PlayerInstanceStatus[] $pStatuses The index is the turn number because reset makes them so.
      * @param timestamp statusDT
-     * @return blindBets[Bet, Bet]
+     * @return blindBets[BetDto, Bet]
      */
-    function saveInstanceWithDealerAndBlinds($blindAmts, $lastDealerSN, $playerStatuses, $statusDT) {
+    function saveInstanceWithDealerAndBlinds($blindAmts, $lastDealerSN, $pStatuses, $statusDT) {
         $blind1 = $blindAmts[0];
         $blind2 = $blindAmts[1];
 
-        $count = count($playerStatuses);
+        $count = count($pStatuses);
         $dealerTurn = 0 % $count;
         $blind1Turn = 1 % $count;
         $blind2Turn = 2 % $count;
@@ -177,12 +223,12 @@ class GameInstanceStatus {
                 WHERE GameInstanceId = $this->id AND TurnNumber = $blind2Turn", __FUNCTION__ . ": Error updating PlayerState second blind bet instance
                 $this->id ");
 
-        $blindBets = array(new Bet($playerStatuses[$blind1Turn]->playerId, $blind1),
-            new Bet($playerStatuses[$blind2Turn]->playerId, $blind2));
+        $blindBets = array(new BetDto($pStatuses[$blind1Turn]->playerId, $blind1),
+            new BetDto($pStatuses[$blind2Turn]->playerId, $blind2));
 
-        $this->nextPlayerId = $playerStatuses[$nextPlayerTurn]->playerId;
+        $this->nextPlayerId = $pStatuses[$nextPlayerTurn]->playerId;
         $this->nextTurnNumber = $nextPlayerTurn;
-        $this->gameInstanceSetup->dealerPlayerId = $playerStatuses[$dealerTurn]->playerId;
+        $this->gameInstanceSetup->dealerPlayerId = $pStatuses[$dealerTurn]->playerId;
         $this->gameInstanceSetup->dealerTurnNumber = $dealerTurn;
         $this->gameInstanceSetup->firstPlayerId = $this->nextPlayerId;
 
@@ -208,15 +254,15 @@ class GameInstanceStatus {
      * Updates GameInstance and PlayerState with the results of the action.
      * @param type $statusDT
      */
-    function followUpPlayerTurn($nextPokerMove, $actionPlayerId, $playerPlayNumber, $statusDT) {
-        $playerActionResultDto = new PlayerActionResultDto($nextPokerMove);
+    function followUpPlayerTurn($nextPMove, $actionPlayerId, $pPlayNum, $statusDT) {
+        $playerActionResultDto = new PlayerActionResultDto($nextPMove);
 
         // get game end
-        if ($nextPokerMove->isEndGameNext) {
+        if ($nextPMove->isEndGameNext) {
             $playerActionResultDto->gameResultDto = $this->findWinnerGetResult($statusDT);
         }
         // update the community cards
-        $playerActionResultDto->cardsToSend = $this->dealCommunityCards($actionPlayerId, $playerPlayNumber);
+        $playerActionResultDto->cardsToSend = $this->dealGetCommunityCardDtos($actionPlayerId, $pPlayNum);
         $this->numberCommunityCardsShown +=
                 count($playerActionResultDto->cardsToSend);
 
@@ -238,44 +284,13 @@ class GameInstanceStatus {
         return $playerActionResultDto;
     }
 
-    function getGameInstanceHands() {
-        $result = executeSQL("SELECT gc.*, HandType, HandInfo, HandCategory, 
-                HandRankWithinCategory
-                FROM GameCard gc INNER JOIN PlayerState ps
-                ON gc.GameInstanceId = ps.GameInstanceId AND gc.PlayerId = ps.PlayerId
-                WHERE gc.gameInstanceId = $this->id
-                AND gc.PlayerId > -1 ORDER BY gc.PlayerId, gc.CardNumber", __FUNCTION__ . "
-                : Error selecting from player state with instance id $this->id");
-        $playerHands = null;
-        $counter = 0;
-        while ($row=mysql_fetch_array($result)) {
-            $playerId = $row["PlayerId"];
-            $pokerCard1 = new PokerCard($row["CardNumber"], $row["CardIndex"], $row["CardName"]);
-
-            // get second card within the loop
-            $row = mysql_fetch_array($result);
-            $pokerCard2 = new PokerCard($row["CardNumber"], $row["CardIndex"], $row["CardName"]);
-
-            $playerHands[$counter] =  new PlayerHand($playerId, $pokerCard1, $pokerCard2);
-            $playerHands[$counter]->pokerHandType = $row["HandType"];
-            $playerHands[$counter]->handInfo = $row["HandInfo"];
-            $playerHands[$counter]->handCategory = $row["HandCategory"];
-            $playerHands[$counter]->rankWithinCategory = $row["HandRankWithinCategory"];
-            if ($this->winningPlayerId == $playerId){
-                $playerHands[$counter]->isWinningHand = 1;
-            }
-            else { $playerHands[$counter]->isWinningHand = 0;}
-            $counter++;
-        }
-        return $playerHands;
-    }
-
     /**
      * Find the winner and everyone's hands at the end of the game.
-     * @return GameResultDto
+     * @param type $statusDT
+     * @return GameResultDto 
      */
     function findWinnerGetResult($statusDT) {
-        $gameCards = $this->getAllGameCards();
+        $gameCards = $this->getInstanceGameCards();
         $playerHands = $gameCards->playerHands;
 
         $hH = new HighestHand(); // holds the highest hand found when traversing the players
@@ -321,13 +336,21 @@ class GameInstanceStatus {
                 $hH->winningPlayerId AND GameInstanceId = $this->id", __FUNCTION__ . "
                 : ERROR updating PlayerState instance id $this->id");
 
-        $gameResult = new GameResultDto($playerHands, $hH->winningPlayerId, $this->id);
+        $playerHandsDto = PlayerHandDto::mapPlayerHands($playerHands);
+        $gameResult = new GameResultDto($playerHandsDto, $hH->winningPlayerId, $this->id);
+        /* --------------------------------------------------------------------- */
+        /* mark cards that are to be seen if item is enabled */
+        CheatingHelper::markGameCards($this);
         /* --------------------------------------------------------------------- */
         return $gameResult;
     }
 
     /**
      * Gets the game result if ended
+     */
+    /**
+     *
+     * @return GameResultDto 
      */
     function getGameResult() {
         if (is_null($this->winningPlayerId)) {
@@ -358,7 +381,7 @@ class GameInstanceStatus {
             }
         } else {
             $casinoTable = EntityHelper::getCasinoTableForSession($this->gameInstanceSetup->gameSessionId);
-            $playerInstances = $casinoTable->loadPlayers();
+            $playerInstances = $casinoTable->getCasinoPlayerDtos();
         }
         for ($i = 0; $i < count($playerInstances); $i++) {
 
@@ -366,10 +389,10 @@ class GameInstanceStatus {
                 continue;
             }
             $message = new EventMessage($this->gameInstanceSetup->gameSessionId,
-                    $playerInstances[$i]->playerId, $actionType, $this->lastUpdateDateTime,
-                                $playerActionResultDto);
-                //$message->eventData = $playerActionResultDto;
-                queueMessage($playerInstances[$i]->playerId, json_encode($message));
+                            $playerInstances[$i]->playerId, $actionType, $this->lastUpdateDateTime,
+                            $playerActionResultDto);
+            //$message->eventData = $playerActionResultDto;
+            queueMessage($playerInstances[$i]->playerId, json_encode($message));
         }
     }
 

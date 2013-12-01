@@ -22,9 +22,8 @@ class CasinoTable {
     public $lastUpdateDateTime;
     public $currentGameSessionId;
     public $sessionStartDateTime;
-    // associated and derived objects - loaded as needed.
-    //public $playerDtos;
     public $isSessionStale;
+    // public $isCheatingAllowed; // what for?
     // log
     private $log;
 
@@ -33,21 +32,218 @@ class CasinoTable {
     }
 
     /*     * ***************************************************************************** */
-    // private methods */
+    /* gaming */
+
+    /**
+     * Calculates the amount of the first and second blind based on table minimums and current game play.
+     * @return array{int, int}
+     */
+    function findBlindBetAmounts() {
+        global $defaultTableMin;
+        $blind1 = $this->tableMinimum / 2;
+        if (is_null($blind1)) {
+            $blind1 = $defaultTableMin;
+        }
+        $blind2 = $blind1 * 2;
+        $this->log->Debug(__FUNCTION__ . "Blind 1 is $blind1 and Blind2 is $blind2");
+        return array($blind1, $blind2);
+    }
+
+    /**
+     * Creates a new game session on the casino table.
+     * @param timestamp $statusDT
+     */
+    function createAndSaveGameSession($statusDT) {
+        $nextSessionId = getNextSequence('GameSession', 'Id');
+        executeSQL("INSERT INTO GameSession (Id, TableMinimum, NumberSeats, StartDateTime,
+                    IsPractice) VALUES ($nextSessionId, $this->tableMinimum, $this->numberSeats,
+                    '$statusDT', 0)", __FUNCTION__ .
+                ": Error inserting into GameSession with generated id $nextSessionId");
+        executeSQL("UPDATE CasinoTable SET CurrentGameSessionId = $nextSessionId,
+            SessionStartDateTime = '$statusDT', LastUpdateDateTime = '$statusDT'
+            WHERE Id = $this->id", __FUNCTION__ .
+                ": Error updating casino's session with generated id $nextSessionId");
+        $this->currentGameSessionId = $nextSessionId;
+        $this->sessionStartDateTime = $statusDT;
+        $this->lastUpdateDateTime = $statusDT;
+        return new GameSession($this->id, $nextSessionId);
+    }
+    
+    /*     * ***************************************************************************** */
+    /* user management */
+
+    /**
+     * Gets all the players at the table.
+     * @return PlayerDto array
+     */
+    function getCasinoPlayerDtos() {
+        $result = executeSQL("SELECT * FROM Player WHERE CurrentCasinoTableId = $this->id
+            ORDER BY CurrentSeatNumber", __FUNCTION__ . ": ERROR selecting from CasinoTable id $this->id");
+        if (mysql_num_rows($result) == 0) {
+            return null;
+        }
+        $i = 0;
+        while ($row = mysql_fetch_array($result)) {
+            $players[$i] = new PlayerDto($row["Id"], $row['Name'], $row['ImageUrl'], $row['IsVirtual']);
+            $players[$i]->casinoTableId = $row["CurrentCasinoTableId"];
+            $players[$i]->currentSeatNumber = $row["CurrentSeatNumber"];
+            $players[$i]->reservedSeatNumber = $row["ReservedSeatNumber"];
+            $players[$i]->buyin = $row["BuyIn"];
+
+            $i++;
+        }
+        return $players;
+    }
+
+    /**
+     * User may already be added.
+     * @global type $defaultTableMin
+     * @global type $buyInMultiplier
+     * @param type $seatNum
+     * @param type $playerDto
+     * @param type $statusDT
+     * @return PlayerDto
+     */
+    public function addUser($seatNum, $playerDto, $statusDT) {
+        global $defaultTableMin;
+        global $buyInMultiplier;
+
+        $this->log->debug(__FUNCTION__ . ": player $playerDto->playerId at new casino table id
+                        $this->id previous " . $playerDto->casinoTableId);
+        if ($this->id == $playerDto->casinoTableId) {
+            return $playerDto;
+            // if ($seatNum == $playerDto->currentSeatNumber) - don't take available seat
+            // user already has one
+            return $playerDto;
+        }
+
+        // user is on a different table, make change
+        $casinoTableId = 'null';
+        $tableSize = $this->tableMinimum;
+        if ($tableSize == null) {
+            $tableSize = $defaultTableMin;
+        }
+
+        $seatValue = $seatNum;
+        $waitingStartDT = "null";
+        // set seat
+        if (is_null($seatNum)) {
+            $seatValue = "null";
+            $waitingStartDT = $statusDT;
+        }
+        $playerDto->casinoTableId = $this->id;
+
+        $this->ejectPlayer($playerDto->playerId, $statusDT);
+
+        // update player's casino table
+        $stake = $tableSize * $buyInMultiplier;
+        executeSQL("UPDATE Player SET CurrentCasinoTableId = $this->id,
+                            CurrentSeatNumber = $seatValue, ReservedSeatNumber = null,
+                            WaitStartDateTime = '$waitingStartDT',
+                            BuyIn = $stake, LastUpdateDateTime = '$statusDT'
+                            WHERE Id = $playerDto->playerId", __FUNCTION__ . "
+                : Error updating Player player id $playerDto->playerId");
+        $this->log->warn(__FUNCTION__ . ": Updated casino id for player id
+                            $playerDto->playerId when getting player");
+        $playerDto->casinoTableId = $this->id;
+        $playerDto->currentSeatNumber = $seatNum;
+        $playerDto->reservedSeatNumber = null;
+        $playerDto->buyin = $stake;
+
+        return $playerDto;
+    }
+
+    /**
+     * Remove a player from a table and vacate his or her seat.
+     * FIXME: should this go Player entity?
+     * @param int $playerId
+     * @return int Vacated Seat
+     */
+    function leaveCurrentTable($playerId, $statusDT) {
+        // must delete the PlayerState if one exists
+        // TODO: additional business rules when leaving a game.
+        executeSQL("UPDATE PlayerState SET status = 'Left', LastUpdateDateTime = '$statusDT'
+					WHERE PlayerId = $playerId", __FUNCTION__ . ":
+                    Error deleting player state from previous table for player id $playerId");
+
+        $result = executeSQL("SELECT * FROM Player WHERE Id = $playerId", __FUNCTION__ . "
+                : Error selecting from player");
+        $vacatedSeat = null;
+        if (mysql_num_rows($result) > 0) {
+            $row = mysql_fetch_array($result);
+            $casinoTableId = $row["CurrentCasinoTableId"];
+            // verify player is on table, otherwise stop.
+            $this->log->warn(__FUNCTION__ . ": Player id $playerId leaving table
+                        $casinoTableId when managing casino table id $this->id");
+            $vacatedSeat = $row["CurrentSeatNumber"];
+            // update Player and set his seat and reserved seat to null and casino id to null;
+            executeSQL("UPDATE Player SET LastUpdateDateTime = '$statusDT',
+                CurrentCasinoTableId = null, CurrentSeatNumber = null
+                WHERE Id = $playerId", __FUNCTION__ .
+                    ": ERROR updating player $playerId who leaves casino table casinoTableId");
+            return $vacatedSeat;
+        }
+        return null;
+    }
+
+    /**
+     * To be used for inactive or timed out players or players who show up on another casino
+     * table.
+     * The player is not necessarily ejected from $this casino table
+     * @param type $playerId
+     */
+    function ejectPlayer($playerId, $statusDT) {
+        // FIXME: should this go somewhere else?
+        $vacatedSeat = $this->leaveCurrentTable($playerId, $statusDT);
+        $waitingPlayerId = $this->findNextWaitingPlayer();
+        if ($waitingPlayerId && $vacatedSeat) {
+            $this->reserveAndOfferSeat($vacatedSeat, $playerId, $statusDT);
+        }
+    }
+
+    /**
+     * Get the number of players in the waiting list of a table.
+     * @return int
+     */
+    function getWaitingListSize() {
+        $result = executeSQL("SELECT COUNT(1) FROM Player WHERE CurrentCasinoTableId =
+                $this->id AND CurrentSeatNumber is null", __FUNCTION__ . ": Error select
+                    count of waiting list on casino id $this->id");
+        $row = mysql_fetch_array($result);
+        return $row[0];
+    }
+
+    /**
+     * Gets the next player in the waiting list. If none return null.
+     * @return int playerId
+     */
+    function findNextWaitingPlayer() {
+        $result = executeSQL("SELECT Id from Player WHERE CurrentCasinoTableId = $this->id
+                AND CurrentSeatNumber is NULL AND ReservedSeatNumber is NULL
+				ORDER BY WaitStartDateTime", __FUNCTION__ . ":
+                    Error selecting player without a seat for casino table $this->id");
+        if (mysql_num_rows($result) == 0) {
+            return null;
+        }
+        $row = mysql_fetch_array($result);
+        return $row[0];
+    }
+
+    /*     * ***************************************************************************** */
 
     /**
      * Find the player who is reserving or occupying a specific seat at a casino table.
-     * @param int $seatNumber The seat number being checked
+     * @param int $seatNum The seat number being checked
      * @return playerId The player id or null if no player is taking or reserving that seat.
      */
-    private function isSeatTakenOrReservedBy($seatNumber) {
-        if (is_null($seatNumber)) {
+    private function isSeatTakenOrReservedBy($seatNum) {
+        if (is_null($seatNum)) {
             return null;
         }
         $result = executeSQL("SELECT Id FROM Player WHERE CurrentCasinoTableId = $this->id
-                AND (CurrentSeatNumber = $seatNumber || ReservedSeatNumber = $seatNumber)"
+                AND (CurrentSeatNumber = $seatNum || ReservedSeatNumber = $seatNum)"
                 , __FUNCTION__ .
-                ": ERROR selecting FROM Player id $this->id, seatnumber $seatNumber");
+                ": ERROR selecting FROM Player id $this->id, seatnumber $seatNum");
         if (mysql_num_rows($result) > 0) {
             $row = mysql_fetch_array($result);
             return $row[0];
@@ -69,29 +265,8 @@ class CasinoTable {
         return null;
     }
 
-    /**
-     * Gets all the players at the table. FIXME: coupling of data and business rules to optimize calls to the database. Caching layer should make data location transparent.
-     */
-    function loadPlayers() {
-        $result = executeSQL("SELECT * FROM Player WHERE CurrentCasinoTableId = $this->id
-            ORDER BY CurrentSeatNumber", __FUNCTION__ . ": ERROR selecting from CasinoTable id $this->id");
-        if (mysql_num_rows($result) == 0) {
-            return null;
-        }
-        $i = 0;
-        while ($row = mysql_fetch_array($result)) {
-            $players[$i] = new PlayerDto($row["Id"], $row["Name"], $row["ImageUrl"],
-                            $row["CurrentSeatNumber"], $row["BuyIn"]);
-            $players[$i]->casinoTableId = $this->id;
-            $players[$i]->isVirtual = $row["IsVirtual"];
-            $players[$i]->reservedSeatNumber = $row["ReservedSeatNumber"];
-            $i++;
-        }
-        return $players;
-    }
-
     /*     * ****************************************************************************** */
-    // Public methods with no data access
+    // seat management
 
     /**
      * Find the lowest numbered seat that is not taken or reserved.
@@ -136,81 +311,46 @@ class CasinoTable {
     }
 
     /**
-     * Calculates the amount of the first and second blind based on table minimums and current game play.
-     * @return array{int, int}
-     */
-    function findBlindBetAmounts() {
-        global $defaultTableMin;
-        $blind1 = $this->tableMinimum / 2;
-        if (is_null($blind1)) {
-            $blind1 = $defaultTableMin;
-        }
-        $blind2 = $blind1 * 2;
-        $this->log->Debug(__FUNCTION__ . "Blind 1 is $blind1 and Blind2 is $blind2");
-        return array($blind1, $blind2);
-    }
-
-    /**
-     * Creates a new game session on the casino table.
-     * @param timestamp $statusDT
-     */
-    function createAndSaveGameSession($statusDT) {
-        $nextSessionId = getNextSequence('GameSession', 'Id');
-        executeSQL("INSERT INTO GameSession (Id, TableMinimum, NumberSeats, StartDateTime,
-                    IsPractice) VALUES ($nextSessionId, $this->tableMinimum, $this->numberSeats,
-                    '$statusDT', 0)", __FUNCTION__ .
-                ": Error inserting into GameSession with generated id $nextSessionId");
-        executeSQL("UPDATE CasinoTable SET CurrentGameSessionId = $nextSessionId,
-            SessionStartDateTime = '$statusDT', LastUpdateDateTime = '$statusDT'
-            WHERE Id = $this->id", __FUNCTION__ .
-                ": Error updating casino's session with generated id $nextSessionId");
-        $this->currentGameSessionId = $nextSessionId;
-        $this->sessionStartDateTime = $statusDT;
-        $this->lastUpdateDateTime = $statusDT;
-        return new GameSession($this->id, $nextSessionId);
-    }
-
-    /**
      * Reserve a seat for a user
      * Validation: verify seat being offered is taken already and user does not have another seat taken or reserved.
-     * @param int $seatNumber
-     * @param int $playerId
+     * @param int $seatNum
+     * @param int $pId
      * @return bool
      */
-    function reserveAndOfferSeat($seatNumber, $playerId, $statusDT) {
+    function reserveAndOfferSeat($seatNum, $pId, $statusDT) {
         global $dateTimeFormat;
 
-        $occupantPlayerId = $this->isSeatTakenOrReservedBy($seatNumber);
-        if (!is_null($occupantPlayerId) && $playerId != $occupantPlayerId) {
-            throw new Exception("Player $occupantPlayerId already has seat $seatNumber
-                    reserved so player id $playerId cannot take it");
+        $occupantPlayerId = $this->isSeatTakenOrReservedBy($seatNum);
+        if (!is_null($occupantPlayerId) && $pId != $occupantPlayerId) {
+            throw new Exception("Player $occupantPlayerId already has seat $seatNum
+                    reserved so player id $pId cannot take it");
         }
 
-        $playerDtos = $this->loadPlayers();
+        $playerDtos = $this->getCasinoPlayerDtos();
 
         // if player has a different seat, log error
-        $key = $this->getPlayerKey($playerId, $playerDtos);
+        $key = $this->getPlayerKey($pId, $playerDtos);
         if (is_null($key)) {
-            throw new Exception("Player $playerId cannot reserve any seats because player is
+            throw new Exception("Player $pId cannot reserve any seats because player is
                     not at table $this->id");
         }
 
         $currentSeat = $playerDtos[$key]->currentSeatNumber;
         $reservedSeat = $playerDtos[$key]->reservedSeatNumber;
-        if ($currentSeat != null && $currentSeat != $seatNumber) {
-            throw new Exception("Player $playerId already has seat $currentSeat and cannot
-                    take $seatNumber");
+        if ($currentSeat != null && $currentSeat != $seatNum) {
+            throw new Exception("Player $pId already has seat $currentSeat and cannot
+                    take $seatNum");
         }
-        if ($reservedSeat != null && $reservedSeat != $seatNumber) {
-            throw new Exception("Player $playerId already has seat $reservedSeat reserved and
-                    cannot take $seatNumber");
+        if ($reservedSeat != null && $reservedSeat != $seatNum) {
+            throw new Exception("Player $pId already has seat $reservedSeat reserved and
+                    cannot take $seatNum");
         }
-        $playerDtos[$key]->reservedSeatNumber = $seatNumber;
+        $playerDtos[$key]->reservedSeatNumber = $seatNum;
         try {
-            executeSQL("UPDATE Player SET ReservedSeatNumber = $seatNumber,
+            executeSQL("UPDATE Player SET ReservedSeatNumber = $seatNum,
 					LastUpdateDateTime = '$statusDT' WHERE ID =
-                    $playerId", __FUNCTION__ . "
-                    : Error updating Player id $playerId to reserved seat number $seatNumber");
+                    $pId", __FUNCTION__ . "
+                    : Error updating Player id $pId to reserved seat number $seatNum");
         } catch (Exception $e) {
             $playerDtos[$key]->reservedSeatNumber = null;
             return false;
@@ -218,49 +358,49 @@ class CasinoTable {
         // TODO: place message in queue
         $actionType = EventType::SEAT_OFFER;
 
-        $message = new EventMessage($this->currentGameSessionId, $playerId, $actionType,
-                        $statusDT, $actionType, $seatNumber);
+        $message = new EventMessage($this->currentGameSessionId, $pId, $actionType,
+                        $statusDT, $actionType, $seatNum);
         //$message->eventData = $seatNumber;
-        queueMessage($playerId, json_encode($message));
+        queueMessage($pId, json_encode($message));
 
         return true;
     }
 
     /**
      * Converts a reserved seat into a current seat.
-     * @param type $seatNumber
-     * @param type $playerId
+     * @param type $seatNum
+     * @param type $pId
      */
-    function takeSeat($seatNumber, $playerId, $playerDtos, $statusDT) {
-        if (is_null($seatNumber)) {
-            throw new Exception("Missing parameter - Player $playerId cannot reserve empty seat
+    function takeSeat($seatNum, $pId, $playerDtos, $statusDT) {
+        if (is_null($seatNum)) {
+            throw new Exception("Missing parameter - Player $pId cannot reserve empty seat
                     at table $this->id");
         }
 
         // verify seat is reserved
-        $key = $this->getPlayerKey($playerId, $playerDtos);
+        $key = $this->getPlayerKey($pId, $playerDtos);
         if (is_null($key)) {
-            throw new Exception("Player $playerId cannot reserve any seats because player is
+            throw new Exception("Player $pId cannot reserve any seats because player is
                     not at table $this->id");
         }
 
-        $occupantPlayerId = $this->isSeatTakenOrReservedBy($seatNumber);
-        if ($playerId != $occupantPlayerId) {
+        $occupantPlayerId = $this->isSeatTakenOrReservedBy($seatNum);
+        if ($pId != $occupantPlayerId) {
             throw new Exception("Player $occupantPlayerId already has seat $currentSeat
-                    reserved so player id $playerId cannot take it");
+                    reserved so player id $pId cannot take it");
         }
 
         $currentSeat = $playerDtos[$key]->currentSeatNumber;
         $reservedSeat = $playerDtos[$key]->reservedSeatNumber;
 
-        if ($currentSeat != null && $currentSeat != $seatNumber) {
-            throw new Exception("The player $playerId already has seat $currentSeat and cannot
-                    take $seatNumber");
+        if ($currentSeat != null && $currentSeat != $seatNum) {
+            throw new Exception("The player $pId already has seat $currentSeat and cannot
+                    take $seatNum");
         }
         // note that the player may take a seat even if he did not reserve it.
-        if ($reservedSeat != null && $reservedSeat != $seatNumber) {
-            throw new Exception("The player $playerId already has reserved seat $reservedSeat
-                    and cannot take $seatNumber");
+        if ($reservedSeat != null && $reservedSeat != $seatNum) {
+            throw new Exception("The player $pId already has reserved seat $reservedSeat
+                    and cannot take $seatNum");
         }
         // nothing to do, player already has a seat.
         /* FIXME: not working, why?
@@ -268,102 +408,37 @@ class CasinoTable {
           return $playerDtos[$key];
           } */
         // Validation Complete --------------------------------------------------------------
-        $playerDtos[$key]->currentSeatNumber = $seatNumber;
+        $playerDtos[$key]->currentSeatNumber = $seatNum;
         $playerDtos[$key]->reservedSeatNumber = null;
         try {
-            executeSQL("UPDATE Player SET CurrentSeatNumber = $seatNumber, 
+            executeSQL("UPDATE Player SET CurrentSeatNumber = $seatNum,
                     ReservedSeatNumber = null, LastUpdateDateTime = '$statusDT' WHERE Id =
-                    $playerId", __FUNCTION__ .
-                    ": Error updating Player id $playerId to seat number $seatNumber");
+                    $pId", __FUNCTION__ .
+                    ": Error updating Player id $pId to seat number $seatNum");
         } catch (Exception $e) {
-            $playerDtos[$i]->reservedSeatNumber = $seatNumber;
+            $playerDtos[$i]->reservedSeatNumber = $seatNum;
             $playerDtos[$i]->currentSeatNumber = null;
             return null;
         }
         return $playerDtos[$key];
     }
 
-    /**
-     * Remove a player from a table and vacate his or her seat
-     * @param int $playerId
-     * @return int Vacated Seat
-     */
-    function leaveCurrentTable($playerId, $statusDT) {
-        // must delete the PlayerState if one exists
-        // TODO: additional business rules when leaving a game.
-        executeSQL("UPDATE PlayerState SET status = 'Left', LastUpdateDateTime = '$statusDT'
-					WHERE PlayerId = $playerId", __FUNCTION__ . ":
-                    Error deleting player state from previous table for player id $playerId");
-
-        $result = executeSQL("SELECT * FROM Player WHERE Id = $playerId", __FUNCTION__ . "
-                : Error selecting from player");
-        $vacatedSeat = null;
-        if (mysql_num_rows($result) > 0) {
-            $row = mysql_fetch_array($result);
-            $casinoTableId = $row["CurrentCasinoTableId"];
-            // verify player is on table, otherwise stop.
-            $this->log->warn(__FUNCTION__ . ": Player id $playerId leaving table
-                        $casinoTableId when managing casino table id $this->id");
-            $vacatedSeat = $row["CurrentSeatNumber"];
-            // update Player and set his seat and reserved seat to null and casino id to null;
-            executeSQL("UPDATE Player SET LastUpdateDateTime = '$statusDT',
-                CurrentCasinoTableId = null, CurrentSeatNumber = null
-                WHERE Id = $playerId", __FUNCTION__ .
-                    ": ERROR updating player $playerId who leaves casino table casinoTableId");
-            return $vacatedSeat;
-        }
-        return null;
-    }
-
-    /**
-     * Gets the next player in the waiting list. If none return null.
-     */
-    function findNextWaitingPlayer() {
-        $result = executeSQL("SELECT Id from Player WHERE CurrentCasinoTableId = $this->id
-                AND CurrentSeatNumber is NULL AND ReservedSeatNumber is NULL
-				ORDER BY WaitStartDateTime", __FUNCTION__ . ":
-                    Error selecting player without a seat for casino table $this->id");
-        if (mysql_num_rows($result) == 0) {
-            return null;
-        }
-        $row = mysql_fetch_array($result);
-        return $row[0];
-    }
-
-    /**
-     * To be used for inactive or timed out players or players who show up on another casino
-     * table.
-     * The player is not necessarily ejected from $this casino table
-     * @param type $playerId
-     */
-    function ejectPlayer($playerId, $statusDT) {
-        // FIXME: should this go somewhere else?
-        $vacatedSeat = $this->leaveCurrentTable($playerId, $statusDT);
-        $waitingPlayerId = $this->findNextWaitingPlayer();
-        if ($waitingPlayerId && $vacatedSeat) {
-            $this->reserveAndOfferSeat($vacatedSeat, $playerId, $statusDT);
-        }
-    }
-
-    function getWaitingListSize() {
-        $result = executeSQL("SELECT COUNT(1) FROM Player WHERE CurrentCasinoTableId =
-                $this->id AND CurrentSeatNumber is null", __FUNCTION__ . ": Error select
-                    count of waiting list on casino id $this->id");
-        $row = mysql_fetch_array($result);
-        return $row[0];
-    }
-
+    /*     * ****************************************************************************** */
     function communicateUserJoined($dto, $playerDtos, $waitingListSize) {
+        global $dateTimeFormat;
+        
         $playerStatusDtos = PlayerStatusDto::mapPlayerDtos(array($dto), PlayerStatusType::WAITING);
         $this->log->debug(__FUNCTION__ . ": Waiting list size " . $waitingListSize);
         $playerStatusDtos[0]->waitingListSize = $waitingListSize;
         // dynamically adding this
         $eventType = EventType::USER_JOINED;
-        
+
+        $localTime = date($dateTimeFormat, strtotime($this->lastUpdateDateTime));
+
         for ($i = 0; $i < count($playerDtos); $i++) {
             if ($playerDtos[$i]->playerId != $dto->playerId) {
                 $message = new EventMessage($this->currentGameSessionId,
-                                $playerDtos[$i]->playerId, $eventType, $this->lastUpdateDateTime,
+                                $playerDtos[$i]->playerId, $eventType, $localTime,
                                 $playerStatusDtos);
                 //$message->eventData = $playerStatusDtos;
                 queueMessage($playerDtos[$i]->playerId, json_encode($message));
@@ -372,15 +447,19 @@ class CasinoTable {
     }
 
     function communicateUserLeft($dto, $playerDtos, $waitingListSize) {
+        global $dateTimeFormat;
+        
         $playerStatusDtos = PlayerStatusDto::mapPlayerDtos(array($dto), PlayerStatusType::LEFT);
         $this->log->debug(__FUNCTION__ . ": Waiting list size " . $waitingListSize);
         $playerStatusDtos[0]->waitingListSize = $waitingListSize;
         $eventType = EventType::USER_LEFT;
         
+        $localTime = date($dateTimeFormat, strtotime($this->lastUpdateDateTime));
+
         for ($i = 0; $i < count($playerDtos); $i++) {
             if ($playerDtos[$i]->playerId != $dto->playerId) {
                 $message = new EventMessage($this->currentGameSessionId,
-                                $playerDtos[$i]->playerId, $eventType, $this->lastUpdateDateTime,
+                                $playerDtos[$i]->playerId, $eventType, $localTime,
                                 $playerStatusDtos);
                 //$message->eventData = $playerStatusDtos;
                 queueMessage($playerDtos[$i]->playerId, json_encode($message));
@@ -388,34 +467,20 @@ class CasinoTable {
         }
     }
 
-    function communicateGameStarted($instanceSetupDto, $playerDtos) {
-        $eventType = EventType::GAME_STARTED;
-        $instanceId = $instanceSetupDto->gameInstanceId;
-
-        for ($i = 0; $i < count($playerDtos); $i++) {
-            $playerId = $playerDtos[$i]->playerId;
-            if ($playerId != $instanceSetupDto->userPlayerId) {
-                $instanceSetupDto->userPlayerHand = EntityHelper::getUserHand($playerId, $instanceId);
-
-                $message = new EventMessage($this->currentGameSessionId,
-                                $playerId, $eventType, $this->lastUpdateDateTime,
-                                $instanceSetupDto);
-                //$message->eventData = $instanceSetupDto;
-                queueMessage($playerId, json_encode($message));
-            }
-        }
-    }
-
     function communicateSeatTaken($dto, $playerDtos, $waitingListSize) {
+        global $dateTimeFormat;
+        
         $playerStatusDtos = PlayerStatusDto::mapPlayerDtos(array($dto), PlayerStatusType::WAITING);
         $this->log->debug(__FUNCTION__ . ": Waiting list size " . $waitingListSize);
         $playerStatusDtos[0]->waitingListSize = $waitingListSize;
         $eventType = EventType::SEAT_TAKEN;
         
+        $localTime = date($dateTimeFormat, strtotime($this->lastUpdateDateTime));
+
         for ($i = 0; $i < count($playerDtos); $i++) {
             //if ($playerDtos[$i]->playerId != $dto->playerId) {
                 $message = new EventMessage($this->currentGameSessionId,
-                                $playerDtos[$i]->playerId, $eventType, $this->lastUpdateDateTime,
+                                $playerDtos[$i]->playerId, $eventType, $localTime,
                                 $playerStatusDtos);
                 //$message->eventData = $playerStatusDtos;
                 queueMessage($playerDtos[$i]->playerId, json_encode($message));

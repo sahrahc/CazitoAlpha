@@ -22,6 +22,7 @@ include_once(dirname(__FILE__) . '/../../Libraries/Helper/DataHelper.php');
  */
 
 function CreateSchema() {
+    global $dbName;
     $con = connectToStateDB();
 
     /* --------------------------------------------------------------------- */
@@ -90,6 +91,7 @@ function CreateSchema() {
             TableMinimum int,
             NumberSeats int,
             IsPractice tinyint,
+            IsCheatingAllowed tinyint,
             PRIMARY KEY (Id)
         )";
     executeDDL($tableName, $sql);
@@ -148,8 +150,8 @@ function CreateSchema() {
             LastPlayAmount int,
             PlayerPlayNumber int,
             NumberTimeOuts int,
-            Card1Label varchar(25),
-            Card2Label varchar(25),
+            Card1Code varchar(25),
+            Card2Code varchar(25),
             HandType varchar(25),
             HandInfo int,
             HandCategory int,
@@ -175,11 +177,13 @@ function CreateSchema() {
     $sql = "CREATE TABLE $tableName
         (
             GameInstanceId int,
+            CardCode varchar(25),
+            DeckPosition int,
             PlayerId int,
-            CardNumber int,
-            CardIndex int,
-            CardName varchar(25)
+            PlayerCardNumber int,
+            CardIndex int
         )";
+    // delete card index after moving to new evaluator
     executeDDL($tableName, $sql);
     // create index on game instace id
     $columnName = "GameInstanceId";
@@ -231,30 +235,6 @@ function CreateSchema() {
     $columnName1 = "GameInstanceId";
     $columnName2 = "PlayerId";
     $indexName = $tableName . '_InstanceId_PlayerId_Idx';
-    $sql = "CREATE INDEX $indexName ON $tableName($columnName1, $columnName2)";
-    executeDDL($indexName, $sql);
-
-    /* --------------------------------------------------------------------- */
-    // EventMessage
-    //      Index: GameInstanceId and PlayerId (compound)
-    // auto-increment because
-    $tableName = "EventMessage";
-    $sql = "CREATE TABLE $tableName
-        (
-            Id int,
-            PRIMARY KEY (Id),
-            GameSessionId int,
-            TargetPlayerId int,
-            EventType varchar(25),
-            EventDateTime timestamp,
-            isDeleted tinyint,
-            JsonEvent varchar(2000)
-        )";
-    executeDDL($tableName, $sql);
-    // create index on game instace id
-    $columnName1 = "GameSessionId";
-    $columnName2 = "TargetPlayerId";
-    $indexName = $tableName . '_SessionId_PlayerId_Idx';
     $sql = "CREATE INDEX $indexName ON $tableName($columnName1, $columnName2)";
     executeDDL($indexName, $sql);
 

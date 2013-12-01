@@ -8,13 +8,13 @@
 class CheaterCardDto {
 
     public $playerId;
-    public $cardNumber;
+    public $playerCardNumber;
     public $cardName;
     public $suit;
 
-    public function __construct($playerId, $cardNumber, $cardName, $suit) {
-        $this->playerId = $playerId;
-        $this->cardNumber = $cardNumber;
+    public function __construct($pId, $pCardNum, $cardName, $suit) {
+        $this->playerId = $pId;
+        $this->playerCardNumber = $pCardNum;
         $this->cardName = $cardName;
         $this->suit = $suit;
     }

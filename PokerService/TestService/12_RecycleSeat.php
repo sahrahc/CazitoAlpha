@@ -7,7 +7,7 @@
  * The user accepts the seat - verify message to all players
  */
 include('../PokerPlayerService.php');
-include(dirname(__FILE__) . '/../EventMessageService.php');
+//include(dirname(__FILE__) . '/../EventMessageService.php');
 include('showObject.php');
 
 /**********************************************************************************
@@ -28,7 +28,12 @@ echo '******************************************************<br />';
 echo 'Setup: new player Anna starts new table and is joined by Bob, Charles, David <br /> <br />';
 
 $name = 'Anna';
-$par = json_encode(array("casinoTableId"=>null, "playerName"=>$name, "tableSize"=>null));
+$par = json_encode(array("playerName"=>$name));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>null, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
     echo "Encoded parameter: $par <br /><br />";
 $gameStatusDtoEncoded = addUserToCasinoTable($par);
     echo "Encoded return object: $gameStatusDtoEncoded <br /> <br />";
@@ -43,7 +48,12 @@ echo "Game Session id is $gameSessionId... <br /><br />";
 
 // Bob
 $name = 'Bob';
-$par = json_encode(array("casinoTableId"=>$casinoTableId, "playerName"=>$name, "tableSize"=>null));
+$par = json_encode(array("playerName"=>$name));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>$casinoTableId, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
     echo "Encoded parameter: $par <br /><br />";
 $gameStatusDtoEncoded = addUserToCasinoTable($par);
     echo "Encoded return object: $gameStatusDtoEncoded <br /> <br />";
@@ -55,7 +65,12 @@ echo "$name created with user id $player2Id on seat number $gameStatusDto->userS
 
 // Charles
 $name = 'Charles';
-$par = json_encode(array("casinoTableId"=>$casinoTableId, "playerName"=>$name, "tableSize"=>null));
+$par = json_encode(array("playerName"=>$name));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>$casinoTableId, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
     echo "Encoded parameter: $par <br /><br />";
 $gameStatusDtoEncoded = addUserToCasinoTable($par);
     echo "Encoded return object: $gameStatusDtoEncoded <br /> <br />";
@@ -67,7 +82,12 @@ echo "$name created with user id $player3Id on seat number $gameStatusDto->userS
 
 // player #4
 $name = 'David';
-$par = json_encode(array("casinoTableId"=>$casinoTableId, "playerName"=>$name, "tableSize"=>null));
+$par = json_encode(array("playerName"=>$name));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>$casinoTableId, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
     echo "Encoded parameter: $par <br /><br />";
 $gameStatusDtoEncoded = addUserToCasinoTable($par);
     echo "Encoded return object: $gameStatusDtoEncoded <br /> <br />";
@@ -93,7 +113,12 @@ echo 'TEST 12.1: Add Eric and Fred and verify they are added but on the waiting 
 
 // Player # 5
 $name = 'Eric';
-$par = json_encode(array("casinoTableId"=>$casinoTableId, "playerName"=>$name, "tableSize"=>null));
+$par = json_encode(array("playerName"=>$name));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>$casinoTableId, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
     echo "Encoded parameter: $par <br /><br />";
 $gameStatusDtoEncoded = addUserToCasinoTable($par);
     echo "Encoded return object: $gameStatusDtoEncoded <br /> <br />";
@@ -105,7 +130,12 @@ echo "$name created with user id $player5Id on seat number $gameStatusDto->userS
 
 // Player # 6
 $name = 'Fred';
-$par = json_encode(array("casinoTableId"=>$casinoTableId, "playerName"=>$name, "tableSize"=>null));
+$par = json_encode(array("playerName"=>$name));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>$casinoTableId, "userPlayerId"=>$userPlayerId, "tableSize"=>null));
     echo "Encoded parameter: $par <br /><br />";
 $gameStatusDtoEncoded = addUserToCasinoTable($par);
     echo "Encoded return object: $gameStatusDtoEncoded <br /> <br />";
@@ -129,7 +159,7 @@ leaveSaloon($par); // no output
 // TODO: offer seat to table who is not reserved and table is full
 // TODO: take seat not offered but empty seats available
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players after Bob leaves: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
@@ -151,7 +181,7 @@ $par = json_encode(array("gameSessionId"=>$gameSessionId,
 takeSeat($par); // no output
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players after Eric takes seat: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
@@ -180,7 +210,7 @@ $gameInstanceSetup = json_decode($gameInstanceSetupDtoEncoded);
 $gameInstance2Id = $gameInstanceSetup->gameInstanceId;
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
@@ -207,7 +237,7 @@ leaveSaloon($par); // no output
 // verify Fred got offered a seat
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
@@ -229,7 +259,7 @@ $par = json_encode(array("gameSessionId"=>$gameSessionId,
 takeSeat($par); // no output
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players after Fred takes seat: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
@@ -258,7 +288,7 @@ $gameInstanceSetup = json_decode($gameInstanceSetupDtoEncoded);
 $gameInstance2Id = $gameInstanceSetup->gameInstanceId;
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players after restarting game: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
@@ -287,7 +317,7 @@ leaveSaloon($par); // no output
 // verify Fred got offered a seat
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .
@@ -317,7 +347,7 @@ $gameInstanceSetup = json_decode($gameInstanceSetupDtoEncoded);
 $gameInstance3Id = $gameInstanceSetup->gameInstanceId;
 
 $casinoTable = EntityHelper::getCasinoTable($casinoTableId);
-$playerDtos = $casinoTable->loadPlayers();
+$playerDtos = $casinoTable->getCasinoPlayerDtos();
 echo "Casino players: <br />";
 for ($i=0; $i<count($playerDtos); $i++) {
     echo " - Player " . $playerDtos[$i]->playerName . " is on seat " .

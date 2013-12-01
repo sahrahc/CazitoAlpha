@@ -10,5 +10,5 @@ mysql_query("Drop table PlayerState");
 mysql_query("Drop table GameCard");
 mysql_query("Drop table PlayerAction");
 mysql_query("Drop table NextPokerMove");
-mysql_query("Drop table EventMessage");
+//mysql_query("Drop table EventMessage");
 ?>

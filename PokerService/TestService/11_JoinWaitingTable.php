@@ -28,7 +28,12 @@ mysql_query("Delete from PlayerState");
 echo '******************************************************<br />';
 
 echo 'TEST CASE 11.1: unknown player AA with new table joined by BB <br /> <br />';
-$par = json_encode(array("casinoTableId"=>null, "playerName"=>"AA", "tableSize"=>null));
+$par = json_encode(array("playerName"=>"AA"));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId1 = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>null, "userPlayerId"=>$userPlayerId1, "tableSize"=>null));
 $gameStatusDtoEncoded = addUserToCasinoTable($par);
 showGameStatusDto($par, $gameStatusDtoEncoded);
 $gameStatusDto = json_decode($gameStatusDtoEncoded);
@@ -46,7 +51,12 @@ echo "<br /><br />";
 echo '-------------------------------------------------------- <br />';
 echo "Second User BB data: <br /> <br />";
 */
-$par = json_encode(array("casinoTableId"=>$gameStatusDto->casinoTableId, "playerName"=>"BB", "tableSize"=>null));
+$par = json_encode(array("playerName"=>"BB"));
+$userIdEncoded = login($par);
+$user = json_decode($userIdEncoded);
+$userPlayerId2 = $user->userPlayerId;
+
+$par = json_encode(array("casinoTableId"=>$gameStatusDto->casinoTableId, "userPlayerId"=>$userPlayerId2, "tableSize"=>null));
 $gameStatusDtoEncoded = addUserToCasinoTable($par);
 showGameStatusDto($par, $gameStatusDtoEncoded);
 $gameStatusDto = json_decode($gameStatusDtoEncoded);

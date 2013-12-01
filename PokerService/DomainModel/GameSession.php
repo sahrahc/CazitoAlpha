@@ -55,5 +55,25 @@ class GameSession {
                 $nextInstanceId");
         return $gameInstanceStatus;
     }
+
+    function communicateGameStarted($instanceSetupDto, $playerDtos, $statusDT) {
+        $eventType = EventType::GAME_STARTED;
+        $instanceId = $instanceSetupDto->gameInstanceId;
+
+        for ($i = 0; $i < count($playerDtos); $i++) {
+            $playerId = $playerDtos[$i]->playerId;
+            //if ($playerId != $instanceSetupDto->userPlayerId) {
+                $instanceSetupDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $instanceId);
+
+                $message = new EventMessage($this->id,
+                                $playerId, $eventType, $statusDT,
+                                $instanceSetupDto);
+                //$message->eventData = $instanceSetupDto;
+                queueMessage($playerId, json_encode($message));
+            //}
+        }
+    }
+
+
 }
 ?>

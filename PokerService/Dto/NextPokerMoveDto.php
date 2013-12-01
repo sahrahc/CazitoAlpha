@@ -3,7 +3,7 @@
 /**
  * Null means the move is not allowed. Fold is always allowed.
  */
-class NextPokerMoveDto {
+final class NextPokerMoveDto {
     public $gameInstanceId;
     public $nextPlayerId;
     public $expirationDate;
@@ -11,10 +11,6 @@ class NextPokerMoveDto {
     public $callAmount;
     public $checkAmount;
     public $raiseAmount;
-    // if additional events occurred
-    public $gameResultDto;
-    public $cardsToSend;
-    public $playerStatusDto;
 
     public function __construct($nextPokerMove) {
         $this->gameInstanceId = $nextPokerMove->gameInstanceId;

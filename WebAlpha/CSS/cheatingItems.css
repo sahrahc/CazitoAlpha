@@ -19,6 +19,7 @@
     color: #D9E1F5;
     font-family: Comic Sans MS;
 	font-size: 0.8em;
+    overflow: auto;
 }
 #sleeve {
 	top: 0px;
@@ -45,13 +46,10 @@
 	text-align: center;
     font-size:small;
 }
-#tabs-6-look {
+.cheatingItemAction input {
 	display: inline-block;
-	width: 50px;
-}
-#tabs-6-swap{
-	display: inline-block;
-	width: 50px;
+	width: 80px;
+    font-size:0.8em;
 }
 .cheatingItemDesc {
 	display:none;
@@ -72,3 +70,7 @@
 	width: 80px;
 	height: 35px;
 }
+.fade{filter:alpha(opacity=70); -moz-opacity:0.7;
+      opacity:0.7;
+}
+.normal{filter:alpha(opacity=100); -moz-opacity:1;opacity:1;}

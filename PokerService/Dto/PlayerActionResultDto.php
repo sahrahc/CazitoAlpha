@@ -3,7 +3,7 @@
 /**
  * Null means the move is not allowed. Fold is always allowed.
  */
-class PlayerActionResultDto {
+final class PlayerActionResultDto {
     public $gameInstanceId;
     public $nextPokerMoveDto;
     public $gameResultDto;

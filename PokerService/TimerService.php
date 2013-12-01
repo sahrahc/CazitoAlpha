@@ -5,10 +5,10 @@ include_once(dirname(__FILE__) . '/../../Libraries/log4php/Logger.php');
 include_once(dirname(__FILE__) . '/../../Libraries/Helper/DataHelper.php');
 
 // Include Application Scripts
-require_once('Config.php');
-include_once('Data/AllInclude.php');
-include_once('DomainModel/AllInclude.php');
-include_once('Dto/AllInclude.php');
+require_once(dirname(__FILE__) . 'Config.php');
+include_once(dirname(__FILE__) . 'DomainHelper/AllInclude.php');
+include_once(dirname(__FILE__) . 'DomainModel/AllInclude.php');
+include_once(dirname(__FILE__) . 'Dto/AllInclude.php');
 
 // configure logging
 Logger::configure(dirname(__FILE__) . '/log4php.xml');
@@ -33,12 +33,12 @@ function cleanUp() {
     $expirationDateTime = new DateTime();
     $expirationDateTime->sub(new DateInterval($moveTimeOut)); // 20 minutes
     $expirationString = $expirationDateTime->format($dateTimeFormat);
-
+/*
     // delete really old actions and events (5 minutes ago);
     $result = executeSQL("DELETE FROM EventMessage WHERE EventDateTime < '$expirationString'", __FUNCTION__ . "
         : Error deleting messages older than 5 minutes.");
     $log->warn(__FUNCTION__ . " Deleted events older than 5 minutes: " . mysql_affected_rows());
-
+*/
     $result = executeSQL("DELETE FROM NextPokerMove WHERE ExpirationDate < '$expirationString'", __FUNCTION__ . "
         : Error deleting next moves that expired over 5 minutes.");
     $log->warn(__FUNCTION__ . " Deleted moves that expired over 5 minutes ago: " . mysql_affected_rows());
@@ -76,9 +76,10 @@ function checkExpiration() {
             executeSQL("UPDATE NextPokerMove SET IsDeleted = 1 WHERE gameInstanceId = $gameInstanceId",
                     __FUNCTION__ . "
             : Error soft deleting previous instance id $gameInstanceId moves");
-            executeSQL("UPDATE EventMessage SET IsDeleted = 1 WHERE gameInstanceId = $gameInstanceId",
+            /* FIXME: must reset queues?
+             * executeSQL("UPDATE EventMessage SET IsDeleted = 1 WHERE gameInstanceId = $gameInstanceId",
                     __FUNCTION__ . "
-            : Error soft deleting previous instance id $gameInstanceId moves");
+            : Error soft deleting previous instance id $gameInstanceId event messages"); */
             continue;
         }
         $counter++;
@@ -109,7 +110,7 @@ function checkExpiration() {
             $nextPokerMove = $playerTurn->applyPlayerAction();
             $isExpired = 0;
         } else {
-            $nextPokerMove = $playerTurn->skipTurn($row["Id"], $isPractice, $statusDateTime);
+            $nextPokerMove = $playerTurn->skipTurn($row["Id"]);//, $isPractice, $statusDateTime);
             if ($playerTurn->playerInstanceStatus->numberTimeOuts >=3) {
                 $casinoTable->ejectPlayer($playerId, $statusDateTime);
             }
