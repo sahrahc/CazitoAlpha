@@ -8,13 +8,16 @@
 function createNewTableCallback(casinoTableDto) {
     // add table id to cookie for use when joining table
     $.cookies.set("tableId", casinoTableDto.casinoTableId, {
-        expires: 1,
-        path: '/'
+	expires: 1,
+	path: '/'
     });
     // messages to user:
     var tableName = casinoTableDto.casinoTableName;
-    O('dialog-new-table-message').children('p')[0].innerHTML = 'You have successfully created your table ' + tableName;
-    O('dialog-new-table-message').dialog('open');
+    O('dialog-table-setup-message').children[0].innerHTML = 'You have successfully created your table ' + tableName;
+    $('#dialog-table-setup-message').dialog('open');
+
+    // on cookie in case 
+    $.cookies.del('waitingForSeat');
 }
 
 /**
@@ -26,92 +29,112 @@ function createNewTableCallback(casinoTableDto) {
 function findCasinoTableCallback(casinoTableDto) {
     // add table id to cookie for use when joining table
     $.cookies.set("tableId", casinoTableDto.casinoTableId, {
-        expires: 1,
-        path: '/'
+	expires: 1,
+	path: '/'
     });
     // messages to user:
     var numberPlayers = casinoTableDto.numberCurrentPlayers;
     var waitingPlayers = casinoTableDto.numberWaitingPlayers;
+    var msg;
     if (numberPlayers > 0) {
-        O('dialog-found-table-message').children('p')[0].innerHTML = 'There are ' + numberPlayers + ' players at this table.';
+	msg = 'There are ' + numberPlayers + ' players at this table.';
     }
     else {
-        O('dialog-found-table-message').children('p')[0].innerHTML = 'There are no players yet at this table.';
+	msg = 'There are no players yet at this table.';
     }
 
     if (waitingPlayers > 0) {
-        O('dialog-found-table').children('p')[1].innerHTML = 'There are ' + waitingPlayers + ' players in the waiting list.';
+	msg += '<br/>There are ' + waitingPlayers + ' players in the waiting list.';
+	// on cookie because heading changes
+	$.cookies.set("waitingForSeat", waitingPlayers);
     }
     else {
-        O('dialog-found-table').children('p')[1].innerHTML = 'There are no players on the waiting list.';
+	msg += '<br/>There are no players on the waiting list.';
     }
-    O('dialog-found-table').dialog('open');
+    O('dialog-table-setup-message').children[0].innerHTML = msg;
+    $('#dialog-table-setup-message').dialog('open');
 }
 
 
 function createNewTable() {
+    var userPlayerId = $.cookies.get("userPlayerId");
+    if (userPlayerId === null) {
+	alert('Need to login first');
+	return;
+    }
+    var tableName = O('tableName') !== null && O('tableName').value === '' ? null : O('tableName').value;
+    var tableCode = O('tableCode') !== null && O('tableCode').value === '' ? null : O('tableCode').value;
+    var tableSize = O('tableSizeId');
     var obj = {
-        requestingPlayerId: $.cookies.get("userPlayerId"),
-        tableName: O('tableName').value === "" ? null : O('tableName').value,
-        tableCode: O('tableCode').value === "" ? null : O('tableCode').value
+	requestingPlayerId: userPlayerId,
+	tableName: tableName === null ? null : O('tableName').value,
+	tableCode: tableCode === null ? null : O('tableCode').value,
+	tableSize: tableSize.options[tableSize.selectedIndex].text
     };
 
     // add table code to cookie so they are not asked again when joining the
     // table (which happens if call successful)
     $.cookies.set("tableCode", O('tableCode').value, {
-        expires: 1,
-        path: '/'
+	expires: 1,
+	path: '/'
     });
 
     // TODO: check if authenticated and pass -1 if not otherwise the currentPlayerId
-    WSClient.call("CreateTable",
-            obj,
-            createNewTableCallback);
+    WSClient.call(CREATE_TABLE,
+	    obj,
+	    createNewTableCallback);
 }
 ;
 
 function findCasinoTable() {
+    var tableName = O('tableName') !== null && O('tableName').value === '' ? null : O('tableName').value;
+    var tableCode = O('tableCode') !== null && O('tableCode').value === '' ? null : O('tableCode').value;
     var obj = {
-        requestingPlayerId: $.cookies.get("userPlayerId"),
-        tableName: O('tableName').value === "" ? null : O('tableName').value,
-        tableCode: O('tableCode').value === "" ? null : O('tableCode').value
+	requestingPlayerId: $.cookies.get("userPlayerId"),
+	tableName: tableName === null ? null : O('tableName').value,
+	tableCode: tableCode === null ? null : O('tableCode').value
     };
     // add table code to cookie so they are not asked again when joining the
     // table (which happens if call successful)
     $.cookies.set("tableCode", O('tableCode').value, {
-        expires: 1,
-        path: '/'
+	expires: 1,
+	path: '/'
     });
 
     // TODO: check if authenticated and pass -1 if not otherwise the currentPlayerId
-    WSClient.call("GetTable",
-            obj,
-            findCasinoTableCallback);
+    WSClient.call(GET_TABLE,
+	    obj,
+	    findCasinoTableCallback);
 }
 ;
 
 /********************************************************************************************/
 function updateUserSeatTaken(playerStatusDto) {
-    if (playerStatusDto.seatNumber !== null) {
-        return;
+    if (playerStatusDto.seatNumber === null) {
+	return;
     }
     updatePlayerIdentity(playerStatusDto);
+    var userTag = 'player' + playerStatusDto.seatNumber;
+    O(userTag + 'Status').innerHTML = playerStatusDto.status; // Seated
+    O(userTag + 'Stake').innerHTML = '';
+    O(userTag + 'Info').setAttribute("class", 'playerInfo playerInfoUser');
 
     // If taking a seat during the middle of a game, the status of the previous
     // player who left remains until a new game starts.
-    if (playerStatusDto.playerId === $.cookies.get('userPlayerId')) {
-        S('takeSeatButton').display = 'none';
-        O('seatNumber').innerHTML = playerStatusDto.seatNumber;
-        O('startGameButton').disabled = false;
-        unDimItem('startGameButton');
+    // how do you detect game in progress?
+    //if (O('gameStatus').innerHTML !== ) {
+    S('takeSeatButton').display = 'none';
+    O('startGameButton').disabled = false;
+    unDimItem('startGameButton');
 
-        if (O('gameStatus').innerHTML === GAME_INACTIVE) {
-            displayCenterMessage('Please press the start button to start play');
-        }
+    //}
+    displayCenterMessage(null);
+    if (O('gameStatus').innerHTML === GAME_INACTIVE) {
+	displayCenterMessage('Please press the start button to start play');
     }
     // TODO: verify leaving previous player data is ok.
     if (playerStatusDto.waitingListSize > 0) {
-        updateWaitingListMessage(playerStatusDto.waitingListSize);
+	updateWaitlistCount(playerStatusDto.waitingListSize);
     }
 }
 
@@ -127,7 +150,14 @@ function offerSeat(seatNumber) {
 }
 
 function leaveSaloon() {
-    sendRequest('LeaveTable');
+    $.cookies.set("joinedTable", 0);
+    if (O('isPractice').innerHTML === "1") {
+	sendRequest('EndPractice');
+    }
+    else {
+	sendRequest('LeaveTable');
+    }
+    window.location.replace("Home.php");
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,19 +167,32 @@ function leaveSaloon() {
  * @param {string} msg
  * @returns {undefined}
  */
+/* S("centerMessageId").top = bH/2 - 30 + 'px';
+ S("centerMessageId").left = bW/2 - 120 + 'px'; */
 function displayCenterMessage(msg) {
-    /* S("centerMessageId").top = bH/2 - 30 + 'px';
-     S("centerMessageId").left = bW/2 - 120 + 'px'; */
     if (msg === null) {
-        S("CenterMessageId").display = 'none';
+	S("centerMessageId").display = 'none';
     }
     else {
-        O("centerMessageId").innerHTML = msg;
-        S("centerMessageId").display = 'block';
+	O("centerMessageId").innerHTML = msg;
+	S("centerMessageId").display = 'block';
     }
 }
-function updateWaitingListMesage(waitingListSize) {
-    O('waitingMessageId').innerHTML = 'There are ' + waitingListSize +
-            ' players waiting for a seat';
+
+function updateWaitlistCount(waitingListSize) {
+    var waitingForSeat = waitingListSize;
+    if (waitingListSize !== null) {
+	$.cookies.set("waitingForSeat", waitingListSize);
+    }
+    else {
+	waitingForSeat = $.cookies.get("waitingForSeat");
+    }
+    if (waitingForSeat > 0) {
+	S('waiting-list').display = 'inline';
+	O('waiting-list').innerHTML = waitingForSeat + ' players are waiting for a seat in your table.';
+    }
+    else {
+	S('waiting-list').display = 'none';
+    }
 }
 

@@ -11,22 +11,30 @@
    Syntax recommendation http://www.w3.org/TR/REC-CSS2/
 */
 /* CheatingSleeve.html*/
-section#front-street {
-        background-image:url('../../../images/SaloonSeedy.png');
-}
-.cImg {
-    border-radius: 3px;
-    border: 2px solid #B6BFD7;
-    width: 30px;
-    height: 42px;
-}
-#cardSelector {
-    float: left;
-}
+#region-front-street {
+    background-image:url('../../../images/SaloonSeedy.png');
+    width: $region-main-width;
+    left: $region-social-width;  
 
-/* FrontStreet.php */
+    h6 {
+	position: relative;
+	left: 25px;
+	top: 25px;
+
+    }
+    input {
+	position: relative;
+	left: 50px;
+	top: 120px;
+    width: 80px;
+    height: 40px;
+    }
+}
+/* cheating option (currently one button only to load card on sleeve) */
 .preCheatImg {
-    float:left;
+    position: relative;
+    left: 50px;
+    top: 50px;
     width: 80px;
     height: 35px;
     padding: 5px;
@@ -36,23 +44,52 @@ section#front-street {
     border-radius: 2px;
     background-color: #81B380;
     vertical-align: text-bottom;
+
+
+}
 /* */
 .fade{filter:alpha(opacity=70); -moz-opacity:0.7;
       opacity:0.7;
 }
 .normal{filter:alpha(opacity=100); -moz-opacity:1;opacity:1;}
+/* tooltip is dynamically set */
+.tooltip {
+    //display:none;
+    background:transparent url(../../../images/black_arrow.png);
+    font-size:0.7em;
+    height:30px;
+    width:150px;
+    padding:15px;
+    color:#eee;
+    text-align: center
 }
-.preCheatDiv {
-    width: 400px;
-    height: 65px; /* see image: 35 height + 2*10 padding */
-    margin: 0px 10px;
+
+// shows the current contents on the sleeve
+#sleeve {
+    position: relative;
+    left: 80px;
+    top: 80px;
+    background-color:#7E8493;
+    margin-left: 10px;
+    padding: 4px 4px;
+    width:450px;
+    height:65px;
+    border-radius: 3px;
+    border: 2px solid #B6BFD7;
+    color: #D9E1F5;
+    font-family: Comic Sans MS;
+    font-size: 0.8em;
+    overflow: auto;
 }
-#cheatingOptionsHeader {
-    font-weight: bold;
-}
+
 #dialog-card-selector {
-    font-size: 0.7em;
+    float: left;
+    font-size: 11px;
+
 }
+    // not working
+    #region-card-selector { position: relative; float: left; }
+// part of dialog-card-selector
 #selectedCards {
     float: right;
     position:relative;
@@ -67,29 +104,13 @@ section#front-street {
     font-size: 0.7em;
     overflow: auto;
 }
-/* tooltip is dynamically set */
-.tooltip {
-    display:none;
-    background:transparent url(../../../images/black_arrow.png);
-    font-size:0.7em;
-    height:40px;
-    width:100px;
-    padding:15px;
-    color:#eee;
-    text-align: center
-}
-.sleeve {
-    display: none;
-    float: left;
-    background-color:#7E8493;
-    margin-left: 10px;
-    padding: 4px 4px;
-    width:450px;
-    height:65px;
-    border-radius: 3px;
+
+/*-----------------------------------------------------------------------------------*/
+/* cheatingSeleeveCards.html: each of the 52 cards shown */
+.cImg { 
+    //border-radius: 3px;
     border: 2px solid #B6BFD7;
-    color: #D9E1F5;
-    font-family: Comic Sans MS;
-    font-size: 0.8em;
-    overflow: auto;
+    width: 30px;
+    height: 48px;
 }
+

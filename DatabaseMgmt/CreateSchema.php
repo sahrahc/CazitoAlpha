@@ -22,6 +22,7 @@ function CreateSchema() {
         (
             Id int NOT NULL,
             Name varchar(100),
+			Code varchar(50),
             Description varchar(2000),
             TableMinimum int not null,
             NumberSeats int,
@@ -79,6 +80,7 @@ function CreateSchema() {
             NumberSeats int,
             IsPractice tinyint,
             IsCheatingAllowed tinyint,
+			IsActive tinyint,
             PRIMARY KEY (Id)
         )";
     executeDDL($tableName, $sql);
@@ -124,10 +126,10 @@ function CreateSchema() {
     $sql = "CREATE TABLE $tableName
         (
             PlayerId int,
-            GameInstanceId int,
-            PRIMARY KEY (GameInstanceId, PlayerId),
-            IsVirtual tinyint,
             GameSessionId int,
+            GameInstanceId int,
+            PRIMARY KEY (GameSessionId, GameInstanceId, PlayerId),
+            IsVirtual tinyint,
             LastUpdateDateTime timestamp,
             SeatNumber int,
             TurnNumber int,
@@ -204,8 +206,8 @@ function CreateSchema() {
     $tableName = "ExpectedPokerMove";
     $sql = "CREATE TABLE $tableName
         (
-            GameInstanceId int,
-            PlayerId int,
+            GameInstanceId int NOT NULL,
+            PlayerId int NOT NULL,
             ExpirationDate timestamp,
             CallAmount int,
             CheckAmount int,

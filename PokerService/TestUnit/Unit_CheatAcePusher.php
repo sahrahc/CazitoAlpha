@@ -23,7 +23,7 @@ $statusDT = date($dateTimeFormat);
     $ex = QueueManager::GetPlayerExchange($ch);
     $q = QueueManager::addOrResetPlayerQueue($playerId, $ch);
 
-    $dto = CheatingHelper::PushRandomAce($playerId, $gameInstance, 1, $statusDT, ItemType::ACE_PUSHER);
+    $dto = CheatingHelper::ApplyAcePusher($playerId, $gameInstance, 1, $statusDT, ItemType::ACE_PUSHER);
     
     $playerHand = CardHelper::getPlayerHandDto($playerId, $gameInstanceId);
 echo "Player hand after pushing ace: " . json_encode($playerHand) . "<br />";

@@ -8,10 +8,13 @@
 class CheatRequestDto {
 
     public $itemType;
-    // optional data
+    // optional data - multipurpose
+    public $playerCardNumber;
+    // optional data - using hidden list
+    public $hiddenCardNumber;
+    // optional data - changing another user's cards
     public $otherPlayerId;
     public $cardName;
-    public $playerCardNumber;
     public $cardNameList;
 }
 

@@ -1,31 +1,25 @@
 <?php
+/*
 // check if logged in
-session_start();
-if (!isset($_SESSION['UserName'])) {
-    header("location:Login.php");
-}
-include 'Includes/HeaderTop.php';
+if (!isset($_SESSION['ProtoTester'])) {
+	header("location:Login.php");
+} */
+include '../Includes/fileInclude.html';
+include '../Includes/headerPlay.php';
+
+// there should be tabs to switch messaging and cheating 
+//include '../Includes/onlineFriends.html';
+include '../Includes/cheatingCardSelector.html';
+include '../Includes/cheatingCatalog.html';
+include '../Includes/pokerPlay.html';
+include '../Includes/messaging.html'; 
 ?>
-<link rel="stylesheet" type="text/css" href="CSS/seedySaloon.css" />
-<link rel="stylesheet" type="text/css" href="CSS/cheatingItems.css" />
-<link rel="stylesheet" type="text/css" href="CSS/safeSaloon.css" />
-<link rel="stylesheet" type="text/css" href="../../Libraries/jcarousel/skins/tango/cheatingItems-skin.css" />
-<link rel="stylesheet" type="text/css" href="../../Libraries/jcarousel/skins/tango/cardItems-skin.css" />
-<?php include 'Includes/HeaderBottom.php'; ?>
-<div class="main">
-    <div class='left-frame'>
-        <!-- cheaters tools and information on the left -->
-        <?php include 'Includes/CheaterCarousel.html'; ?>
-        <?php include 'Includes/CheatingItemDetail.html' ?>
-    </div>
-    <div>
-        <?php include 'Includes/PokerTable.html' ?>
-    </div>
-    <div class='right-frame'>
-        <?php include 'Includes/Messaging.php' ?>
-    </div>
-</div>
-<div class='log'></div>
-<script src="../js/poker-play.js" type="text/javascript"></script>
-<script src="js/CheatingPlay.js"></script>
-<?php include 'Includes/Footer.html'; ?>
+<div class="logFrame" id="logEvent">Log Event</div>
+<script src="../js/core/queue.js" type="text/javascript"></script>
+<script src="../js/core/game-status.js" type="text/javascript"></script>
+<script src="../js/core/cheating-cards.js" type="text/javascript"></script>
+<script src="../js/core/cheating-status.js" type="text/javascript"></script>
+<script src="../js/core/game-canvas.js" type="text/javascript"></script>
+<script src="../js/core/game-actions.js" type="text/javascript"></script>
+<script src="../js/pages/cheating-play.js"></script>
+<?php include '../Includes/footer.html'; ?>

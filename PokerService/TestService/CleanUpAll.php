@@ -1,6 +1,5 @@
 <?php
-include_once('../PokerPlayerService.php');
-include_once('../CoordinatorService.php');
+include_once('../Config.php');
     
 executeSQL("DELETE FROM GameCard", "Error deleting GameCard");
 executeSQL("DELETE FROM ExpectedPokerMove","Error deleting ExpectedPokerMove");

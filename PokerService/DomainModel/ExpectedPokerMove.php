@@ -113,7 +113,7 @@ class ExpectedPokerMove {
      */
     public static function GetExpectedMoveForInstance($gInstanceId) {
         $result = executeSQL("SELECT e.*, s.Status FROM ExpectedPokerMove e
-            LEFT JOIN PlayerState s on e.Playerid = s.PlayerId
+            INNER JOIN PlayerState s on e.Playerid = s.PlayerId
             WHERE e.GameInstanceId = $gInstanceId
                 ORDER BY ExpirationDate DESC LIMIT 1", __FUNCTION__ . "
                 : Error selecting from ExpectedPokerMove for instance $gInstanceId");
@@ -122,8 +122,8 @@ class ExpectedPokerMove {
             return null;
         }
         $pokerMove = new ExpectedPokerMove();
-        $pokerMove->gameInstanceId = $row["GameInstanceId"];
-        $pokerMove->playerId = $row["PlayerId"];
+        $pokerMove->gameInstanceId = (int)$row["GameInstanceId"];
+        $pokerMove->playerId = (int)$row["PlayerId"];
         $pokerMove->expirationDate = $row["ExpirationDate"];
         $pokerMove->callAmount = $row["CallAmount"];
         $pokerMove->isCheckAllowed = $row["CheckAmount"];
@@ -133,13 +133,14 @@ class ExpectedPokerMove {
     }
 
     public static function GetExpiredPokerMoves($expirationDateTime) {
-        //$currentTimeString = $statusDateTime->format($dateTimeFormat);
         // check if expiration
         $result = executeSQL("SELECT m.*, s.IsVirtual
-            FROM ExpectedPokerMove m LEFT JOIN PlayerState s
+            FROM ExpectedPokerMove m INNER JOIN PlayerState s
             ON m.gameInstanceId = s.GameInstanceId AND m.PlayerId = s.PlayerId
-            WHERE ExpirationDate <= '$expirationDateTime'
-                ORDER BY GameInstanceId, ExpirationDate DESC", __FUNCTION__ . "
+			INNER JOIN GameSession gs on gs.Id = s.GameSessionId
+            WHERE m.ExpirationDate <= '$expirationDateTime'
+				AND gs.IsActive = 1
+                ORDER BY m.GameInstanceId, m.ExpirationDate DESC", __FUNCTION__ . "
                  : ERROR selecting all of ExpectedPokerMove");
         // only the last record for every game instance id is processed
         // this won't be needed when only one move is stored (out of database)
@@ -148,12 +149,13 @@ class ExpectedPokerMove {
         echo mysql_num_rows($result) . " rows found. <br />";
         while ($row = mysql_fetch_array($result)) {
             $expectedPokerMoves[$i] = new ExpectedPokerMove();
-            $expectedPokerMoves[$i]->gameInstanceId = $row["GameInstanceId"];
-            $expectedPokerMoves[$i]->playerId = $row["PlayerId"];
+            $expectedPokerMoves[$i]->gameInstanceId = (int)$row["GameInstanceId"];
+            $expectedPokerMoves[$i]->playerId = (int)$row["PlayerId"];
             $expectedPokerMoves[$i]->expirationDate = $row['ExpirationDate'];
             $expectedPokerMoves[$i]->isCheckAllowed = $row["CheckAmount"];
             $expectedPokerMoves[$i]->callAmount = $row["CallAmount"];
             $expectedPokerMoves[$i]->raiseAmount = $row["RaiseAmount"];
+			$i++;
         }
         return $expectedPokerMoves;
     }
@@ -162,14 +164,14 @@ class ExpectedPokerMove {
         global $dateTimeFormat;
         $checkAmt = 0;
         if (is_null($this->isCheckAllowed)) {
-            $checkAmt = "null";
+            $checkAmt = 'null';
         }
-        $expirationString = $this->expirationDate->format($dateTimeFormat);
+        $expirationString = "'" . $this->expirationDate->format($dateTimeFormat) . "'";
 
         executeSQL("INSERT INTO ExpectedPokerMove (GameInstanceId, PlayerId, 
                 ExpirationDate, CallAmount, CheckAmount, RaiseAmount)
                 VALUES ($this->gameInstanceId, 
-                $this->playerId, '$expirationString',
+                $this->playerId, $expirationString,
                 $this->callAmount, $checkAmt,
                 $this->raiseAmount)", __FUNCTION__ . "
                 :ERROR - Error inserting next move for instance
@@ -186,3 +188,4 @@ class ExpectedPokerMove {
 }
 
 ?>
+s

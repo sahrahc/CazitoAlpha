@@ -19,11 +19,11 @@ function CreateItems() {
             GameInstanceId int,
             ItemType varchar(25),
             StartDateTime timestamp,
-            EndDateTime timestamp,
-            LockEndDateTime timestamp,
-            IsActive tinyint,
-            IsAvailable tinyint,
-            NumberCards int
+            EndDateTime timestamp NULL,
+            LockEndDateTime timestamp NULL,
+            IsLocked tinyint,
+            NumberCards int,
+			OtherPlayerId int
         )";
     executeDDL($tableName, $sql);
 
@@ -50,7 +50,8 @@ function CreateItems() {
         (
             PlayerId int NOT NULL,
             CardCode char(2),
-            CardPosition int
+            CardPosition int,
+            HideType varchar(25)
         )";
     executeDDL($tableName, $sql);
     
@@ -66,8 +67,9 @@ function CreateItems() {
         (
             PlayerId int NOT NULL,
             GameSessionId int,
+			ItemType varchar(25),
             CardCode char(2),
-            ExpirationDateTime timestamp
+            ExpirationDateTime timestamp NULL
         )";
     executeDDL($tableName, $sql);
 

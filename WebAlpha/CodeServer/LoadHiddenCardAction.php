@@ -36,10 +36,12 @@ if ($suitType != null && $actionType != null) {
             break;
     }
     if ($actionType == 'add') {
-        PlayerVisibleCard::addVisibleCardCodes($player->id, $gameSessionId, $cardCodes);
+		$gameInstance = EntityHelper::getSessionLastInstance($gameSessionId);
+        CheatingHelper::AddVisibleCards ($gameInstance);
         echo "Successfully marked $suitType cards for $playerName for 10 minutes";
     } elseif ($actionType == 'remove') {
-        PlayerVisibleCard::removeVisibleCardCodes($player->id, $gameSessionId, $cardCodes);
+		$visibles = new PlayerVisibleCard($player->id, $gameSessionId);
+        $visibles->removeVisibleCardCodes($cardCodes);
         echo "Successfully removed $suitType cards as marked cards for $playerName";
     }
     QueueManager::disconnect($qConn);

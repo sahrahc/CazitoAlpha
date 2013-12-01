@@ -7,67 +7,102 @@
  */
 class GameSession {
 
-    public $id;
-    public $requestingPlayerId;
-    public $isCheatingAllowed;
-    // transient only
-    private $log;
-    public $isPractice = false;
-    
-    public function __construct($gSessionId, $playerId) {
-        $this->log = Logger::getLogger(__CLASS__);
-        $this->id = (int)$gSessionId;
-        $this->requestingPlayerId = (int)$playerId;
-    }
+	public $id;
+	public $requestingPlayerId;
+	public $isCheatingAllowed;
+	// transient only
+	private $log;
+	public $isPractice = false;
+	public $isActive = true;
 
-    /**
-     * Create and save game instance. Initialize values including identifier but there is no real data.
-     * The number of players participating in this next game is set when the turns are reset.
-     * @param int $tableMin The minimize bet.
-     * @param type $statusDT
-     * @return GameInstance
-     */
-    public function InitNewLiveGameInstance() {
-        $statusDT = Context::GetStatusDT();
+	public function __construct($gSessionId, $playerId) {
+		$this->log = Logger::getLogger(__CLASS__);
+		$this->id = (int) $gSessionId;
+		$this->requestingPlayerId = (int) $playerId;
+	}
 
-        $nextInstanceId = getNextSequence('GameInstance', 'Id');
-        $gameInstance = new GameInstance($nextInstanceId);
-        $gameInstance->gameSessionId = $this->id;
-        $gameInstance->status = GameStatus::STARTED;
-        $gameInstance->startDateTime = $statusDT;
-        $gameInstance->lastUpdateDateTime = $statusDT;
-        // number of players set later while reseting turns.
-        // dealer and first player set later per business rules
-        $gameInstance->currentPotSize = 0;
-        $gameInstance->lastBetSize = 0;
-        $gameInstance->numberCommunityCardsShown = 0;
-        $gameInstance->lastInstancePlayNumber = 0;
+	/**
+	 * Create and save game instance. Initialize values including identifier but there is no real data.
+	 * The number of players participating in this next game is set when the turns are reset.
+	 * @param int $tableMin The minimize bet.
+	 * @param type $statusDT
+	 * @return GameInstance
+	 */
+	public function InitNewLiveGameInstance() {
+		$statusDT = Context::GetStatusDT();
 
-        $gameInstance->Insert();
-        return $gameInstance;
-    }
+		$nextInstanceId = getNextSequence('GameInstance', 'Id');
+		$gameInstance = new GameInstance($nextInstanceId);
+		$gameInstance->gameSessionId = $this->id;
+		$gameInstance->status = GameStatus::STARTED;
+		$gameInstance->startDateTime = $statusDT;
+		$gameInstance->lastUpdateDateTime = $statusDT;
+		// number of players set later while reseting turns.
+		// dealer and first player set later per business rules
+		$gameInstance->currentPotSize = 0;
+		$gameInstance->lastBetSize = 0;
+		$gameInstance->numberCommunityCardsShown = 0;
+		$gameInstance->lastInstancePlayNumber = 0;
 
-    /**
-     * Communicates game started to the list of recipients. 
-     * @param type $instanceSetupDto
-     * @param Player[] $recipientPlayers Cannot be PlayerInstance because waiting players need to be communicated
-     */
-    function CommunicateGameStarted($gameStatusDto, $recipientPlayers) {
-        $QEx = Context::GetExchangePlayer();
+		$gameInstance->Insert();
+		return $gameInstance;
+	}
 
-        $eventType = EventType::GameStarted;
-        $instanceId = $gameStatusDto->gameInstanceId;
+	/**
+	 * Communicates game started to the list of recipients. 
+	 * @param type $instanceSetupDto
+	 * @param Player[] $recipientPlayers Cannot be PlayerInstance because waiting players need to be communicated
+	 */
+	function CommunicateGameStarted($gameStatusDto, $recipientPlayers) {
+		$QEx = Context::GetExchangePlayer();
 
-        for ($i = 0; $i < count($recipientPlayers); $i++) {
-            $playerId = $recipientPlayers[$i]->id;
-            $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $instanceId);
+		$eventType = EventType::GameStarted;
+		$instanceId = $gameStatusDto->gameInstanceId;
 
-            $message = new QueueMessage($eventType, $gameStatusDto);
-            //$message->eventData = $instanceSetupDto;
-            QueueManager::SendToPlayer($QEx, $playerId, json_encode($message));
-            //}
-        }
-    }
+		for ($i = 0; $i < count($recipientPlayers); $i++) {
+			$playerId = $recipientPlayers[$i]->id;
+			$gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $instanceId);
+
+			$message = new QueueMessage($eventType, $gameStatusDto, $this->id);
+			//$message->eventData = $instanceSetupDto;
+			QueueManager::SendToPlayer($QEx, $playerId, json_encode($message));
+			//}
+		}
+	}
+
+	/**
+	 * game was reset, communicate to all active players.
+	 */
+	function communicateResetStatus($casinoTable) {
+		$recipientPlayers = EntityHelper::GetPlayersForCasinoTable($casinoTable->id);
+		$gameStatusDto = GameStatusDto::InitResetSession($recipientPlayers, $casinoTable);
+
+		$QEx = Context::GetExchangePlayer();
+
+		// shortcut
+		$eventType = EventType::ChangeNextTurn;
+		for ($i = 0; $i < count($recipientPlayers); $i++) {
+			$playerId = $recipientPlayers[$i]->id;
+
+			$gameStatusDto->userPlayerId = $playerId;
+			$gameStatusDto->userSeatNumber = $recipientPlayers[$i]->currentSeatNumber;
+			$message = new QueueMessage($eventType, $gameStatusDto, $this->id);
+			//$message->eventData = $instanceSetupDto;
+			QueueManager::SendToPlayer($QEx, $playerId, json_encode($message));
+			//}
+		}
+	}
+
+	function EndSession() {
+		executeSQL("UPDATE GameSession SET IsActive = 0 "
+				. "WHERE Id = " . $this->id, ": Error ending game session id " . $this->id);
+	}
+
+	function Delete() {
+		executeSQL("DELETE FROM GameSession  "
+				. "WHERE Id = " . $this->id, ": Error deleting game session id " . $this->id);
+	}
 
 }
+
 ?>

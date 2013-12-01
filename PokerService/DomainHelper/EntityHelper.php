@@ -21,6 +21,7 @@ class EntityHelper {
         $obj = new CasinoTable();
         $obj->id = (int) $row["Id"];
         $obj->name = $row["Name"];
+		$obj->code = $row["Code"];
         $obj->tableMinimum = (int) $row["TableMinimum"];
         $obj->numberSeats = (int) $row["NumberSeats"];
         $obj->lastUpdateDateTime = DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
@@ -55,12 +56,12 @@ class EntityHelper {
      * @param type $cTableId
      * @return CasinoTable 
      */
-    public static function getCasinoTableByName($tableName) {
-        if (is_null($tableName) || $tableName == "") {
+    public static function getCasinoTableByCode($tableCode) {
+        if (is_null($tableCode) || $tableCode == "") {
             return null;
         }
-        $result = executeSQL("SELECT * FROM CasinoTable WHERE Name = '$tableName'", __FUNCTION__ .
-                ": Error selecting from CasinoTable casino $tableName");
+        $result = executeSQL("SELECT * FROM CasinoTable WHERE Code = '$tableCode'", __FUNCTION__ .
+                ": Error selecting from CasinoTable casino $tableCode");
         if (mysql_num_rows($result) == 0) {
             return null;
         }
@@ -92,27 +93,27 @@ class EntityHelper {
      * @param type $statusString
      * @return CasinoTable 
      */
-    public static function createCasinoTable($tableName, $betSize, $numberSeats, $playerId) {
-        global $dateTimeFormat;
-        $statusString = Context::GetStatusDT()->format($dateTimeFormat);
+    public static function createCasinoTable($tableName, $tableCode, $betSize, $numberSeats, $playerId) {
+        $statusString = Context::GetStatusDTString();
 
         // resetting the id
         $nextTableId = getNextSequence('CasinoTable', 'Id');
         $gameSessionId = getNextSequence('GameSession', 'Id');
         // TODO: need business rules for setting table minimums.
-        executeSQL("INSERT INTO CasinoTable (Id, Name, TableMinimum, NumberSeats,
+        executeSQL("INSERT INTO CasinoTable (Id, Name, Code, TableMinimum, NumberSeats,
                     LastUpdateDateTime, CurrentGameSessionId, SessionStartDateTime) VALUES
-                    ($nextTableId, '$tableName', $betSize, $numberSeats, '$statusString',
-                    $gameSessionId, '$statusString')", __FUNCTION__ .
+                    ($nextTableId, '$tableName', '$tableCode', $betSize, $numberSeats, 
+                    '$statusString', $gameSessionId, '$statusString')", __FUNCTION__ .
                 ": Error inserting into casino with generated id $nextTableId");
         executeSQL("INSERT INTO GameSession (Id, RequestingPlayerId,
-                TableMinimum, NumberSeats, StartDateTime,
-                    IsPractice) VALUES ($gameSessionId, $playerId, $betSize, $numberSeats,
-                    '$statusString', 0)", __FUNCTION__ .
+                TableMinimum, NumberSeats, StartDateTime, IsPractice,
+                    IsActive) VALUES ($gameSessionId, $playerId, $betSize, $numberSeats,
+                    '$statusString', 0, 1)", __FUNCTION__ .
                 ": Error inserting into GameSession with generated id $gameSessionId");
         $casinoTable = new CasinoTable();
         $casinoTable->id = $nextTableId;
         $casinoTable->name = $tableName;
+		$casinoTable->code = $tableCode;
         $casinoTable->tableMinimum = $betSize;
         $casinoTable->numberSeats = $numberSeats;
         $casinoTable->lastUpdateDateTime = Context::GetStatusDT();
@@ -138,6 +139,7 @@ class EntityHelper {
         } else {
             $gameSession = new GameSession($row["Id"], $row["RequestingPlayerId"]);
         }
+        $gameSession->isActive = is_null($row["IsActive"]) ? null : (int) $row["IsActive"];
         return $gameSession;
     }
 
@@ -154,10 +156,10 @@ class EntityHelper {
         $startString = $gameSession->startDateTime->format($dateTimeFormat);
 
         executeSQL("INSERT INTO GameSession (Id, RequestingPlayerId,
-            StartDateTime, TableMinimum, NumberSeats,
+            StartDateTime, TableMinimum, NumberSeats, IsActive,
                 IsPractice) VALUES ($gameSession->id, $gameSession->requestingPlayerId,
-                '$startString', $gameSession->tableMinimum,
-                $gameSession->numberSeats, $gameSession->isPractice) "
+                '$startString', $gameSession->tableMinimum, $gameSession->numberSeats, 
+                $gameSession->isActive, $gameSession->isPractice) "
                 , __FUNCTION__ . ": ERROR insert into game session");
         return $gameSession;
     }
@@ -174,17 +176,19 @@ class EntityHelper {
         $expirationDateTime->sub(new DateInterval($sessionExpiration)); // 24 hours
         $expString = $expirationDateTime->format($dateTimeFormat);
 
-        $result = executeSQL("SELECT s.Id FROM GameSession s " .
+        $result = executeSQL("SELECT distinct(s.Id) Id FROM GameSession s " .
                 " LEFT JOIN GameInstance i on s.Id = i.GameSessionId" .
-                " WHERE i.LastUpdateDateTime >= '$expString' OR " .
-                " (s.StartDateTime >= '$expString' AND i.Id is null)", ": Error selecting active practice and live game sessions");
+                " WHERE (i.LastUpdateDateTime >= '$expString' OR " .
+                " (s.StartDateTime >= '$expString' AND i.Id is null)) " .
+				" AND s.IsActive = 1", 
+				": Error selecting active practice and live game sessions");
         if (mysql_num_rows($result) == 0) {
             return null;
         }
         $gameSessionIds = null;
         $i = 0;
-        while ($row = mysql_fetch_array($result)) {
-            $gameSessionIds[$i] = (int) $row["Id"];
+        while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+            $gameSessionIds[$i++] = (int) $row["Id"];
         }
         return $gameSessionIds;
     }
@@ -396,8 +400,7 @@ class EntityHelper {
      */
     public static function createPlayer($playerName) {
         global $defaultAvatarUrl;
-        global $dateTimeFormat;
-        $statusString = Context::GetStatusDT()->format($dateTimeFormat);
+        $statusString = Context::GetStatusDTString();
         $nextPlayerId = getNextSequence('Player', 'Id');
         if ($playerName == 'Guest') {
             $playerName = 'Guest' . $nextPlayerId;
@@ -426,13 +429,12 @@ class EntityHelper {
     public static function createPracticePlayer($playerName, $seatNum) {
         global $defaultAvatarUrl;
         global $defaultTableMin;
-        global $dateTimeFormat;
         global $buyInMultiplier;
 
         $nextPlayerId = getNextSequence('Player', 'Id');
         $imageUrl = $defaultAvatarUrl;
         $buyIn = $defaultTableMin * $buyInMultiplier;
-        $statusString = Context::GetStatusDT()->format($dateTimeFormat);
+        $statusString = Context::GetStatusDTString();
 
         executeSQL("INSERT INTO Player (Id, IsVirtual, Name, ImageUrl, CurrentCasinoTableId,
             CurrentSeatNumber, BuyIn, LastUpdateDateTime, WaitStartDateTime)

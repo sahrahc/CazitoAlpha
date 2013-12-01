@@ -6,194 +6,270 @@
  * 1) all the player's items such as status box, messages, dealer button and cards
  * 2) community cards
  */
+jQuery(document).ready(function() {
+    jQuery('#cheatingCatalogCarousel').jcarousel({
+	vertical: true,
+	start: 1,
+	size: 11,
+	scroll: 2,
+	visible: 9,
+	wrap: "circular"
+    });
+
+    cazito.setGlobalVar("hiddenItemType", "grooveCards");
+});
+
 window.onload = function() {
     // check if there is a user id; if not redirect to the saloon
     if ($.cookies.get("userPlayerId") === null) {
-        // FIXME: seedy salon is hard coded, there should be another login page.
-        window.location = 'Home.php';
+	// FIXME: seedy salon is hard coded, there should be another login page.
+	window.location.replace("Home.php");
     }
-    O('hello').innerHTML = "Hello " + $.cookies.get("playerName");
-    //$('#dialog-modal').dialog('open');
+    O('leaveSaloonButton').value = 'Leave Table';
+
+    // make rest call to join table
+    if ($.cookies.get("tableId") !== null) {
+	joinCasinoTable();
+    }
+    if ($.cookies.get("tableId") === null) {
+	alert('You need to select a table, please go to home page');
+	window.location.replace("Home.php");
+    }
+    // use previously saved count on cookie
+    updateWaitlistCount();
+    $.cookies.set("vanilla-play", 0);
 
     // load sleeve. This is the only cheating option that is activated before going to a table
-    cheatLoadSleeve();
-
+    var cardList = $.cookies.get("sleeveCards", cardList);
+    if (cardList !== null) {
+	cheatUpdateHiddenCards($("#sleeveCards"), cardList);
+    }
+    var cardList = $.cookies.get("grooveCards", cardList);
+    if (cardList !== null) {
+	cheatUpdateHiddenCards($("#grooveCards"), cardList);
+    }
     /*
      var widthToHeight = 4 / 3;
      var newWidth = window.innerWidth;
      var newHeight = window.innerHeight;
      */
-    animateCard();
+    /* refreshHeaderPlay() and animateCard() from joinCasinoTableCallback() */
 
-    // some cheating items are disabled because of dependencies
-    O('LookRiverCard-swap').disabled = true;
-    O('LookRiverCard-look').disabled = false;
+    // cheating items
+    resetCheatingOnSessionStart();
+    resetCheatingOnGameStart();
 
-    disableInstanceItems(false);
-
-    O('TableTucker-Act').disabled = false;
-    O('SocialSpotter-Act').disabled = false;
-    O('SnakeOilMarker-Act').disabled = false;
-    O('AntiOilMarker-Act').disabled = false;
-    O('FaceMelter-Act').disabled = false;
+    // why is this needed?
+    //disableCheatingItems(false);
 
 };
+
 /********************************************************************************************/
-function cheatAcePusher(cardNumber) {
+function cheat(arg) {
+    var instanceId = O('gameInstanceId').innerHTML;
+
     var eventData = {
-        itemType: ACE_PUSHER,
-        playerCardNumber: cardNumber
+	itemType: arg.itemType,
     };
+    if (eventData.itemType === null) {
+	eventData.itemType = $(this).attr("id");
+    }
+    switch (arg.itemType) {
+	// nothing else to do for suit markers
+	case HEART_MARKER:
+	case CLUB_MARKER:
+	case DIAMOND_MARKER:
+	    break;
+	case ACE_PUSHER:
+	    eventData.playerCardNumber = arg.playerCardNumber;
+	    break;
+	case USE_CARD_ON_SLEEVE:
+	    eventData.playerCardNumber = arg.playerCardNumber;
+	    eventData.hiddenCardNumber = arg.hiddenCardNumber;
+	    break;
+	case RIVER_SHUFFLER:
+	    // set next river action on response
+	    break;
+	case RIVER_SHUFFLER_USE:
+	    //S(RIVER_SHUFFLER_USE + '-div').display = 'none';
+	    break;
+	case POKER_PEEKER:
+	    eventData.otherPlayerId = arg.otherPlayerId;
+	    eventData.playerCardNumber = arg.playerCardNumber;
+	    break;
+	case SOCIAL_SPOTTER:
+	    break;
+	case TUCKER_TABLE_SLIDE_UNDER:
+	    eventData.cardNameList = [];
+	    $("#selectedCards").children().each(function() {
+		var child = $(this);
+		eventData.cardNameList.push(child.attr("title"));
+	    });
+	    // empty the card list on dialog
+	    $("selectedCards").empty();
+	    break;
+	case TUCKER_TABLE_EXCHANGE:
+	    eventData.playerCardNumber = arg.playerCardNumber;
+	    eventData.hiddenCardNumber = arg.hiddenCardNumber;
+	    break;
+	case SNAKE_OIL_MARKER:
+	    break;
+	case ANTI_OIL_MARKER:
+	    eventData.otherPlayerId = arg.otherPlayerId;
+	    break;
+	case KEEP_FACE_CARDS:
+	    break;
+    }
+    if ($.inArray(arg.itemTye, [HEART_MARKER, CLUB_MARKER, DIAMOND_MARKER,
+	ACE_PUSHER, USE_CARD_ON_SLEEVE,
+	RIVER_SHUFFLER, RIVER_SHUFFLER_USE,
+	POKER_PEEKER, TUCKER_TABLE_EXCHANGE]) && instanceId === null) {
+	alert('There is no active game');
+	return;
+    }
+
     sendRequest(CHEAT, eventData);
-}
 
-function cheat(itemType) {
-    if (itemType === RIVER_SHUFFLER || itemType === RIVER_SHUFFLER_USE) {
-        var instanceId = O('gameInstanceId').innerHTML;
-        if (instanceId === null) {
-            alert('There is no active game');
-            return;
-        }
-    }
- 
-    var eventData = {
-        itemType: itemType
-    };
-    sendRequest(CHEAT, eventData);
-    
-    // if sendRequest successful, disable. Lock out end message to be received
-    // lock out should start on successful use of item, so message will need
-    // to be sent.
-    switch (itemType) {
-        case RIVER_SHUFFLER:
-            O('LookRiverCard-swap').disabled = false;
-            O('LookRiverCard-look').disabled = true;
-        case RIVER_SHUFFLER_USE:
-            O('LookRiverCard-swap').disabled = true;
-            O('LookRiverCard-look').disabled = false;
-    };
-}
-/*
-function cheatLoadSleeve() {
-    var obj = {
-        userPlayerId: $.cookies.get("userPlayerId")
-    };
-
-    WSClient.call(LOAD_CARD_ON_SLEEVE, //"cheatLoadSleeve",
-            obj,
-            cheatUpdateHiddenCards);
-}
-*/
-/********************************************************************************************/
-function cheatSuitMarkerCallback(suit, cardList) {
-    /* FIXME: same as diamond and heart marker reuse */
-    for (var j = 0, m = cardList.length; j < m; j++) {
-        if (cardList[j].suit !== null && cardList[j].playerId !== $.cookies.get("userPlayerId")) {
-            var playerTag = getPlayerPositionTag(cardList[j].playerId);
-            var cardMarkerTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'Marker';
-            // using the small marker
-            var cardMarkerClassTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'SmallMarker';
-            S(cardMarkerTag).display = 'block';
-            /* set the class */
-            O(cardMarkerTag).src = "../../../images/PokerCard_" + suit + "_small.png";
-            O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
-        }
-    }
 }
 
 /********************************************************************************************/
-function updateCheatingEvent(eventData, eventType, eventDateTime) {
-    if (eventType === ITEM_UNLOCK) {
-        O(eventType + '-Act').disabled = false;
-        unDimItem(eventType + '-Act');
-        O('logFrame').innerHTML = eventDateTime + ' - ' + eventData.itemType + 'is now available. <br />' + O('logFrame').innerHTML;
+function updateCheatingEvent(itemType, eventData, eventType) {
+    /*
+     if (eventType === ITEM_UNLOCK) {
+     O(itemType).disabled = false;
+     unDimItem(itemType);
+     }
+     else if (eventType === ITEM_END) {
+     O(itemType).disabled = true;
+     dimItem(itemType);
+     }
+     else if (eventType === ITEM_LOG && eventData.isDisabled === 1
+     && itemType !== RIVER_SHUFFLER_USE
+     && itemType !== TUCKER_TABLE_SLIDE_OUT
+     && itemType !== TUCKER_TABLE_EXCHANGE) {
+     O(itemType).disabled = true;
+     //dimItem(itemType + '-Act');
+     }
+     */
+    if (eventData.isDisabled === 0) {
+	if (itemType === RIVER_SHUFFLER_USE || itemType === RIVER_SHUFFLER) {
+	    // second condition should never happen
+	    cazito.setGlobalVar(RIVER_SHUFFLER, 'Enabled');
+	}
+	else if (itemType === SNAKE_OIL_MARKER_COUNTERED) {
+	    unGreyItem(SNAKE_OIL_MARKER);
+	} else {
+	    unGreyItem(itemType);
+	}
+	// click must match cheatingCatalog.html
+	switch (itemType) {
+	    /* simple queue message */
+	    case HEART_MARKER:
+	    case CLUB_MARKER:
+	    case DIAMOND_MARKER:
+	    case SOCIAL_SPOTTER:
+	    case SNAKE_OIL_MARKER:
+		O(itemType).onclick = function() {
+		    cheat({itemType: itemType});
+		};
+		break;
+	    case SNAKE_OIL_MARKER_COUNTERED:
+		O(SNAKE_OIL_MARKER).onclick = function() {
+		    cheat({itemType: SNAKE_OIL_MARKER});
+		};
+		break;
+	    case RIVER_SHUFFLER:
+		O(RIVER_SHUFFLER_USE + '-image').onclick = function() {
+		    cheat({itemType: RIVER_SHUFFLER});
+		};
+		break;
+	    case RIVER_SHUFFLER_USE:
+		O(RIVER_SHUFFLER + '-image').onclick = function() {
+		    cheat({itemType: RIVER_SHUFFLER});
+		    hideDescription($('#' + RIVER_SHUFFLER));
+		};
+		break;
+		/* draggables */
+	    case ACE_PUSHER:
+	    case POKER_PEEKER:
+	    case ANTI_OIL_MARKER:
+		$('#' + itemType + ' img').draggable('enable');
+		break;
+		/* not time-locked
+		 case KEEP_FACE_CARDS:
+		 case TUCKER_TABLE_SLIDE_UNDER:
+		 case TUCKER_TABLE_SLIDE_OUT:
+		 case TUCKER_TABLE_EXCHANGE:
+		 */
+	}
     }
-    else if (eventType === ITEM_LOG) {
-        O('logFrame').innerHTML = eventDateTime + ' - ' + eventData + '<br />' + O('logFrame').innerHTML;
+    else if (eventData.isDisabled === 1) {
+	if (itemType === RIVER_SHUFFLER) {
+	    cazito.setGlobalVar(RIVER_SHUFFLER, 'Disabled');
+	}
+	else if (itemType === RIVER_SHUFFLER_USE) {
+	    cazito.setGlobalVar(RIVER_SHUFFLER, 'Disabled');
+	    // river shuffler use does not get disabled/greyed only hidden
+	    greyItem(RIVER_SHUFFLER);
+	    O(RIVER_SHUFFLER + '-image').onclick = null;
+	} else if (itemType === POKER_PEEKER || itemType === ACE_PUSHER || itemType === ANTI_OIL_MARKER) {
+	    greyItem(itemType);
+	    //disable draggable
+	    $('#' + itemType + ' img').draggable('disable');
+	}
+	else {
+	    greyItem(itemType);
+	    O(itemType).onclick = null;
+	}
     }
-    else if (eventType === ITEM_END) {
-        O(eventType + '-Act').disabled = true;
-        dimItem(eventType + '-Act');
-        O('logFrame').innerHTML = eventDateTime + ' - ' + eventData.itemType + 'has now ended. <br />' + O('logFrame').innerHTML;
+
+    O('logEvent').innerHTML = eventData.info + '<br />' + O('logEvent').innerHTML;
+
+    // if pokerpeeker or anti-oil marker effectively applied, the cloned element
+    // on top of droppable should be removed.
+    if (itemType === POKER_PEEKER) {
+	$('#PokerPeekerCloned').remove();
+    }
+    else if (itemType === ANTI_OIL_MARKER) {
+	$('#AntiOilMarkerCloned').remove();
+    }
+    else if (itemType === ACE_PUSHER) {
+	$('#AcePusherCloned').remove();
+    }
+    else if (itemType === RIVER_SHUFFLER_USE) {
+	cazito.setGlobalVar("nextRiverAction", 'Look');
+	S(RIVER_SHUFFLER + '-image').display = 'inline';
+	S(RIVER_SHUFFLER_USE + '-div').display = 'none';
     }
 }
-/**
- * Display player hands updated via cheating
- * @param {playerHandDto} playerHandDto
- */
-function cheatUpdateUserHands(playerHandDto) {
-    if ($.cookies.get("userPlayerId") !== playerHandDto.playerId) {
-        return;
+/********************************************************************************************/
+
+function showDescription(itemType) {
+    if (itemType === null) {
+	//itemType = $(this).parent().attr("id");
+	return;
     }
-    var playerElement = getPlayerPositionTag($.cookies.get("userPlayerId"));
-    var cardNumber = playerHandDto.playerCardNumber;
-    O(playerElement + 'Card' + cardNumber).innerHTML = playerHandDto.cardName;
-    // FIXME: the status return is null, so it's set in the UI but
-    showPlayerCard(playerElement, cardNumber, playerHandDto.cardName);
+    if (itemType.id === RIVER_SHUFFLER &&
+	    cazito.getGlobalVar("nextRiverAction") === 'Swap') {
+	S(RIVER_SHUFFLER_USE + '-Desc').display = 'block';
+    }
+    else {
+	S(itemType.id + '-Desc').display = 'block';
+    }
 }
 
-/**
- * Display other players card value or suit.
- * @param {string[]} cardList
- */
-function cheatUpdateOthersCardsMarks(cardList) {
-    for (var j = 0, m = cardList.length; j < m; j++) {
-        // no need to update the user
-        if (cardList[j].playerId !== $.cookies.get("userPlayerId")) {
-            var playerTag = getPlayerPositionTag(cardList[j].playerId);
-            var cardMarkerTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'Marker';
-            S(cardMarkerTag).display = 'block';
-            /* reveal to player by setting the class attribute */
-            if (cardList[j].cardName !== null) {
-                var cardMarkerClassTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'LargeMarker';
-                O(cardMarkerTag).src = "../../../images/PokerCard_" + cardList[j].cardName + "_small.png";
-                O(cardMarkerTag).setAttribute("class", 'cardLargeMarker ' + cardMarkerClassTag);
-            }
-            /* suit only information shows up on back of card, small size (1/3 of card) */
-            else if (cardList[j].suit !== null) {
-                cardMarkerClassTag = playerTag + 'Card' + cardList[j].playerCardNumber + 'SmallMarker';
-                O(cardMarkerTag).src = "../../../images/PokerCard_" + cardList[j].suit + "_small.png";
-                O(cardMarkerTag).setAttribute("class", 'cardSmallMarker ' + cardMarkerClassTag);
-            }
-        }
+function hideDescription(itemType) {
+    if (itemType === null) {
+	//itemType = $(this).parent().attr("id");
+	null;
+    }
+    if (itemType.id === RIVER_SHUFFLER &&
+	    cazito.getGlobalVar("nextRiverAction") === 'Swap') {
+	S(RIVER_SHUFFLER_USE + '-Desc').display = 'none';
+    }
+    else {
+	S(itemType.id + '-Desc').display = 'none';
     }
 }
 
-/**
- * Display list of hidden cards the player maintains. Refresh the entire list.
- * Incremental updates later - more performant with very large number of users but far more complex
- * @param {array[]} cardNameCodes
- */
-function cheatUpdateHiddenCards(cardNameCodes) {
-    if (cardNameCodes === null) {
-        return;
-    }
-    $("#sleeve").empty();
-    $("#sleeve").append("<p>Sleeve:</ p>");
-    for (var i = 0; i < cardNameCodes.length; i++)
-    {
-        var card = cardNameCodes[i];
-        $("#sleeve").append("<img class='cheatingCard' src='../../../images/PokerCard_" + card
-                + "_small.png' title='" + card + "' alt='" + card + "' />");
-    }
-}
-
-/**
- * Display the lsit of upcoming cards off the deck.
- * Incremental updates later - more performant with very large number of users but far more complex
- * @param {string[]} cardNameCodes list of two-character card codes
- * @param {string} altMessage
- * @returns {none}
- */
-function cheatUpdateNextCards(cardNameCodes, altMessage) {
-    $("#nextCard").empty();
-    $("#nextCard").append("<p>Next Card:</ p>");
-    for (var i = 0; i < cardNameCodes.length; i++)
-    {
-        var card = cardNameCodes[i];
-        var alt = altMessage === null ? card : altMessage;
-        $("#nextCard").append("<img class='cheatingCard' src='../../../images/PokerCard_" + card
-                + "_small.png' title='" + card + "' alt='" + alt + "' />");
-    }
-}
-
+/********************************************************************************************/

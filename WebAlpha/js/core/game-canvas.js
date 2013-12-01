@@ -18,16 +18,19 @@ constCardNormalHeight = 60;
  * shows the specified community card
  */
 function showCommunityCards(communityCards) {
+    var startingPosition = +O('nextCommunityCardPosition').innerHTML;
     for (var j = 0, m = communityCards.length; j < m; j++) {
         // the cards are ordered, so the index is the position
-        card = {
-            position: j,
-            image: O('communityCard' + j),
+	var currentPosition = startingPosition+j;
+        var card = {
+            position: currentPosition,
+            image: O('communityCard' + currentPosition),
             playerId: -1,
             value: communityCards[j]
         };
         card.image.src = "../../../images/" + "PokerCard_" + communityCards[j] + "_small.png";
         cardQueue.push(card);
+	O('nextCommunityCardPosition').innerHTML = startingPosition + communityCards.length;
     }
 }
 
@@ -45,7 +48,7 @@ function animateCard() {
             // initialize
             var dealerPlayerTag = getPlayerPositionTag(O('currentDealerId').innerHTML);
             // get dealer button
-            var dealerButtonStyle = $('#' + dealerPlayerTag + 'DealerButton');
+            var dealerButtonStyle = $('#playerDealerButton');
             startX = getSize(dealerButtonStyle.css('left'));
             startY = getSize(dealerButtonStyle.css('top'));
             if (currentCard.playerId === -1) {

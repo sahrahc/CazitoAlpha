@@ -35,10 +35,10 @@ function cleanUpPlayerById($playerId) {
             "Error deleting PlayerAction player id $playerId");
     echo "Info: " . mysql_affected_rows() . " PlayerAction rows deleted for player.<br/>";
     
+    /*
     executeSQL("DELETE FROM ExpectedPokerMove WHERE PlayerId = $playerId",
             "Error deleting ExpectedPokerMove player id $playerId");
     echo "Info: " . mysql_affected_rows() . " ExpectedPokerMove rows deleted for player.<br/>";
-    
     // better to delete using GameInstance by Id, only used on tests
     executeSQL("UPDATE GameInstance 
     SET DealerPlayerId = null
@@ -47,7 +47,7 @@ function cleanUpPlayerById($playerId) {
             "Error deleting GameInstance player id $playerId");
     echo "Info: " . mysql_affected_rows() . " GameInstance rows deleted for player.<br />";
     
-    /* need to remove player from game instance */
+    //need to remove player from game instance 
     executeSQL("UPDATE GameInstance 
     SET DealerPlayerId = null
     WHERE DealerPlayerId = $playerId", 
@@ -65,7 +65,7 @@ function cleanUpPlayerById($playerId) {
     WHERE NextPlayerId = $playerId",
             "Error updating GameInstance next player id $playerId to null");
     echo "Info: " . mysql_affected_rows() . " GameInstance rows updated for player.<br />";
-
+*/
     // delete from Player
     executeSQL("DELETE FROM Player WHERE Id = $playerId",
             "Error deleting Player with id $playerId");

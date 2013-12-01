@@ -7,13 +7,17 @@ $name = 'Test0';
 //////////////////////////
 
 /**
+ * Waiting List - Regression smoke have five players join a table. Fifth
+ * player on waiting list. Start game and 2 on round 2 and leave one on
+ * round 3. End game and start another. Verify waiting list and active players
+ * Regresion smoke tests the right players are included in next game
+ * and  turns set correctly on next play
  * Add users to table and grow waiting list to three
  * Have second seated player leave
  * The first waiting user should be offered the seat - verify message
  * The user accepts the seat - verify message to all players
  */
 include('../PokerPlayerService.php');
-include('showObject.php');
 
 /* * ********************************************************************************
  * Setup

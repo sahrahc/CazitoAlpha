@@ -53,7 +53,7 @@ class GameStatusDto {
      * @param type $players
      * @param type $casinoTable
      */
-    public static function Init($requestingPlayer, $players, $casinoTable) {
+    public static function InitForTable($requestingPlayer, $players, $casinoTable, $addNames=false) {
         global $dateTimeFormat;
         $gameStatusDto = new GameStatusDto();
 
@@ -61,30 +61,58 @@ class GameStatusDto {
         $gameStatusDto->casinoTableId = $casinoTable->id;
         $userDto = new PlayerDto($requestingPlayer);
         $gameInstance = EntityHelper::getSessionLastInstance($casinoTable->currentGameSessionId);
-
-        if ($gameInstance) {
+		if ($gameInstance) {
+        $gameCards = new GameInstanceCards($gameInstance->id, $gameInstance->numberCommunityCardsShown);
             $gameStatusDto->gameInstanceId = $gameInstance->id;
             $gameStatusDto->gameStatus = $gameInstance->status;
             $gameStatusDto->statusDateTime = $gameInstance->lastUpdateDateTime->format($dateTimeFormat);
             $gameStatusDto->dealerPlayerId = $gameInstance->dealerPlayerId;
-            $gameStatusDto->playerStatusDtos = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);
-            $gameStatusDto->nextMoveDto = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstance->id);
+			// doesn't get players seated but not in game
+            $gameStatusDto->playerStatusDtos = PlayerInstance::GetPlayersWithStates($gameInstance->id, $casinoTable->id);
+			$gameStatusDto->nextMoveDto = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstance->id);
             $gameStatusDto->currentPotSize = $gameInstance->currentPotSize;
             
-            $gameStatusDto->communityCards = CardHelper::getCommunityCardDtos($gameInstance->id, $gameInstance->numberCommunityCardsShown);
+            $gameStatusDto->communityCards = $gameCards->GetSavedCommunityCardDtos();
             $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($requestingPlayer->id, $gameInstance->id);
             if ($gameInstance->status === GameStatus::ENDED) {
                 $gameStatusDto->winningPlayerId = $gameInstance->winningPlayerId;
-                $gameStatusDto->playerHandsDto = PlayerHandDto::mapPlayerHands($gameInstance->playerHands);
+				$gameCards = new GameInstanceCards($gameInstance->id);
+				$gameCards->GetSavedCards();
+                $gameStatusDto->playerHandsDto = PlayerHandDto::mapPlayerHands($gameCards->playerHands);
             }
         } else {
             $gameStatusDto->gameStatus = GameStatus::NONE;
-            $gameStatusDto->statusDateTime = Context::GetStatusDT()->format($dateTimeFormat);
+            $gameStatusDto->statusDateTime = Context::GetStatusDTString();
             $gameStatusDto->playerStatusDtos = PlayerStatusDto::mapPlayers($players, PlayerStatusType::WAITING, true);
         }
+		$gameStatusDto->userPlayerId = $userDto->playerId;
         $gameStatusDto->userSeatNumber = $userDto->currentSeatNumber;
 
         $gameStatusDto->waitingListSize = $casinoTable->getWaitingListSize();
+        return $gameStatusDto;
+    }
+ 
+	public static function InitResetSession($players, $casinoTable) {
+        global $dateTimeFormat;
+        $gameStatusDto = new GameStatusDto();
+
+        $gameStatusDto->gameSessionId = $casinoTable->currentGameSessionId;
+        $gameStatusDto->casinoTableId = $casinoTable->id;
+            $gameStatusDto->gameStatus = GameStatus::NONE;
+            $gameStatusDto->statusDateTime = Context::GetStatusDTString();
+            $gameStatusDto->playerStatusDtos = PlayerStatusDto::mapPlayers($players, PlayerStatusType::WAITING, true);
+        $gameStatusDto->waitingListSize = $casinoTable->getWaitingListSize();
+        return $gameStatusDto;
+		
+	}
+    public static function InitForInstance($gameInstance) {
+        global $dateTimeFormat;
+        $gameStatusDto = new GameStatusDto();
+		$gameStatusDto->gameSessionId = $gameInstance->gameSessionId;
+		$gameStatusDto->gameInstanceId = $gameInstance->id;
+		$gameStatusDto->dealerPlayerId = $gameInstance->dealerPlayerId;
+		$gameStatusDto->statusDateTime = $gameInstance->lastUpdateDateTime->format($dateTimeFormat);
+
         return $gameStatusDto;
     }
 
@@ -94,12 +122,11 @@ class GameStatusDto {
      * @param type $requestingPlayerId
      */
     public static function SetStartedGame($gameInstance) {
-        global $dateTimeFormat;
         $gameStatusDto = new GameStatusDto();
         $gameStatusDto->gameSessionId = $gameInstance->gameSessionId;
         $gameStatusDto->gameInstanceId = $gameInstance->id;
         $gameStatusDto->gameStatus = GameStatus::STARTED;
-        $gameStatusDto->statusDateTime = Context::GetStatusDT()->format($dateTimeFormat);
+        $gameStatusDto->statusDateTime = Context::GetStatusDTString();
         $gameStatusDto->dealerPlayerId = $gameInstance->dealerPlayerId;
         $gameStatusDto->currentPotSize = $gameInstance->currentPotSize;
         return $gameStatusDto;

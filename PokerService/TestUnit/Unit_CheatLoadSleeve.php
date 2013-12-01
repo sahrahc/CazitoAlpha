@@ -2,7 +2,6 @@
 
 include(dirname(__FILE__) . '/../PokerPlayerService.php');
 include_once(dirname(__FILE__) . '/../Metadata.php');
-include('showObject.php');
 
 /**********************************************************************************
  * Setup

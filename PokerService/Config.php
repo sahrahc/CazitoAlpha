@@ -18,35 +18,37 @@ $defaultAvatarUrl = 'Avatar_user0.jpeg';
 
 /* * ***************************************************************************************************** */
 // time outs
-$playerTimeOut = 'PT2M'; // period after which a player is considered inactive
-$instanceTimeOut = 'PT1M'; // period after which an instance is considered inactive
+//$playerTimeOut = 'PT2M'; // period after which a player is considered inactive
+$instanceTimeOut = 'PT5H'; // period after which an instance is considered inactive
 $playExpiration = 'PT20S'; // time given to a player to make a move
 $practiceExpiration = 'PT2S'; // time between practice player moves
-$moveTimeOut = 'PT20M'; // time when next move is purged from the queue.
-$sessionExpiration = 'PT24H';
-$waitSessionExpiration = 'PT12H'; // time before a session without games is expired
+//$moveTimeOut = 'PT20M'; // time when next move is purged from the queue.
+$sessionExpiration = 'PT5H'; // time before a session without games or player joining table is expired
 /* * ***************************************************************************************************** */
 // cheating time outs
 $cHeartMarkerTimeOut = 'PT5M';
 $cClubMarkerTimeOut = 'PT1M';
 $cDiamondMarkerTimeOut = 'PT3M';
-$cRiverShufflerTimeOut = 'PT10M'; // the Swap Time Out is the same
+$cRiverShufflerTimeOut = 'PT10M'; 
 $cPokerPeekerTimeOut = 'PT15M';
-$cSocialSpotterTimeOut = 'PT60M';
-$cSocialSpotterDuration = 'PT45M';
-$cSnakeOilMarkerTimeOut = 'PT30M';
-$cAntiOilMarkerTimeOut = 'PT60M';
+$cSocialSpotterTimeOut = 'PT6M'; //60
+$cSocialSpotterDuration = 'PT4M'; //45
+$cSnakeOilMarkerTimeOut = 'PT3M';
+$cSnakeOilMarkerDuration = 'PT2M';
+$cAntiOilMarkerTimeOut = 'PT4M';
 //$cRiverBendoTimeOut = 'PT10M';
 
 /* * ***************************************************************************************************** */
 /* messaging - centralized config parmeters helps with deployment */
 $stomp_port = 61613;
-$stomp_host = 'localhost';
+$stomp_host = '192.168.1.70';
+//$stomp_host = 'localhost';
 $stomp_exchange = 'direct';// 'player';
 $stomp_vhost = '/';
 /* * ***************************************************************************************************** */
 $amqp_port = 5672;
-$amqp_host = 'localhost';
+$amqp_host = '192.168.1.70';
+//$amqp_host = 'localhost';
 $amqp_player_exchange = 'player';
 $amqp_session_exchange = 'session';
 $amqp_chat_exchange = 'chat';

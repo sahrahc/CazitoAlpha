@@ -8,9 +8,9 @@
                     <td colspan="3"><strong>Member Login </strong></td>
                 </tr>
                 <tr>
-                    <td width="78">Username</td>
+                    <td width="78">User Name: </td>
                     <td width="6">:</td>
-                    <td width="294"><input name="UserName" type="text" id="UserName"></td>
+                    <td width="294"><input name="ProtoTester" type="text" id="ProtoTester"></td>
                 </tr>
                 <tr>
                     <td>Password</td>

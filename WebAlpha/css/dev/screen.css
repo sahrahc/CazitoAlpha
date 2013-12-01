@@ -1,149 +1,137 @@
-/*
+/*!
 */
+/* main section, between header and footer */
+/* header and footer width are window's'  */
+/* cheating */
 /* line 1, ../sass/core/_footer.scss */
 footer#textLinks {
-  width: 100%;
-  background-color: #9EB8F0;
-  height: 27px;
+  background-color: #9eb8f0;
+  height: 30px;
   color: #111111;
-  font-size: 11px;
-  margin-top: -27px;
-  /* Sticky footer */
-  position: relative;
-  /*holds logo and date*/
+  font-size: 0.9em;
+  position: absolute;
+  top: 560px;
+  width: 100%;
+  /* columns in the left hold logo and date*/
   /*holds text links*/
 }
-/* line 13, ../sass/core/_footer.scss */
+/* line 14, ../sass/core/_footer.scss */
 footer#textLinks .left {
   padding-left: 21px;
   padding-top: 6px;
 }
-/* line 19, ../sass/core/_footer.scss */
+/* line 20, ../sass/core/_footer.scss */
 footer#textLinks p {
   margin-top: 0;
   margin-bottom: 0;
   padding: 0;
 }
-/* line 24, ../sass/core/_footer.scss */
+/* line 25, ../sass/core/_footer.scss */
 footer#textLinks p a {
   display: inline;
   color: #111111;
   margin: 0 8px;
   text-decoration: none;
 }
-/* line 30, ../sass/core/_footer.scss */
+/* line 31, ../sass/core/_footer.scss */
 footer#textLinks p a:hover {
   color: #d23420;
 }
 
-/*
-.containerInner {
-    @include opacity(1);
-}
-*/
 /* line 1, ../sass/core/_header.scss */
 header#main {
+  position: relative;
+  vertical-align: middle;
+  height: 60px;
   background-color: khaki;
   padding: 0;
-  margin-bottom: 53px;
-  position: relative;
-  width: 100%;
-  height: 50px;
-  text-align: left;
   z-index: 101;
 }
-
-/* line 12, ../sass/core/_header.scss */
-#logo {
+/* line 10, ../sass/core/_header.scss */
+header#main a {
   float: left;
-  margin-right: 4px;
 }
-
-/* line 16, ../sass/core/_header.scss */
-#header-central {
-  height: 123px;
-  margin: 0 auto;
-  /*width: 1070px; 
-  width:642px;*/
-  width: 1014px;
-  z-index: 10;
+/* line 13, ../sass/core/_header.scss */
+header#main img {
+  padding: 5px;
+  width: 40px;
+  height: 50px;
 }
-/* line 23, ../sass/core/_header.scss */
-#header-central p {
+/* line 18, ../sass/core/_header.scss */
+header#main .greetings {
   float: left;
-  width: 500px;
-  font-size: 1.5em;
-  color: white;
+  position: relative;
+  width: 400px;
+  padding-top: 8px;
+}
+/* line 25, ../sass/core/_header.scss */
+header#main nav {
+  float: right;
+}
+/* line 27, ../sass/core/_header.scss */
+header#main nav li {
+  width: 80px;
+  display: inline;
 }
 
-/* line 3, ../sass/core/_html.scss */
-h1 {
-  font-size: 1.8em;
-  padding: 0 0 0 0;
-  margin: 0 0 0 0;
+/* line 35, ../sass/core/_header.scss */
+#dialog-login {
+  display: none;
 }
 
-/* line 8, ../sass/core/_html.scss */
-h2 {
-  font-size: 1.8em;
+/* line 36, ../sass/core/_header.scss */
+#dialog-register {
+  display: none;
 }
 
-/* line 11, ../sass/core/_html.scss */
-strong {
+/* line 2, ../sass/core/_html.scss */
+body {
+  font-size: 12px;
+}
+/* line 5, ../sass/core/_html.scss */
+body h1 {
+  font-size: 200%;
+  color: #523455;
+}
+/* line 9, ../sass/core/_html.scss */
+body h2 {
+  font-size: 120%;
+}
+/* line 12, ../sass/core/_html.scss */
+body h5 {
+  font-size: 100%;
   font-weight: bold;
+}
+/* line 16, ../sass/core/_html.scss */
+body strong {
+  font-weight: bold;
+}
+/* line 19, ../sass/core/_html.scss */
+body a:active {
+  color: lime;
 }
 
 /* Position the major areas. Because of reset, all the sizes must add up*/
 /* layout **************************************************************/
-/* the main part, may be contain left and right frames */
-/* line 4, ../sass/core/_layout.scss */
-.main {
-  width: 1024px;
-  height: 768px;
-  padding: 5px 5px;
-  z-index: -1;
-  background-image: url("../../../images/window-bg.png");
-  background-repeat: no-repeat;
-}
-
-/* line 12, ../sass/core/_layout.scss */
-.main left-frame {
-  width: 220px;
-  height: 444px;
-  padding: 5px 5px 5px 0px;
-  float: left;
-}
-
-/* line 18, ../sass/core/_layout.scss */
-.main right-frame {
-  position: relative;
-  /* elements within must align top or bottom */
-  width: 152px;
-  height: 436px;
-  border-radius: 3px;
-  /* left: 642px; /* = container width */
-  float: right;
-}
-
-/* line 26, ../sass/core/_layout.scss */
-.log {
-  width: 1014px;
-  height: 80px;
-  background-color: white;
-  text-align: left;
-  color: blue;
-  clear: both;
-  opacity: 0.6;
-  border-radius: 3px;
-  padding: 5px 5px;
-  margin-bottom: 5px;
-  overflow: auto;
+/* the main part, may be contain left and right frames 
+/* dimensions and positioning for the header and footer on respective css files */
+/* line 5, ../sass/core/_layout.scss */
+.region {
+  position: absolute;
+  top: 60px;
+  height: 500px;
+  padding: 0px 0px;
 }
 
 /* header **************************************************************/
 /* ul on the top area is for session information only hence no display */
-/* line 41, ../sass/core/_layout.scss */
+/* line 13, ../sass/core/_layout.scss */
 .hiddenVariables {
+  display: none;
+}
+
+/* line 16, ../sass/core/_layout.scss */
+.dialog-modal {
   display: none;
 }
 
@@ -155,18 +143,29 @@ strong {
         Purpose of the stylesheet follows.
 */
 /* #messagingFrame */
-/* line 11, ../sass/core/_messaging.scss */
-.msg {
+/* line 10, ../sass/core/_messaging.scss */
+#region-messaging {
+  width: 160px;
+  height: 500px;
+  background-color: #8b9dc3;
+  left: 872px;
+  /*#casinoTableHeader
+  {
+  margin-bottom: 0;
+  }
+  */
+}
+/* line 17, ../sass/core/_messaging.scss */
+#region-messaging .msg {
   /* top: 0px; */
   margin-bottom: 0px;
-  height: 201px;
-  margin: 1px 0px 0px 5px;
+  height: 250px;
   border: 2px solid #B6BFD7;
   background-color: #EEEEEE;
   border-radius: 3px;
 }
-/* line 21, ../sass/core/_messaging.scss */
-.msg p {
+/* line 26, ../sass/core/_messaging.scss */
+#region-messaging .msg p {
   width: 144px;
   text-align: center;
   border: 1px solid #7E8493;
@@ -177,12 +176,12 @@ strong {
   font-size: 0.8em;
   background-color: #7E8493;
 }
-/* line 32, ../sass/core/_messaging.scss */
-.msg .msgForm {
+/* line 37, ../sass/core/_messaging.scss */
+#region-messaging .msg .msgForm {
   display: block;
 }
-/* line 35, ../sass/core/_messaging.scss */
-.msg .msgText {
+/* line 40, ../sass/core/_messaging.scss */
+#region-messaging .msg .msgText {
   width: 140px;
   height: 161px;
   background-color: white;
@@ -191,50 +190,881 @@ strong {
   font-family: "Trebuchet MS", Helvetica, sans-serif;
   font-size: 0.8em;
 }
-/* line 44, ../sass/core/_messaging.scss */
-.msg .msgInput {
+/* line 49, ../sass/core/_messaging.scss */
+#region-messaging .msg .msgInput {
   width: 98px;
   border: 1px inset grey;
   height: 30px;
   font-size: 0.6em;
 }
-/* line 50, ../sass/core/_messaging.scss */
-.msg .msgSend {
+/* line 55, ../sass/core/_messaging.scss */
+#region-messaging .msg .msgSend {
   width: 35px;
   font-size: 0.6em;
 }
 
-/*#casinoTableHeader
-{
-margin-bottom: 0;
-}
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
 */
-/* line 2, ../sass/core/_navigation.scss */
-nav.primary ul {
-  float: right;
-  margin: 0;
-  padding: 10px 0 0 0;
-}
-/* line 8, ../sass/core/_navigation.scss */
-nav.primary ul li {
-  float: left;
-}
-/* line 12, ../sass/core/_navigation.scss */
-nav.primary ul .activePlaying {
-  disabled: "disabled";
+/* 
+    Created on : Aug 27, 2013, 2:29:42 PM
+    Author     : cazito
+*/
+/* line 11, ../sass/core/_onlineFriends.scss */
+#region-online-friends {
+  width: 230px;
+  background-color: #ffa366;
+  left: 0px;
+  z-index: -1;
 }
 
-/* line 18, ../sass/core/_navigation.scss */
-.greetings li {
-  color: #868686;
-  display: block;
-  font: 16px/100% "Flamenco", Arial, Helvetica, Verdana, sans-serif;
-  padding: 6px 10px;
-  text-decoration: none;
-  text-transform: lowercase;
+/* all relative elements within the game board
+        The following are overlayed:
+        1) game background
+        2) canvas - for animated elements
+        3) board table DIV - this is where the elements that are not animated are positioned
+*/
+    /*
+#gameBackground
+{
+    position:absolute;
+    /* background-color: #B2C97E; 
+    border: 3px outset #958E3E;
+    background-image:url('../../../images/board-bg.png');
+    background-repeat:repeat;
+    border-radius: 5px;
+    z-index:1;
+    width:640px;
+    height:400px; 
+}
+*/
+/* the main gaming area with players info (status, stake, dealer button, etc.)
+   community cards, cards, etc. 
+#boardTable */
+/* line 24, ../sass/core/_pokerPlay.scss */
+#poker-table {
+  position: absolute;
+  /*z-index:3; */
+  left: 230px;
+  width: 640px;
+  top: 60px;
+  background-color: transparent;
+  /*text-align: middle; */
+  width: 640px;
+  height: 400px;
+  /* merging #gameBackground with boardTable */
+  z-index: 1;
+  background-image: url("../../../images/board-bg.png");
+  background-repeat: repeat;
+}
+
+/*#playGameCanvasId */
+/* line 40, ../sass/core/_pokerPlay.scss */
+#play-section-canvas {
+  position: absolute;
+  z-index: 2;
+  /* top and left are seven to adjust for the border */
+  top: 0px;
+  left: 0px;
+  width: 640px;
+  height: 400px;
+}
+
+    /*
+.pokerTable {
+    position:relative;
+    width: 642px;
+    height:444px; 
+    /* left:220px; = to the cheaters frame width 
+    float: left;
+    padding: 5px 0px 0px 5px;
+}
+.pokerTable {
+    position: absolute;
+    top: 200px;
+    left: 20px;
+}
+*/
+/*************************************************************************************/
+/* div enveloping each player info */
+/* line 69, ../sass/core/_pokerPlay.scss */
+.playerInfo {
+  position: absolute;
+  /* display:none; */
+  width: 150px;
+  height: 80px;
+  border-radius: 5px;
+  padding: 0px;
+}
+
+/* different box displays depending on player status */
+/* line 78, ../sass/core/_pokerPlay.scss */
+.playerInfoNormal {
+  border: 2px ridge grey;
+  background-color: #D3D3D3;
+}
+
+/* line 82, ../sass/core/_pokerPlay.scss */
+.playerInfoTimeOut {
+  border: 2px ridge grey;
+  background-color: #E59093;
+}
+
+/* line 86, ../sass/core/_pokerPlay.scss */
+.playerInfoWinner {
+  border: 3px double grey;
+  background-color: #1463FF;
+}
+
+/* line 90, ../sass/core/_pokerPlay.scss */
+.playerInfoNext {
+  border: 3px dotted grey;
+  background-color: #70B251;
+}
+
+/* line 94, ../sass/core/_pokerPlay.scss */
+.playerInfoUser {
+  border: 3px ridge #9086D9;
+  background-color: #BEBBD5;
+}
+
+/* line 98, ../sass/core/_pokerPlay.scss */
+.playerInfo p {
+  text-align: center;
 }
 
 /*
+.playerInfo img {
+    margin: 0px 20px 20px 0px;
+    height:30px;	
+} */
+/* line 106, ../sass/core/_pokerPlay.scss */
+.avatarImg {
+  display: block;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  margin-left: auto;
+  margin-right: auto;
+  height: 30px;
+}
+
+/* line 114, ../sass/core/_pokerPlay.scss */
+#player0Info {
+  top: 310px;
+  /* 400 - 80px (height) - 5 */
+  left: 5px;
+}
+
+/* line 118, ../sass/core/_pokerPlay.scss */
+#player1Info {
+  top: 5px;
+  left: 5px;
+}
+
+/* line 122, ../sass/core/_pokerPlay.scss */
+#player2Info {
+  top: 5px;
+  left: 482px;
+  /* 642 - 150 px - 5 */
+}
+
+/* line 126, ../sass/core/_pokerPlay.scss */
+#player3Info {
+  top: 310px;
+  left: 482px;
+}
+
+/* line 131, ../sass/core/_pokerPlay.scss */
+.playerName {
+  font-weight: bold;
+}
+
+/* line 134, ../sass/core/_pokerPlay.scss */
+.playerStake {
+  font-size: small;
+}
+
+/* line 138, ../sass/core/_pokerPlay.scss */
+.playerStatus {
+  font-weight: bold;
+  color: red;
+}
+
+/* line 143, ../sass/core/_pokerPlay.scss */
+.playerStatusWinner {
+  font-weight: bold;
+  color: white;
+}
+
+/* line 148, ../sass/core/_pokerPlay.scss */
+.dealerButton {
+  /* display: none; */
+  position: absolute;
+  border: 2px groove #503A2E;
+  border-radius: 5px;
+  background-color: #C85E25;
+  font-family: Calibri;
+  font-size: 120%;
+  height: 20px;
+  width: 20px;
+  z-index: 4;
+}
+
+/* line 160, ../sass/core/_pokerPlay.scss */
+.player0DealerPosition {
+  top: 371px;
+  /* 400 -20- 5 */
+  left: 165px;
+  /* 150 + 5 -+5 */
+}
+
+/* line 164, ../sass/core/_pokerPlay.scss */
+.player1DealerPosition {
+  top: 5px;
+  left: 165px;
+}
+
+/* line 168, ../sass/core/_pokerPlay.scss */
+.player2DealerPosition {
+  top: 5px;
+  left: 455px;
+  /* 642- 150 - 5 - 5 */
+}
+
+/* line 172, ../sass/core/_pokerPlay.scss */
+.player3DealerPosition {
+  top: 371px;
+  left: 455px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* line 177, ../sass/core/_pokerPlay.scss */
+.riverCard {
+  height: 42px;
+  width: 30px;
+}
+
+/* line 181, ../sass/core/_pokerPlay.scss */
+.playerCard {
+  position: absolute;
+  /* display:none; */
+  height: 42px;
+  width: 30px;
+  z-index: 5;
+}
+
+/* line 188, ../sass/core/_pokerPlay.scss */
+.userCard {
+  /* display:none; */
+  height: 70px;
+  width: 50px;
+  z-index: 5;
+  margin: 2px;
+}
+
+/* line 196, ../sass/core/_pokerPlay.scss */
+.userCardSlot {
+  position: absolute;
+  /* display:none; */
+  height: 70px;
+  width: 50px;
+  z-index: 10;
+}
+
+/* player cards go off the dealer */
+/* line 204, ../sass/core/_pokerPlay.scss */
+.player0Card1 {
+  top: 323px;
+  /* 400 - 80 - 20 - 5 - 5 */
+  left: 165px;
+  /* 150 + 5*3 */
+}
+
+/* line 208, ../sass/core/_pokerPlay.scss */
+.player0Card2 {
+  top: 323px;
+  /* 400 - 70 - 20 - 5 - 5 */
+  left: 200px;
+  /* card1 + 50 + 5 */
+}
+
+/* line 212, ../sass/core/_pokerPlay.scss */
+.player1Card1 {
+  top: 33px;
+  /* 5 + 20 + 5 */
+  left: 165px;
+}
+
+/* line 216, ../sass/core/_pokerPlay.scss */
+.player1Card2 {
+  top: 33px;
+  left: 200px;
+}
+
+/* line 220, ../sass/core/_pokerPlay.scss */
+.player2Card1 {
+  top: 33px;
+  left: 412px;
+  /* 642 - 150 - 5 - 5 - 5*/
+}
+
+/* line 224, ../sass/core/_pokerPlay.scss */
+.player2Card2 {
+  top: 33px;
+  left: 448px;
+  /* card1 - 50 - 5*/
+}
+
+/* line 228, ../sass/core/_pokerPlay.scss */
+.player3Card1 {
+  top: 323px;
+  left: 412px;
+}
+
+/* line 232, ../sass/core/_pokerPlay.scss */
+.player3Card2 {
+  top: 323px;
+  left: 448px;
+}
+
+/* user card */
+/* line 238, ../sass/core/_pokerPlay.scss */
+.player0UserCard1 {
+  top: 295px;
+  /* player card - 28 */
+  left: 165px;
+}
+
+/* line 242, ../sass/core/_pokerPlay.scss */
+.player0UserCard2 {
+  top: 295px;
+  left: 220px;
+  /* player card + 20 */
+}
+
+/* line 246, ../sass/core/_pokerPlay.scss */
+.player1UserCard1 {
+  top: 33px;
+  /* 5 + 20 + 5 */
+  left: 165px;
+}
+
+/* line 250, ../sass/core/_pokerPlay.scss */
+.player1UserCard2 {
+  top: 33px;
+  left: 220px;
+}
+
+/* line 254, ../sass/core/_pokerPlay.scss */
+.player2UserCard1 {
+  top: 33px;
+  left: 372px;
+  /* player card - 20 */
+}
+
+/* line 258, ../sass/core/_pokerPlay.scss */
+.player2UserCard2 {
+  top: 33px;
+  left: 428px;
+}
+
+/* line 262, ../sass/core/_pokerPlay.scss */
+.player3UserCard1 {
+  top: 295px;
+  left: 372px;
+  /* playercard1 412 - 40 */
+}
+
+/* line 266, ../sass/core/_pokerPlay.scss */
+.player3UserCard2 {
+  top: 295px;
+  left: 428px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* small markers on the back */
+/* line 273, ../sass/core/_pokerPlay.scss */
+.cardSmallMarker {
+  position: absolute;
+  display: none;
+  height: 21px;
+  /* 42 */
+  width: 15px;
+  /* 30 */
+  z-index: 7;
+}
+
+/* line 280, ../sass/core/_pokerPlay.scss */
+.player0Card1SmallMarker {
+  top: 342px;
+  /* + 323 + (42 - 21) - 2 */
+  left: 178px;
+  /* + 165 + (30 - 15) - 2 */
+}
+
+/* line 284, ../sass/core/_pokerPlay.scss */
+.player0Card2SmallMarker {
+  top: 342px;
+  left: 213px;
+  /* 200 + (30-15) - 2 */
+}
+
+/* line 288, ../sass/core/_pokerPlay.scss */
+.player1Card1SmallMarker {
+  top: 52px;
+  /* 33 + (42-21) -2 */
+  left: 178px;
+}
+
+/* line 292, ../sass/core/_pokerPlay.scss */
+.player1Card2SmallMarker {
+  top: 52px;
+  left: 213px;
+}
+
+/* line 296, ../sass/core/_pokerPlay.scss */
+.player2Card1SmallMarker {
+  top: 52px;
+  left: 426px;
+  /* 412 + (42 - 21) - 5 offset - 2 */
+}
+
+/* line 300, ../sass/core/_pokerPlay.scss */
+.player2Card2SmallMarker {
+  top: 52px;
+  left: 461px;
+  /* 448 + (30 - 15)- 2 */
+}
+
+/* line 304, ../sass/core/_pokerPlay.scss */
+.player3Card1SmallMarker {
+  top: 342px;
+  left: 426px;
+}
+
+/* line 308, ../sass/core/_pokerPlay.scss */
+.player3Card2SmallMarker {
+  top: 342px;
+  left: 461px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* large cheating marker */
+/* line 315, ../sass/core/_pokerPlay.scss */
+.cardLargeMarker {
+  position: absolute;
+  display: none;
+  /*
+  height: 30px;
+  width: 21px;
+  */
+  height: 42px;
+  width: 30px;
+  z-index: 6;
+}
+
+/* line 326, ../sass/core/_pokerPlay.scss */
+.player0Card1LargeMarker {
+  top: 333px;
+  /* 323 + (42-30) - 2*/
+  left: 172px;
+  /* 165 + (30-21) - 2*/
+}
+
+/* line 330, ../sass/core/_pokerPlay.scss */
+.player0Card2LargeMarker {
+  top: 333px;
+  left: 207px;
+  /* 200 + (30-21) - 2 */
+}
+
+/* line 334, ../sass/core/_pokerPlay.scss */
+.player1Card1LargeMarker {
+  top: 43px;
+  /* 33 + (42-30) - 2 */
+  left: 172px;
+}
+
+/* line 338, ../sass/core/_pokerPlay.scss */
+.player1Card2LargeMarker {
+  top: 43px;
+  left: 207px;
+}
+
+/* line 342, ../sass/core/_pokerPlay.scss */
+.player2Card1LargeMarker {
+  top: 43px;
+  left: 419px;
+  /* 412 + (42-30) -5 offset - 2 - 2*/
+}
+
+/* line 346, ../sass/core/_pokerPlay.scss */
+.player2Card2LargeMarker {
+  top: 43px;
+  left: 455px;
+  /* 448 + (30-21) - 2*/
+}
+
+/* line 350, ../sass/core/_pokerPlay.scss */
+.player3Card1LargeMarker {
+  top: 333px;
+  left: 419px;
+}
+
+/* line 354, ../sass/core/_pokerPlay.scss */
+.player3Card2LargeMarker {
+  top: 333px;
+  left: 455px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* bigger card sizes for user */
+/* player cards go off the dealer */
+/* line 362, ../sass/core/_pokerPlay.scss */
+.cardSmallUserMarker {
+  position: absolute;
+  display: none;
+  height: 24px;
+  width: 17px;
+  z-index: 7;
+}
+
+/* line 370, ../sass/core/_pokerPlay.scss */
+.player0Card1SmallUserMarker {
+  top: 336px;
+  /* 295 + (70-24) - 5 */
+  left: 193px;
+  /* 165 + (50-17) - 5 */
+}
+
+/* line 374, ../sass/core/_pokerPlay.scss */
+.player0Card2SmallUserMarker {
+  top: 336px;
+  left: 248px;
+  /* 220 + (50-17) - 5 */
+}
+
+/* line 378, ../sass/core/_pokerPlay.scss */
+.player1Card1SmallUserMarker {
+  top: 74px;
+  /* 33 + (70-24) - 5 */
+  left: 193px;
+}
+
+/* line 382, ../sass/core/_pokerPlay.scss */
+.player1Card2SmallUserMarker {
+  top: 74px;
+  left: 248px;
+}
+
+/* line 386, ../sass/core/_pokerPlay.scss */
+.player2Card1SmallUserMarker {
+  top: 74px;
+  left: 400px;
+  /* 372 + (50-17) - 5 */
+}
+
+/* line 390, ../sass/core/_pokerPlay.scss */
+.player2Card2SmallUserMarker {
+  top: 74px;
+  left: 456px;
+  /* 428 + (50-17) - 5 */
+}
+
+/* line 394, ../sass/core/_pokerPlay.scss */
+.player3Card1SmallUserMarker {
+  top: 336px;
+  left: 400px;
+}
+
+/* line 398, ../sass/core/_pokerPlay.scss */
+.player3Card2SmallUserMarker {
+  top: 336px;
+  left: 456px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* bigger card sizes for user */
+/* player cards go off the dealer */
+/* line 406, ../sass/core/_pokerPlay.scss */
+.cardLargeUserMarker {
+  position: absolute;
+  display: none;
+  height: 50px;
+  width: 36px;
+  z-index: 6;
+}
+
+/* line 413, ../sass/core/_pokerPlay.scss */
+.player0Card1LargeUserMarker {
+  top: 310px;
+  /* 295 + (70-50) - 5 */
+  left: 174px;
+  /* 165 + (50 - 36) - 5 */
+}
+
+/* line 417, ../sass/core/_pokerPlay.scss */
+.player0Card2LargeUserMarker {
+  top: 310px;
+  left: 229px;
+  /* 220 + (50 - 36) - 5 */
+}
+
+/* line 421, ../sass/core/_pokerPlay.scss */
+.player1Card1LargeUserMarker {
+  top: 48px;
+  /* 33 + (70-50) - 5 */
+  left: 174px;
+}
+
+/* line 425, ../sass/core/_pokerPlay.scss */
+.player1Card2LargeUserMarker {
+  top: 48px;
+  left: 229px;
+}
+
+/* line 429, ../sass/core/_pokerPlay.scss */
+.player2Card1LargeUserMarker {
+  top: 48px;
+  left: 381px;
+  /* 372 + (50-36) - 5 */
+}
+
+/* line 433, ../sass/core/_pokerPlay.scss */
+.player2Card2LargeUserMarker {
+  top: 48px;
+  left: 437px;
+  /* 428 + (50-36) - 5 */
+}
+
+/* line 437, ../sass/core/_pokerPlay.scss */
+.player3Card1LargeUserMarker {
+  top: 310px;
+  left: 381px;
+}
+
+/* line 441, ../sass/core/_pokerPlay.scss */
+.player3Card2LargeUserMarker {
+  top: 310px;
+  left: 437px;
+}
+
+/*************************************************************************************/
+/* line 446, ../sass/core/_pokerPlay.scss */
+.communityCard {
+  position: absolute;
+  display: none;
+  top: 150px;
+  height: 60px;
+  width: 43px;
+}
+
+/* line 453, ../sass/core/_pokerPlay.scss */
+#communityCard0 {
+  left: 212px;
+}
+
+/* line 456, ../sass/core/_pokerPlay.scss */
+#communityCard1 {
+  left: 260px;
+}
+
+/* line 459, ../sass/core/_pokerPlay.scss */
+#communityCard2 {
+  left: 308px;
+}
+
+/* line 462, ../sass/core/_pokerPlay.scss */
+#communityCard3 {
+  left: 356px;
+}
+
+/* line 465, ../sass/core/_pokerPlay.scss */
+#communityCard4 {
+  left: 404px;
+}
+
+/*************************************************************************************/
+/* this is the message at the center of the table */
+/* line 470, ../sass/core/_pokerPlay.scss */
+#centerMessageId {
+  display: block;
+  text-align: center;
+  font-size: 20px;
+  font-weight: bolder;
+  color: white;
+  margin: 200px 0 0 0;
+}
+
+/* #boardTable input { */
+/* line 480, ../sass/core/_pokerPlay.scss */
+section#play-section input {
+  position: absolute;
+}
+
+/*************************************************************************************/
+/* line 484, ../sass/core/_pokerPlay.scss */
+#userCallAmount {
+  display: none;
+}
+
+/* line 487, ../sass/core/_pokerPlay.scss */
+#userRaiseAmount {
+  display: none;
+}
+
+/* line 490, ../sass/core/_pokerPlay.scss */
+.userButton {
+  position: absolute;
+  height: 28px;
+  display: none;
+  border-radius: 0;
+  background-color: #7E8493;
+  border-style: outset;
+  z-index: 100;
+}
+
+/* line 499, ../sass/core/_pokerPlay.scss */
+#userRaiseButton {
+  width: 95px;
+}
+
+/* line 502, ../sass/core/_pokerPlay.scss */
+#userFoldButton {
+  width: 55px;
+}
+
+/* line 505, ../sass/core/_pokerPlay.scss */
+#userCallButton {
+  width: 95px;
+}
+
+/* line 508, ../sass/core/_pokerPlay.scss */
+#userCheckButton {
+  width: 55px;
+}
+
+/* line 511, ../sass/core/_pokerPlay.scss */
+.player0Raise {
+  top: 249px;
+  left: 5px;
+}
+
+/* line 515, ../sass/core/_pokerPlay.scss */
+.player0Fold {
+  top: 249px;
+  left: 103px;
+}
+
+/* line 519, ../sass/core/_pokerPlay.scss */
+.player0Check {
+  top: 279px;
+  left: 5px;
+}
+
+/* line 523, ../sass/core/_pokerPlay.scss */
+.player0Call {
+  top: 279px;
+  left: 63px;
+}
+
+/* player 1 positions */
+/* line 528, ../sass/core/_pokerPlay.scss */
+.player1Raise {
+  top: 90px;
+  left: 5px;
+}
+
+/* line 532, ../sass/core/_pokerPlay.scss */
+.player1Fold {
+  top: 90px;
+  left: 103px;
+}
+
+/* line 536, ../sass/core/_pokerPlay.scss */
+.player1Check {
+  top: 120px;
+  left: 5px;
+}
+
+/* line 540, ../sass/core/_pokerPlay.scss */
+.player1Call {
+  top: 120px;
+  left: 63px;
+}
+
+/* player 2 button positions */
+/* line 545, ../sass/core/_pokerPlay.scss */
+.player2Raise {
+  top: 90px;
+  left: 482px;
+}
+
+/* line 549, ../sass/core/_pokerPlay.scss */
+.player2Fold {
+  top: 90px;
+  left: 580px;
+  /* 482 + 98 */
+}
+
+/* line 553, ../sass/core/_pokerPlay.scss */
+.player2Check {
+  top: 120px;
+  left: 482px;
+}
+
+/* line 557, ../sass/core/_pokerPlay.scss */
+.player2Call {
+  top: 120px;
+  left: 540px;
+  /* 482 + 68 */
+}
+
+/* player 3 positions */
+/* line 562, ../sass/core/_pokerPlay.scss */
+.player3Raise {
+  top: 249px;
+  left: 482px;
+}
+
+/* line 566, ../sass/core/_pokerPlay.scss */
+.player3Fold {
+  top: 249px;
+  left: 580px;
+}
+
+/* line 570, ../sass/core/_pokerPlay.scss */
+.player3Check {
+  top: 279px;
+  left: 482px;
+}
+
+/* line 574, ../sass/core/_pokerPlay.scss */
+.player3Call {
+  top: 279px;
+  left: 540px;
+}
+
+/*************************************************************************************/
+/* this button shows up if a seat becomes available for a waiting user so that
+   the user can accept it */
+/* line 581, ../sass/core/_pokerPlay.scss */
+#takeSeatButton {
+  display: none;
+  position: absolute;
+  opacity: 0.8;
+  filter: alpha(opacity=80);
+  background-color: #D7AF82;
+  font-weight: bold;
+  font-style: italic;
+  border-radius: 5px;
+  width: 150px;
+  height: 80px;
+}
+
+/*!
 * Line break
 */
 /* line 1, ../sass/plugins/_jcarousel-skin-tango.scss */
@@ -257,13 +1087,13 @@ nav.primary ul .activePlaying {
   padding: 20px 40px;
 }
 
-/* line 18, ../sass/plugins/_jcarousel-skin-tango.scss */
+/*
 .jcarousel-skin-tango .jcarousel-container-vertical {
-  width: 75px;
-  height: 360px;
-  padding: 40px 10px;
+    width: 75px;
+    height: 360px;
+    padding: 40px 10px;
 }
-
+*/
 /* line 24, ../sass/plugins/_jcarousel-skin-tango.scss */
 .jcarousel-skin-tango .jcarousel-clip {
   overflow: hidden;
@@ -454,7 +1284,7 @@ nav.primary ul .activePlaying {
   background-position: 0 -96px;
 }
 
-/*
+/*!
  * jQuery UI CSS Framework 1.8.22
  *
  * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -546,7 +1376,7 @@ nav.primary ul .activePlaying {
   height: 100%;
 }
 
-/*
+/*!
  * jQuery UI CSS Framework 1.8.22
  *
  * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -1673,7 +2503,7 @@ nav.primary ul .activePlaying {
   border-radius: 5px;
 }
 
-                                                                                                                                                                                                                                                                                      /*
+                                                                                                                                                                                                                                                                                      /*!
 * jQuery UI Resizable 1.8.22
 *
 * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -1771,7 +2601,7 @@ nav.primary ul .activePlaying {
   top: -5px;
 }
 
-                                                                                      /*
+                                                                                      /*!
 * jQuery UI Selectable 1.8.22
 *
 * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -1787,7 +2617,7 @@ nav.primary ul .activePlaying {
   border: 1px dotted black;
 }
 
-/*
+/*!
  * jQuery UI Accordion 1.8.22
  *
  * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -1858,7 +2688,7 @@ nav.primary ul .activePlaying {
   display: block;
 }
 
-/*
+/*!
  * jQuery UI Autocomplete 1.8.22
  *
  * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -1929,7 +2759,7 @@ nav.primary ul .activePlaying {
   margin: -1px;
 }
 
-/*
+/*!
  * jQuery UI Button 1.8.22
  *
  * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -2052,7 +2882,7 @@ input.ui-button {
 /* line 422, ../sass/plugins/_jquery-ui-popup.scss */
 .ui-buttonset .ui-button {
   margin-left: 0;
-  margin-right: -0.3em;
+  margin-right: -.3em;
 }
 
 /* workarounds */
@@ -2063,7 +2893,7 @@ button.ui-button::-moz-focus-inner {
 }
 
 /* reset extra padding in Firefox */
-/*
+/*!
  * jQuery UI Dialog 1.8.22
  *
  * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -2157,7 +2987,7 @@ button.ui-button::-moz-focus-inner {
   cursor: move;
 }
 
-/*
+/*!
  * jQuery UI Slider 1.8.22
  *
  * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -2198,8 +3028,8 @@ button.ui-button::-moz-focus-inner {
 
 /* line 461, ../sass/plugins/_jquery-ui-popup.scss */
 .ui-slider-horizontal .ui-slider-handle {
-  top: -0.3em;
-  margin-left: -0.6em;
+  top: -.3em;
+  margin-left: -.6em;
 }
 
 /* line 462, ../sass/plugins/_jquery-ui-popup.scss */
@@ -2226,9 +3056,9 @@ button.ui-button::-moz-focus-inner {
 
 /* line 467, ../sass/plugins/_jquery-ui-popup.scss */
 .ui-slider-vertical .ui-slider-handle {
-  left: -0.3em;
+  left: -.3em;
   margin-left: 0;
-  margin-bottom: -0.6em;
+  margin-bottom: -.6em;
 }
 
 /* line 468, ../sass/plugins/_jquery-ui-popup.scss */
@@ -2247,7 +3077,7 @@ button.ui-button::-moz-focus-inner {
   top: 0;
 }
 
-                                                   /*
+                                                   /*!
 * jQuery UI Tabs 1.8.22
 *
 * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -2319,7 +3149,7 @@ button.ui-button::-moz-focus-inner {
   display: none !important;
 }
 
-/*
+/*!
  * jQuery UI Datepicker 1.8.22
  *
  * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -2598,7 +3428,7 @@ button.ui-button::-moz-focus-inner {
   /*must have*/
 }
 
-/*
+/*!
 * jQuery UI Progressbar 1.8.22
 *
 * Copyright 2012, AUTHORS.txt (http://jqueryui.com/about)
@@ -2681,7 +3511,577 @@ table {
   border-spacing: 0;
 }
 
+/* line 1, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-container {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  background: #7E8493;
+  border: 1px solid #B6BFD7;
+}
+
+/* line 9, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl {
+  direction: rtl;
+}
+
+/* line 13, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-container-horizontal {
+  width: 245px;
+  padding: 20px 40px;
+}
+
+/* line 18, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-container-vertical {
+  width: 75px;
+  height: 408px;
+  padding: 40px 10px;
+}
+
+/* line 24, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-clip {
+  overflow: hidden;
+}
+
+/* line 28, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-clip-horizontal {
+  width: 245px;
+  height: 75px;
+}
+
+/* line 33, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-clip-vertical {
+  width: 75px;
+  height: 360px;
+}
+
+/* line 38, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-item {
+  width: 80px;
+  height: 35px;
+}
+
+/* line 43, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-item-horizontal {
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+/* line 48, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-item-horizontal {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+/* line 53, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-item-vertical {
+  margin-bottom: 10px;
+}
+
+/* line 57, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-item-placeholder {
+  background: #fff;
+  color: #000;
+}
+
+/**
+ *  Horizontal Buttons
+ */
+/* line 65, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal {
+  position: absolute;
+  top: 43px;
+  right: 5px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(next-horizontal.png) no-repeat 0 0;
+}
+
+/* line 75, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-next-horizontal {
+  left: 5px;
+  right: auto;
+  background-image: url(prev-horizontal.png);
+}
+
+/* line 82, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-next-horizontal:focus {
+  background-position: -32px 0;
+}
+
+/* line 86, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal:active {
+  background-position: -64px 0;
+}
+
+/* line 93, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:focus,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:active {
+  cursor: default;
+  background-position: -96px 0;
+}
+
+/* line 98, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal {
+  position: absolute;
+  top: 43px;
+  left: 5px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(prev-horizontal.png) no-repeat 0 0;
+}
+
+/* line 108, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-prev-horizontal {
+  left: auto;
+  right: 5px;
+  background-image: url(next-horizontal.png);
+}
+
+/* line 115, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-prev-horizontal:focus {
+  background-position: -32px 0;
+}
+
+/* line 119, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal:active {
+  background-position: -64px 0;
+}
+
+/* line 126, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:focus,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:active {
+  cursor: default;
+  background-position: -96px 0;
+}
+
+/**
+ *  Vertical Buttons
+ */
+/* line 134, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical {
+  position: absolute;
+  bottom: 5px;
+  left: 33px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(next-vertical.png) no-repeat 0 0;
+}
+
+/* line 145, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical:hover,
+.jcarousel-skin-tango .jcarousel-next-vertical:focus {
+  background-position: 0 -32px;
+}
+
+/* line 149, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical:active {
+  background-position: 0 -64px;
+}
+
+/* line 156, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:hover,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:focus,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:active {
+  cursor: default;
+  background-position: 0 -96px;
+}
+
+/* line 161, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical {
+  position: absolute;
+  top: 5px;
+  left: 33px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(prev-vertical.png) no-repeat 0 0;
+}
+
+/* line 172, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical:hover,
+.jcarousel-skin-tango .jcarousel-prev-vertical:focus {
+  background-position: 0 -32px;
+}
+
+/* line 176, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical:active {
+  background-position: 0 -64px;
+}
+
+/* line 183, ../sass/plugins/_skin-cazito.scss */
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:hover,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:focus,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:active {
+  cursor: default;
+  background-position: 0 -96px;
+}
+
+/* line 1, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-container {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  background: #7E8493;
+  border: 2px solid #B6BFD7;
+}
+
+/* line 9, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-direction-rtl {
+  direction: rtl;
+}
+
+/* line 13, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-container-horizontal {
+  width: 275px;
+  padding: 5px 34px;
+}
+
+/* line 18, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-clip {
+  overflow: hidden;
+}
+
+/* line 22, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-clip-horizontal {
+  width: 275px;
+  height: 42px;
+}
+
+/* line 27, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-item {
+  width: 50px;
+  height: 70px;
+}
+
+/* line 32, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-item-horizontal {
+  margin-left: 0;
+  margin-right: 5px;
+}
+
+/* line 37, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-direction-rtl .jcarousel-item-horizontal {
+  margin-left: 5px;
+  margin-right: 0;
+}
+
+/* line 42, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-item-placeholder {
+  background: #fff;
+  color: #000;
+}
+
+/**
+ *  Horizontal Buttons
+ */
+/* line 50, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-next-horizontal {
+  position: absolute;
+  top: 10px;
+  right: 5px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  background: transparent url(next-horizontal.png) no-repeat 0 0;
+}
+
+/* line 60, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-direction-rtl .jcarousel-next-horizontal {
+  left: 2px;
+  right: auto;
+  background-image: url(prev-horizontal.png);
+}
+
+/* line 67, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-next-horizontal:hover,
+.jcarousel-skin-card .jcarousel-next-horizontal:focus {
+  background-position: -32px 0;
+}
+
+/* line 71, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-next-horizontal:active {
+  background-position: -64px 0;
+}
+
+/* line 78, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-next-disabled-horizontal,
+.jcarousel-skin-card .jcarousel-next-disabled-horizontal:hover,
+.jcarousel-skin-card .jcarousel-next-disabled-horizontal:focus,
+.jcarousel-skin-card .jcarousel-next-disabled-horizontal:active {
+  cursor: default;
+  background-position: -96px 0;
+}
+
+/* line 83, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-prev-horizontal {
+  position: absolute;
+  top: 10px;
+  left: 5px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  background: transparent url(prev-horizontal.png) no-repeat 0 0;
+}
+
+/* line 93, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-direction-rtl .jcarousel-prev-horizontal {
+  left: auto;
+  right: 5px;
+  background-image: url(next-horizontal.png);
+}
+
+/* line 100, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-prev-horizontal:hover,
+.jcarousel-skin-card .jcarousel-prev-horizontal:focus {
+  background-position: -32px 0;
+}
+
+/* line 104, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-prev-horizontal:active {
+  background-position: -64px 0;
+}
+
+/* line 111, ../sass/plugins/_cardItems-skin.scss */
+.jcarousel-skin-card .jcarousel-prev-disabled-horizontal,
+.jcarousel-skin-card .jcarousel-prev-disabled-horizontal:hover,
+.jcarousel-skin-card .jcarousel-prev-disabled-horizontal:focus,
+.jcarousel-skin-card .jcarousel-prev-disabled-horizontal:active {
+  cursor: default;
+  background-position: -96px 0;
+}
+
+/* line 1, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-container {
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  background: #7E8493;
+  border: 2px solid #B6BFD7;
+}
+
+/* line 9, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl {
+  direction: rtl;
+}
+
+/* line 13, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-container-horizontal {
+  width: 275px;
+  padding: 5px 5px;
+}
+
 /*
+.jcarousel-skin-tango .jcarousel-container-vertical {
+    width: 76px;
+    height: 362px;
+    padding: 40px 10px;
+}
+*/
+/* line 24, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-clip {
+  overflow: hidden;
+}
+
+/* line 28, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-clip-horizontal {
+  width: 275px;
+  height: 52px;
+}
+
+/* line 33, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-clip-vertical {
+  width: 75px;
+  height: 408px;
+  /*    width:  76px;
+      height: 362px; */
+}
+
+/* line 40, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-item {
+  width: 80px;
+  height: 35px;
+}
+
+/* line 45, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-item-horizontal {
+  margin-left: 0;
+  margin-right: 10px;
+}
+
+/* line 50, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-item-horizontal {
+  margin-left: 10px;
+  margin-right: 0;
+}
+
+/* line 55, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-item-vertical {
+  margin-bottom: 10px;
+}
+
+/* line 59, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-item-placeholder {
+  background: #fff;
+  color: #000;
+}
+
+/**
+ *  Horizontal Buttons
+ */
+/* line 67, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal {
+  position: absolute;
+  top: 43px;
+  right: 5px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(next-horizontal.png) no-repeat 0 0;
+}
+
+/* line 77, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-next-horizontal {
+  left: 5px;
+  right: auto;
+  background-image: url(prev-horizontal.png);
+}
+
+/* line 84, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-next-horizontal:focus {
+  background-position: -32px 0;
+}
+
+/* line 88, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-next-horizontal:active {
+  background-position: -64px 0;
+}
+
+/* line 95, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:focus,
+.jcarousel-skin-tango .jcarousel-next-disabled-horizontal:active {
+  cursor: default;
+  background-position: -96px 0;
+}
+
+/* line 100, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal {
+  position: absolute;
+  top: 43px;
+  left: 5px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(prev-horizontal.png) no-repeat 0 0;
+}
+
+/* line 110, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-direction-rtl .jcarousel-prev-horizontal {
+  left: auto;
+  right: 5px;
+  background-image: url(next-horizontal.png);
+}
+
+/* line 117, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-prev-horizontal:focus {
+  background-position: -32px 0;
+}
+
+/* line 121, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-prev-horizontal:active {
+  background-position: -64px 0;
+}
+
+/* line 128, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:hover,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:focus,
+.jcarousel-skin-tango .jcarousel-prev-disabled-horizontal:active {
+  cursor: default;
+  background-position: -96px 0;
+}
+
+/**
+ *  Vertical Buttons
+ */
+/* line 136, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical {
+  position: absolute;
+  bottom: 5px;
+  left: 33px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(next-vertical.png) no-repeat 0 0;
+}
+
+/* line 147, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical:hover,
+.jcarousel-skin-tango .jcarousel-next-vertical:focus {
+  background-position: 0 -32px;
+}
+
+/* line 151, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-next-vertical:active {
+  background-position: 0 -64px;
+}
+
+/* line 158, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:hover,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:focus,
+.jcarousel-skin-tango .jcarousel-next-disabled-vertical:active {
+  cursor: default;
+  background-position: 0 -96px;
+}
+
+/* line 163, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical {
+  position: absolute;
+  top: 5px;
+  left: 33px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  background: transparent url(prev-vertical.png) no-repeat 0 0;
+}
+
+/* line 174, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical:hover,
+.jcarousel-skin-tango .jcarousel-prev-vertical:focus {
+  background-position: 0 -32px;
+}
+
+/* line 178, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-prev-vertical:active {
+  background-position: 0 -64px;
+}
+
+/* line 185, ../sass/plugins/_cheatingItems-skin.scss */
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:hover,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:focus,
+.jcarousel-skin-tango .jcarousel-prev-disabled-vertical:active {
+  cursor: default;
+  background-position: 0 -96px;
+}
+
+/*!
 * Line break
 */
 /**
@@ -2695,855 +4095,32 @@ table {
         Purpose of the stylesheet follows.
 */
 /* line 8, ../sass/pages/_home.scss */
-section#home {
-  position: relative;
-  height: 400px;
-  width: 642px;
+#region-choices {
+  width: 640px;
+  left: 230px;
+  z-index: -1;
+  background-image: url("../../../images/window-bg.png");
   background-repeat: no-repeat;
   border-style: outset;
   border-color: green;
   border-width: 2px;
-  background-image: url("../../../images/SaloonSafe.png");
+  /* center the options */
 }
-
-/* center the options */
+/* line 18, ../sass/pages/_home.scss */
+#region-choices table {
+  margin: 0 auto;
+}
 /* line 20, ../sass/pages/_home.scss */
-section#home table {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* size each option */
-/* line 26, ../sass/pages/_home.scss */
-section#home input {
-  height: 40px;
-  width: 40px;
-}
-
-/* all relative elements within the game board
-        The following are overlayed:
-        1) game background
-        2) canvas - for animated elements
-        3) board table DIV - this is where the elements that are not animated are positioned
-*/
-    /*
-#gameBackground
-{
-    position:absolute;
-    /* background-color: #B2C97E; 
-    border: 3px outset #958E3E;
-    background-image:url('../../../images/board-bg.png');
-    background-repeat:repeat;
-    border-radius: 5px;
-    z-index:1;
-    width:640px;
-    height:400px; 
-}
-*/
-/* the main gaming area with players info (status, stake, dealer button, etc.)
-   community cards, cards, etc. 
-#boardTable */
-/* line 24, ../sass/pages/_playSection.scss */
-section#play-section {
-  position: relative;
-  /*z-index:3; */
-  float: left;
-  background-color: transparent;
-  text-align: middle;
-  width: 640px;
-  height: 400px;
-  /* merging #gameBackground with boardTable */
-  z-index: 1;
-  background-image: url("../../../images/board-bg.png");
-  background-repeat: repeat;
-}
-
-/*#playGameCanvasId */
-/* line 38, ../sass/pages/_playSection.scss */
-#play-section-canvas {
-  position: absolute;
-  z-index: 2;
-  /* top and left are seven to adjust for the border */
-  top: 7px;
-  left: 7px;
-  width: 640px;
-  height: 400px;
-}
-
-    /*
-.pokerTable {
-    position:relative;
-    width: 642px;
-    height:444px; 
-    /* left:220px; = to the cheaters frame width 
-    float: left;
-    padding: 5px 0px 0px 5px;
-}
-.pokerTable {
-    position: absolute;
-    top: 200px;
-    left: 20px;
-}
-*/
-/*************************************************************************************/
-/* this button shows up if a seat becomes available for a waiting user so that
-   the user can accept it */
-/* line 65, ../sass/pages/_playSection.scss */
-#takeSeatButton {
-  display: none;
-  position: absolute;
-  opacity: 0.8;
-  filter: alpha(opacity=80);
-  background-color: #D7AF82;
-  font-weight: bold;
-  font-style: italic;
-  border-radius: 5px;
-  width: 150px;
-  height: 80px;
-}
-
-/*************************************************************************************/
-/* div enveloping each player info */
-/* line 80, ../sass/pages/_playSection.scss */
-.playerInfo {
-  position: absolute;
-  /* display:none; */
-  width: 150px;
-  height: 80px;
-  border-radius: 5px;
-  padding: 0px auto;
-}
-
-/* different box displays depending on player status */
-/* line 89, ../sass/pages/_playSection.scss */
-.playerInfoNormal {
-  border: 2px ridge grey;
-  background-color: #D3D3D3;
-}
-
-/* line 93, ../sass/pages/_playSection.scss */
-.playerInfoTimeOut {
-  border: 2px ridge grey;
-  background-color: #E59093;
-}
-
-/* line 97, ../sass/pages/_playSection.scss */
-.playerInfoWinner {
-  border: 3px double grey;
-  background-color: #1463FF;
-}
-
-/* line 101, ../sass/pages/_playSection.scss */
-.playerInfoNext {
-  border: 3px dotted grey;
-  background-color: #70B251;
-}
-
-/* line 105, ../sass/pages/_playSection.scss */
-.playerInfoUser {
-  border: 3px ridge #9086D9;
-  background-color: #BEBBD5;
-}
-
-/* line 109, ../sass/pages/_playSection.scss */
-.playerInfo p {
-  text-align: center;
-}
-
-/*
-.playerInfo img {
-    margin: 0px 20px 20px 0px;
-    height:30px;	
-} */
-/* line 117, ../sass/pages/_playSection.scss */
-.avatarImg {
-  display: block;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-left: auto;
-  margin-right: auto;
-  height: 30px;
-}
-
-/* line 125, ../sass/pages/_playSection.scss */
-#player0Info {
-  top: 310px;
-  /* 400 - 80px (height) - 5 */
-  left: 5px;
-}
-
-/* line 129, ../sass/pages/_playSection.scss */
-#player1Info {
-  top: 5px;
-  left: 5px;
-}
-
-/* line 133, ../sass/pages/_playSection.scss */
-#player2Info {
-  top: 5px;
-  left: 482px;
-  /* 642 - 150 px - 5 */
-}
-
-/* line 137, ../sass/pages/_playSection.scss */
-#player3Info {
-  top: 310px;
-  left: 482px;
-}
-
-/* line 142, ../sass/pages/_playSection.scss */
-.playerName {
-  font-weight: bold;
-}
-
-/* line 145, ../sass/pages/_playSection.scss */
-.playerStake {
-  font-size: small;
-}
-
-/* line 149, ../sass/pages/_playSection.scss */
-.playerStatus {
-  font-weight: bold;
-  color: red;
-}
-
-/* line 154, ../sass/pages/_playSection.scss */
-.playerStatusWinner {
-  font-weight: bold;
-  color: white;
-}
-
-/* line 159, ../sass/pages/_playSection.scss */
-.dealerButton {
-  /* display: none; */
-  position: absolute;
-  border: 2px groove #503A2E;
-  border-radius: 5px;
-  background-color: #C85E25;
-  font-family: Calibri;
-  font-size: 120%;
-  height: 20px;
-  width: 20px;
-  z-index: 4;
-}
-
-/* line 171, ../sass/pages/_playSection.scss */
-#player0DealerButton {
-  top: 371px;
-  /* 400 -20- 5 */
-  left: 165px;
-  /* 150 + 5 -+5 */
-}
-
-/* line 175, ../sass/pages/_playSection.scss */
-#player1DealerButton {
-  top: 5px;
-  left: 165px;
-}
-
-/* line 179, ../sass/pages/_playSection.scss */
-#player2DealerButton {
-  top: 5px;
-  left: 455px;
-  /* 642- 150 - 5 - 5 */
-}
-
-/* line 183, ../sass/pages/_playSection.scss */
-#player3DealerButton {
-  top: 371px;
-  left: 455px;
-}
-
-/*-----------------------------------------------------------------------------------*/
-/* line 188, ../sass/pages/_playSection.scss */
-.playerCard {
-  position: absolute;
-  /* display:none; */
-  height: 42px;
-  width: 30px;
-  z-index: 5;
-}
-
-/* line 195, ../sass/pages/_playSection.scss */
-.userCard {
-  position: absolute;
-  /* display:none; */
+#region-choices table td {
   height: 70px;
-  width: 50px;
-  z-index: 5;
+  width: 240px;
 }
-
-/* player cards go off the dealer */
-/* line 203, ../sass/pages/_playSection.scss */
-.player0Card1 {
-  top: 323px;
-  /* 400 - 80 - 20 - 5 - 5 */
-  left: 165px;
-  /* 150 + 5*3 */
-}
-
-/* line 207, ../sass/pages/_playSection.scss */
-.player0Card2 {
-  top: 323px;
-  /* 400 - 70 - 20 - 5 - 5 */
-  left: 200px;
-  /* card1 + 50 + 5 */
-}
-
-/* line 211, ../sass/pages/_playSection.scss */
-.player1Card1 {
-  top: 33px;
-  /* 5 + 20 + 5 */
-  left: 165px;
-}
-
-/* line 215, ../sass/pages/_playSection.scss */
-.player1Card2 {
-  top: 33px;
-  left: 200px;
-}
-
-/* line 219, ../sass/pages/_playSection.scss */
-.player2Card1 {
-  top: 33px;
-  left: 412px;
-  /* 642 - 150 - 5 - 5 - 5*/
-}
-
-/* line 223, ../sass/pages/_playSection.scss */
-.player2Card2 {
-  top: 33px;
-  left: 448px;
-  /* card1 - 50 - 5*/
-}
-
-/* line 227, ../sass/pages/_playSection.scss */
-.player3Card1 {
-  top: 323px;
-  left: 412px;
-}
-
-/* line 231, ../sass/pages/_playSection.scss */
-.player3Card2 {
-  top: 323px;
-  left: 448px;
-}
-
-/* user card */
-/* line 237, ../sass/pages/_playSection.scss */
-.player0UserCard1 {
-  top: 295px;
-  /* player card - 28 */
-  left: 165px;
-}
-
-/* line 241, ../sass/pages/_playSection.scss */
-.player0UserCard2 {
-  top: 295px;
-  left: 220px;
-  /* player card + 20 */
-}
-
-/* line 245, ../sass/pages/_playSection.scss */
-.player1UserCard1 {
-  top: 33px;
-  /* 5 + 20 + 5 */
-  left: 165px;
-}
-
-/* line 249, ../sass/pages/_playSection.scss */
-.player1UserCard2 {
-  top: 33px;
-  left: 220px;
-}
-
-/* line 253, ../sass/pages/_playSection.scss */
-.player2UserCard1 {
-  top: 33px;
-  left: 372px;
-  /* player card - 20 */
-}
-
-/* line 257, ../sass/pages/_playSection.scss */
-.player2UserCard2 {
-  top: 33px;
-  left: 428px;
-}
-
-/* line 261, ../sass/pages/_playSection.scss */
-.player3UserCard1 {
-  top: 295px;
-  left: 372px;
-  /* playercard1 412 - 40 */
-}
-
-/* line 265, ../sass/pages/_playSection.scss */
-.player3UserCard2 {
-  top: 295px;
-  left: 428px;
-}
-
-/*-----------------------------------------------------------------------------------*/
-/* small markers on the back */
-/* line 272, ../sass/pages/_playSection.scss */
-.cardSmallMarker {
-  position: absolute;
-  display: none;
-  height: 21px;
-  /* 42 */
-  width: 15px;
-  /* 30 */
-  z-index: 7;
-}
-
-/* line 279, ../sass/pages/_playSection.scss */
-.player0Card1SmallMarker {
-  top: 342px;
-  /* + 323 + (42 - 21) - 2 */
-  left: 178px;
-  /* + 165 + (30 - 15) - 2 */
-}
-
-/* line 283, ../sass/pages/_playSection.scss */
-.player0Card2SmallMarker {
-  top: 342px;
-  left: 213px;
-  /* 200 + (30-15) - 2 */
-}
-
-/* line 287, ../sass/pages/_playSection.scss */
-.player1Card1SmallMarker {
-  top: 52px;
-  /* 33 + (42-21) -2 */
-  left: 178px;
-}
-
-/* line 291, ../sass/pages/_playSection.scss */
-.player1Card2SmallMarker {
-  top: 52px;
-  left: 213px;
-}
-
-/* line 295, ../sass/pages/_playSection.scss */
-.player2Card1SmallMarker {
-  top: 52px;
-  left: 426px;
-  /* 412 + (42 - 21) - 5 offset - 2 */
-}
-
-/* line 299, ../sass/pages/_playSection.scss */
-.player2Card2SmallMarker {
-  top: 52px;
-  left: 461px;
-  /* 448 + (30 - 15)- 2 */
-}
-
-/* line 303, ../sass/pages/_playSection.scss */
-.player3Card1SmallMarker {
-  top: 342px;
-  left: 426px;
-}
-
-/* line 307, ../sass/pages/_playSection.scss */
-.player3Card2SmallMarker {
-  top: 342px;
-  left: 461px;
-}
-
-/*-----------------------------------------------------------------------------------*/
-/* large cheating marker */
-/* line 314, ../sass/pages/_playSection.scss */
-.cardLargeMarker {
-  position: absolute;
-  display: none;
-  /*
-  height: 30px;
-  width: 21px;
-  */
-  height: 42px;
-  width: 30px;
-  z-index: 6;
-}
-
-/* line 325, ../sass/pages/_playSection.scss */
-.player0Card1LargeMarker {
-  top: 333px;
-  /* 323 + (42-30) - 2*/
-  left: 172px;
-  /* 165 + (30-21) - 2*/
-}
-
-/* line 329, ../sass/pages/_playSection.scss */
-.player0Card2LargeMarker {
-  top: 333px;
-  left: 207px;
-  /* 200 + (30-21) - 2 */
-}
-
-/* line 333, ../sass/pages/_playSection.scss */
-.player1Card1LargeMarker {
-  top: 43px;
-  /* 33 + (42-30) - 2 */
-  left: 172px;
-}
-
-/* line 337, ../sass/pages/_playSection.scss */
-.player1Card2LargeMarker {
-  top: 43px;
-  left: 207px;
-}
-
-/* line 341, ../sass/pages/_playSection.scss */
-.player2Card1LargeMarker {
-  top: 43px;
-  left: 419px;
-  /* 412 + (42-30) -5 offset - 2 - 2*/
-}
-
-/* line 345, ../sass/pages/_playSection.scss */
-.player2Card2LargeMarker {
-  top: 43px;
-  left: 455px;
-  /* 448 + (30-21) - 2*/
-}
-
-/* line 349, ../sass/pages/_playSection.scss */
-.player3Card1LargeMarker {
-  top: 333px;
-  left: 419px;
-}
-
-/* line 353, ../sass/pages/_playSection.scss */
-.player3Card2LargeMarker {
-  top: 333px;
-  left: 455px;
-}
-
-/*-----------------------------------------------------------------------------------*/
-/* bigger card sizes for user */
-/* player cards go off the dealer */
-/* line 361, ../sass/pages/_playSection.scss */
-.cardSmallUserMarker {
-  position: absolute;
-  display: none;
-  height: 24px;
-  width: 17px;
-  z-index: 7;
-}
-
-/* line 369, ../sass/pages/_playSection.scss */
-.player0Card1SmallUserMarker {
-  top: 336px;
-  /* 295 + (70-24) - 5 */
-  left: 193px;
-  /* 165 + (50-17) - 5 */
-}
-
-/* line 373, ../sass/pages/_playSection.scss */
-.player0Card2SmallUserMarker {
-  top: 336px;
-  left: 248px;
-  /* 220 + (50-17) - 5 */
-}
-
-/* line 377, ../sass/pages/_playSection.scss */
-.player1Card1SmallUserMarker {
-  top: 74px;
-  /* 33 + (70-24) - 5 */
-  left: 193px;
-}
-
-/* line 381, ../sass/pages/_playSection.scss */
-.player1Card2SmallUserMarker {
-  top: 74px;
-  left: 248px;
-}
-
-/* line 385, ../sass/pages/_playSection.scss */
-.player2Card1SmallUserMarker {
-  top: 74px;
-  left: 400px;
-  /* 372 + (50-17) - 5 */
-}
-
-/* line 389, ../sass/pages/_playSection.scss */
-.player2Card2SmallUserMarker {
-  top: 74px;
-  left: 456px;
-  /* 428 + (50-17) - 5 */
-}
-
-/* line 393, ../sass/pages/_playSection.scss */
-.player3Card1SmallUserMarker {
-  top: 336px;
-  left: 400px;
-}
-
-/* line 397, ../sass/pages/_playSection.scss */
-.player3Card2SmallUserMarker {
-  top: 336px;
-  left: 456px;
-}
-
-/*-----------------------------------------------------------------------------------*/
-/* bigger card sizes for user */
-/* player cards go off the dealer */
-/* line 405, ../sass/pages/_playSection.scss */
-.cardLargeUserMarker {
-  position: absolute;
-  display: none;
-  height: 50px;
-  width: 36px;
-  z-index: 6;
-}
-
-/* line 412, ../sass/pages/_playSection.scss */
-.player0Card1LargeUserMarker {
-  top: 310px;
-  /* 295 + (70-50) - 5 */
-  left: 174px;
-  /* 165 + (50 - 36) - 5 */
-}
-
-/* line 416, ../sass/pages/_playSection.scss */
-.player0Card2LargeUserMarker {
-  top: 310px;
-  left: 229px;
-  /* 220 + (50 - 36) - 5 */
-}
-
-/* line 420, ../sass/pages/_playSection.scss */
-.player1Card1LargeUserMarker {
-  top: 48px;
-  /* 33 + (70-50) - 5 */
-  left: 174px;
-}
-
-/* line 424, ../sass/pages/_playSection.scss */
-.player1Card2LargeUserMarker {
-  top: 48px;
-  left: 229px;
-}
-
-/* line 428, ../sass/pages/_playSection.scss */
-.player2Card1LargeUserMarker {
-  top: 48px;
-  left: 381px;
-  /* 372 + (50-36) - 5 */
-}
-
-/* line 432, ../sass/pages/_playSection.scss */
-.player2Card2LargeUserMarker {
-  top: 48px;
-  left: 437px;
-  /* 428 + (50-36) - 5 */
-}
-
-/* line 436, ../sass/pages/_playSection.scss */
-.player3Card1LargeUserMarker {
-  top: 310px;
-  left: 381px;
-}
-
-/* line 440, ../sass/pages/_playSection.scss */
-.player3Card2LargeUserMarker {
-  top: 310px;
-  left: 437px;
-}
-
-/*************************************************************************************/
-/* line 445, ../sass/pages/_playSection.scss */
-.communityCard {
-  position: absolute;
-  display: none;
-  top: 150px;
-  height: 60px;
-  width: 43px;
-}
-
-/* line 452, ../sass/pages/_playSection.scss */
-#communityCard0 {
-  left: 212px;
-}
-
-/* line 455, ../sass/pages/_playSection.scss */
-#communityCard1 {
-  left: 260px;
-}
-
-/* line 458, ../sass/pages/_playSection.scss */
-#communityCard2 {
-  left: 308px;
-}
-
-/* line 461, ../sass/pages/_playSection.scss */
-#communityCard3 {
-  left: 356px;
-}
-
-/* line 464, ../sass/pages/_playSection.scss */
-#communityCard4 {
-  left: 404px;
-}
-
-/*************************************************************************************/
-/* this is the message at the center of the table */
-/* line 469, ../sass/pages/_playSection.scss */
-#centerMessageId {
-  display: block;
+/* line 23, ../sass/pages/_home.scss */
+#region-choices table td input {
+  height: 96%;
+  width: 98%;
+  white-space: normal;
   text-align: center;
-  font-size: 20px;
-  font-weight: bolder;
-  color: white;
-  margin: 200px 0 0 0;
-}
-
-/* #boardTable input { */
-/* line 479, ../sass/pages/_playSection.scss */
-section#play-section input {
-  position: absolute;
-}
-
-/*************************************************************************************/
-/* line 483, ../sass/pages/_playSection.scss */
-#userCallAmount {
-  display: none;
-}
-
-/* line 486, ../sass/pages/_playSection.scss */
-#userRaiseAmount {
-  display: none;
-}
-
-/* line 489, ../sass/pages/_playSection.scss */
-.userButton {
-  position: absolute;
-  height: 28px;
-  display: inline-block;
-  border-radius: 0;
-  background-color: #7E8493;
-  border-style: outset;
-}
-
-/* line 497, ../sass/pages/_playSection.scss */
-#userRaiseButton {
-  width: 95px;
-}
-
-/* line 500, ../sass/pages/_playSection.scss */
-#userFoldButton {
-  width: 55px;
-}
-
-/* line 503, ../sass/pages/_playSection.scss */
-#userCallButton {
-  width: 95px;
-}
-
-/* line 506, ../sass/pages/_playSection.scss */
-#userCheckButton {
-  width: 55px;
-}
-
-/* line 509, ../sass/pages/_playSection.scss */
-.player0Raise {
-  top: 249px;
-  left: 5px;
-}
-
-/* line 513, ../sass/pages/_playSection.scss */
-.player0Fold {
-  top: 249px;
-  left: 103px;
-}
-
-/* line 517, ../sass/pages/_playSection.scss */
-.player0Check {
-  top: 279px;
-  left: 5px;
-}
-
-/* line 521, ../sass/pages/_playSection.scss */
-.player0Call {
-  top: 279px;
-  left: 63px;
-}
-
-/* player 1 positions */
-/* line 526, ../sass/pages/_playSection.scss */
-.player1Raise {
-  top: 90px;
-  left: 5px;
-}
-
-/* line 530, ../sass/pages/_playSection.scss */
-.player1Fold {
-  top: 90px;
-  left: 103px;
-}
-
-/* line 534, ../sass/pages/_playSection.scss */
-.player1Check {
-  top: 120px;
-  left: 5px;
-}
-
-/* line 538, ../sass/pages/_playSection.scss */
-.player1Call {
-  top: 120px;
-  left: 63px;
-}
-
-/* player 2 button positions */
-/* line 543, ../sass/pages/_playSection.scss */
-.player2Raise {
-  top: 90px;
-  left: 482px;
-}
-
-/* line 547, ../sass/pages/_playSection.scss */
-.player2Fold {
-  top: 90px;
-  left: 580px;
-  /* 482 + 98 */
-}
-
-/* line 551, ../sass/pages/_playSection.scss */
-.player2Check {
-  top: 120px;
-  left: 482px;
-}
-
-/* line 555, ../sass/pages/_playSection.scss */
-.player2Call {
-  top: 120px;
-  left: 540px;
-  /* 482 + 68 */
-}
-
-/* player 3 positions */
-/* line 560, ../sass/pages/_playSection.scss */
-.player3Raise {
-  top: 249px;
-  left: 482px;
-}
-
-/* line 564, ../sass/pages/_playSection.scss */
-.player3Fold {
-  top: 249px;
-  left: 580px;
-}
-
-/* line 568, ../sass/pages/_playSection.scss */
-.player3Check {
-  top: 279px;
-  left: 482px;
-}
-
-/* line 572, ../sass/pages/_playSection.scss */
-.player3Call {
-  top: 279px;
-  left: 540px;
 }
 
 /* 
@@ -3559,27 +4136,32 @@ section#play-section input {
 */
 /* CheatingSleeve.html*/
 /* line 14, ../sass/pages/_frontStreet.scss */
-section#front-street {
+#region-front-street {
   background-image: url("../../../images/SaloonSeedy.png");
+  width: 640px;
+  left: 230px;
+}
+/* line 19, ../sass/pages/_frontStreet.scss */
+#region-front-street h6 {
+  position: relative;
+  left: 25px;
+  top: 25px;
+}
+/* line 25, ../sass/pages/_frontStreet.scss */
+#region-front-street input {
+  position: relative;
+  left: 50px;
+  top: 120px;
+  width: 80px;
+  height: 40px;
 }
 
-/* line 17, ../sass/pages/_frontStreet.scss */
-.cImg {
-  border-radius: 3px;
-  border: 2px solid #B6BFD7;
-  width: 30px;
-  height: 42px;
-}
-
-/* line 23, ../sass/pages/_frontStreet.scss */
-#cardSelector {
-  float: left;
-}
-
-/* FrontStreet.php */
-/* line 28, ../sass/pages/_frontStreet.scss */
+/* cheating option (currently one button only to load card on sleeve) */
+/* line 34, ../sass/pages/_frontStreet.scss */
 .preCheatImg {
-  float: left;
+  position: relative;
+  left: 50px;
+  top: 50px;
   width: 80px;
   height: 35px;
   padding: 5px;
@@ -3589,40 +4171,66 @@ section#front-street {
   border-radius: 2px;
   background-color: #81B380;
   vertical-align: text-bottom;
-  /* */
 }
-/* line 40, ../sass/pages/_frontStreet.scss */
-.preCheatImg .fade {
+
+/* */
+/* line 51, ../sass/pages/_frontStreet.scss */
+.fade {
   filter: alpha(opacity=70);
   -moz-opacity: 0.7;
   opacity: 0.7;
 }
-/* line 43, ../sass/pages/_frontStreet.scss */
-.preCheatImg .normal {
+
+/* line 54, ../sass/pages/_frontStreet.scss */
+.normal {
   filter: alpha(opacity=100);
   -moz-opacity: 1;
   opacity: 1;
 }
 
-/* line 45, ../sass/pages/_frontStreet.scss */
-.preCheatDiv {
-  width: 400px;
-  height: 65px;
-  /* see image: 35 height + 2*10 padding */
-  margin: 0px 10px;
-}
-
-/* line 50, ../sass/pages/_frontStreet.scss */
-#cheatingOptionsHeader {
-  font-weight: bold;
-}
-
-/* line 53, ../sass/pages/_frontStreet.scss */
-#dialog-card-selector {
-  font-size: 0.7em;
-}
-
+/* tooltip is dynamically set */
 /* line 56, ../sass/pages/_frontStreet.scss */
+.tooltip {
+  background: transparent url(../../../images/black_arrow.png);
+  font-size: 0.7em;
+  height: 30px;
+  width: 150px;
+  padding: 15px;
+  color: #eee;
+  text-align: center;
+}
+
+/* line 68, ../sass/pages/_frontStreet.scss */
+#sleeve {
+  position: relative;
+  left: 80px;
+  top: 80px;
+  background-color: #7E8493;
+  margin-left: 10px;
+  padding: 4px 4px;
+  width: 450px;
+  height: 65px;
+  border-radius: 3px;
+  border: 2px solid #B6BFD7;
+  color: #D9E1F5;
+  font-family: Comic Sans MS;
+  font-size: 0.8em;
+  overflow: auto;
+}
+
+/* line 85, ../sass/pages/_frontStreet.scss */
+#dialog-card-selector {
+  float: left;
+  font-size: 11px;
+}
+
+/* line 91, ../sass/pages/_frontStreet.scss */
+#region-card-selector {
+  position: relative;
+  float: left;
+}
+
+/* line 93, ../sass/pages/_frontStreet.scss */
 #selectedCards {
   float: right;
   position: relative;
@@ -3638,60 +4246,34 @@ section#front-street {
   overflow: auto;
 }
 
-/* tooltip is dynamically set */
-/* line 71, ../sass/pages/_frontStreet.scss */
-.tooltip {
-  display: none;
-  background: transparent url(../../../images/black_arrow.png);
-  font-size: 0.7em;
-  height: 40px;
-  width: 100px;
-  padding: 15px;
-  color: #eee;
-  text-align: center;
-}
-
-/* line 81, ../sass/pages/_frontStreet.scss */
-.sleeve {
-  display: none;
-  float: left;
-  background-color: #7E8493;
-  margin-left: 10px;
-  padding: 4px 4px;
-  width: 450px;
-  height: 65px;
-  border-radius: 3px;
+/*-----------------------------------------------------------------------------------*/
+/* cheatingSeleeveCards.html: each of the 52 cards shown */
+/* line 110, ../sass/pages/_frontStreet.scss */
+.cImg {
   border: 2px solid #B6BFD7;
-  color: #D9E1F5;
-  font-family: Comic Sans MS;
-  font-size: 0.8em;
-  overflow: auto;
+  width: 30px;
+  height: 48px;
 }
 
-/* line 1, ../sass/pages/_cheatingSection.scss */
-.cheatersCatalog {
-  position: absolute;
-}
-
-/* line 4, ../sass/pages/_cheatingSection.scss */
-.cheaterItemDetail {
-  position: relative;
-}
-
+/* #region-cheating {
+    //   position: absolute;
+    width: $region-main-width; 
+}*/
 /* not working, why? */
-/* line 8, ../sass/pages/_cheatingSection.scss */
+/* line 9, ../sass/pages/_cheatingSection.scss */
 .cheaterItemDetail > div {
-  position: absolute;
   left: 103px;
 }
 
 /* both sleeve and next card are hidden */
-/* line 13, ../sass/pages/_cheatingSection.scss */
+/* line 14, ../sass/pages/_cheatingSection.scss */
 .hiddenCard {
+  position: absolute;
+  left: 103px;
   background-color: #7E8493;
   padding: 4px 4px;
   width: 112px;
-  height: 108px;
+  height: 133px;
   border-radius: 3px;
   border: 2px solid #B6BFD7;
   color: #D9E1F5;
@@ -3699,47 +4281,48 @@ section#front-street {
   font-size: 0.8em;
   overflow: auto;
 }
-/* line 24, ../sass/pages/_cheatingSection.scss */
-.hiddenCard .sleeveCard {
-  top: 0px;
-}
-/* line 27, ../sass/pages/_cheatingSection.scss */
-.hiddenCard .nextCard {
-  top: 325px;
+
+/* line 28, ../sass/pages/_cheatingSection.scss */
+#sleeveCards {
+  top: 60px;
   z-index: 1;
 }
 
 /* line 32, ../sass/pages/_cheatingSection.scss */
+#grooveCards {
+  top: 410px;
+  z-index: 1;
+}
+
+/*
 .cheatingItemAction {
-  display: none;
-  position: absolute;
-  top: 124px;
-  width: 117px;
-  height: 70px;
-  background-color: #F1F6FB;
-  display: table-cell;
-  vertical-align: middle;
-  margin-top: auto;
-  margin-bottom: auto;
-  border: 2px solid #B6BFD7;
-  border-radius: 3px;
-  overflow: auto;
-  padding: 1px 2px 2px 1px;
-  text-align: center;
-  font-size: small;
-}
-
-/* line 50, ../sass/pages/_cheatingSection.scss */
-.cheatingItemAction input {
-  display: inline-block;
-  width: 80px;
-  font-size: 0.8em;
-}
-
-/* line 55, ../sass/pages/_cheatingSection.scss */
+    display:none;
+    position:absolute;
+    top: 148px;
+    width:117px;
+    height: 70px;
+    background-color:#F1F6FB;
+    display: table-cell;
+    vertical-align:middle;
+    margin-top: auto;
+    margin-bottom: auto;
+    border: 2px solid #B6BFD7;
+    border-radius: 3px;
+    overflow: auto;
+    padding: 1px 2px 2px 1px;
+    text-align: center;
+    font-size:small;
+    .cheatingItemAction input {
+	//display: inline-block;
+	width: 80px;
+	font-size:0.8em;
+    }
+} */
+/* line 60, ../sass/pages/_cheatingSection.scss */
 .cheatingItemDesc {
   display: none;
-  top: 205px;
+  position: absolute;
+  top: 228px;
   background-color: #F0F6F9;
   font-size: small;
   width: 200px;
@@ -3751,7 +4334,7 @@ overflow: auto; */
   border-radius: 3px;
 }
 
-/* line 68, ../sass/pages/_cheatingSection.scss */
+/* line 74, ../sass/pages/_cheatingSection.scss */
 .cheatImg {
   border-radius: 3px;
   border: 2px solid #B6BFD7;
@@ -3759,12 +4342,99 @@ overflow: auto; */
   height: 35px;
 }
 
+/* line 80, ../sass/pages/_cheatingSection.scss */
+#SwapRiverCard-div {
+  background-image: url("../../../images/cheatItem6.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  display: table-cell;
+}
+
+/* line 87, ../sass/pages/_cheatingSection.scss */
+#SwapRiverCard-image {
+  display: block;
+  height: 25px;
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
+  vertical-align: middle;
+  margin-top: 2px;
+}
+
 /*-----------------------------------------------------------------------------------*/
-/* line 75, ../sass/pages/_cheatingSection.scss */
+/* line 97, ../sass/pages/_cheatingSection.scss */
 .cheatingCard {
   /* display:none; */
   height: 42px;
   width: 30px;
   z-index: 5;
-  margin: 2px;
+  display: inline;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* line 107, ../sass/pages/_cheatingSection.scss */
+.logFrame {
+  position: absolute;
+  /*z-index:3; */
+  left: 230px;
+  width: 640px;
+  top: 460px;
+  height: 80px;
+  background-color: #dcd9d9;
+  text-align: left;
+  color: blue;
+  clear: both;
+  opacity: 0.6;
+  border-radius: 3px;
+  padding: 5px 5px;
+  margin-bottom: 5px;
+  overflow: auto;
+}
+
+/*
+.logFrame {
+    width:$region-main-width;
+    height: $log-height;
+    background-color: white;
+    text-align:left;
+    color:blue;
+    clear: both;
+    opacity: 0.6;
+    border-radius: 3px;
+    padding: $region-padding-vertical $region-padding-horizontal;
+    //margin-bottom: 5px;
+    overflow: auto;
+}
+*/
+/* line 140, ../sass/pages/_cheatingSection.scss */
+.cheatingCard.ui-draggable-dragging {
+  height: 30px;
+  width: auto;
+}
+
+/* line 144, ../sass/pages/_cheatingSection.scss */
+.clonedCheatingCard {
+  height: 30px;
+  width: auto;
+  z-index: 99;
+  display: inline;
+}
+
+/* line 150, ../sass/pages/_cheatingSection.scss */
+.clonedCheatingItem {
+  height: 20px;
+  width: auto;
+  z-index: 99;
+  display: inline;
+}
+
+/* line 156, ../sass/pages/_cheatingSection.scss */
+.cheatImg.ui-draggable-dragging {
+  height: 20px;
+  width: auto;
+}
+
+/* line 160, ../sass/pages/_cheatingSection.scss */
+.hovered {
+  opacity: 0.7;
 }

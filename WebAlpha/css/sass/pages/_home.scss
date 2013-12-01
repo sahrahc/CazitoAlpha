@@ -5,25 +5,25 @@
     Description:
         Purpose of the stylesheet follows.
 */
-section#home {
-    position:relative;
-    height:400px;
-    width:642px;
+#region-choices {
+    width: $region-main-width;
+    left: $region-social-width;  
+        z-index:-1;
+    background-image:url('../../../images/window-bg.png');
     background-repeat:no-repeat;
     border-style: outset;
     border-color: green;
     border-width:2px;
-        background-image:url('../../../images/SaloonSafe.png');
-}
-
-/* center the options */
-section#home table {
-    margin-left: auto;
-    margin-right: auto;
-    
-}
-/* size each option */
-section#home input {
-    height: 40px;
-    width: 40px;
+    /* center the options */
+    table {
+	margin: 0 auto;
+	td {
+	    height: 70px;
+	    width: 240px; 
+	    input { height: 96%;
+	    width: 98%;
+	    white-space: normal;
+	    text-align: center;}
+	}
+    }
 }

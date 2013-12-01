@@ -2,7 +2,6 @@
 
 include(dirname(__FILE__) . '/../PokerPlayerService.php');
 include_once(dirname(__FILE__) . '/../Metadata.php');
-include('showObject.php');
 
 /* * ********************************************************************************
  * Setup
@@ -37,19 +36,21 @@ $dtoEncoded = startPracticeSession($par);
 $gameStatusDto = json_decode($dtoEncoded);
 $gameSessionId = $gameStatusDto->gameSessionId;
 $gameInstance = EntityHelper::GetGameInstance($gameStatusDto->gameInstanceId);
-$cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
+$gameCards = new GameInstanceCards($gameInstance->id);
+	$cCards = $gameCards->GetSavedCommunityCardDtos(5);
 echo "Community card before look: " . json_encode($cCards) . "<br /><br />";
 
 echo 'TEST CASE 34.1 swap before looking not allowed<br /><br />';
-$dto = CheatingHelper::CheatLookRiverCard($playerId, $gameInstance, $statusDT, ItemType::RIVER_SHUFFLER);
-$cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
+$dto = $cheatingItem->CheatLookRiverCard($gameInstance);
+$gameCards = new GameInstanceCards($gameInstance->id);
+$cCards = $gameCards->GetSavedCommunityCardDtos(5);
 echo "Community card after looking (no change): " . json_encode($cCards) . "<br /><br />";
 
 echo '******************************************************<br />';
 echo 'TEST CASE 34.2: Look and swap river cards for instance <br /><br />';
 
 $dto = CheatingHelper::CheatSwapRiverCard($playerId, $gameInstance, ItemType::RIVER_SHUFFLER);
-$cCards = CardHelper::getCommunityCardDtos($gameInstance->id, 5);
+$cCards = $gameCards->GetSavedCommunityCardDtos(5);
 echo "Community card after swapping: " . json_encode($cCards) . "<br /><br />";
 
 QueueManager::DisconnectQueue($qConn);

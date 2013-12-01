@@ -8,8 +8,20 @@ $name = 'Test0';
 
 include(dirname(__FILE__) . '/../PokerPlayerService.php');
 include_once(dirname(__FILE__) . '/../Metadata.php');
-include('showObject.php');
-
+/*
+ * exceptions - regression smoke have two four users join and go through one 
+ * round of play
+ * all exceptions are hacking conditions
+ * - wrong turn
+ * - check on first round
+ * - player not playing on table
+ * - wrong call, raise amount
+ * - attempt move after fold
+ * - attempt move after left
+ * - move on ended game
+ * - move on unknown session
+ * - user on waiting list attempts move
+ */
 /**********************************************************************************
  * Setup
  */

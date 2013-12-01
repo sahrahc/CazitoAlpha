@@ -7,6 +7,9 @@ var SEAT_TAKEN = 'SeatTaken';
 var WAIT_LIST_CHANGE = 'WaitListChange';
 var USER_LEFT = 'UserLeft';
 var SEAT_OFFER = 'SeatOffer';
+var CHEATED = 'Cheated';
+var USER_EJECTED = 'UserEjected';
+// cheating dto types
 var CHEATED_HANDS = "CheatedHands";
 var CHEATED_CARDS = "CheatedCards";
 var CHEATED_HIDDEN = "CheatedHidden";
@@ -17,7 +20,7 @@ var ITEM_LOG = "ItemLog";
 var ITEM_END = "ItemEnd";
 /* game status */
 var GAME_ACTIVE = 'Active';
-var GAME_INACTIVE = 'Inactive';
+var GAME_INACTIVE = 'None';
 var GAME_ENDED = 'Ended';
 /* constants - actions */
 var START_GAME = 'StartGame';
@@ -31,37 +34,60 @@ var CHAT = 'Chat';
 var SKIPPED = 'Skipped';
 /* cheat items */
 var ACE_PUSHER = 'AcePusher'; // Sly McGuffin's Ace Pusher
-    // Messages: 1) User hand with ace 2) old card in sleeve 
+// Messages: 1) User hand with ace 2) old card in sleeve 
 var HEART_MARKER = 'HeartMarker';
-    // Messages: 1) All player hands with heart 2) Lock start message
+// Messages: 1) All player hands with heart 2) Lock start message
 var LOAD_CARD_ON_SLEEVE = 'LoadCardOnSleeve'; // Old Man Chalmers Reliable Card Pusher
-    // No messages, sync REST call, confirmation sent
+// No messages, sync REST call, confirmation sent
 var USE_CARD_ON_SLEEVE = 'UseCardOnSleeve';
-    // Messages: 1) Updated user hand 2) updated sleeve
+// Messages: 1) Updated user hand 2) updated sleeve
 var CLUB_MARKER = 'ClubMarker';
-    // Messages: 1) All player hands with clubs 2) Lock start message
+// Messages: 1) All player hands with clubs 2) Lock start message
 var DIAMOND_MARKER = 'DiamondMarker';
-    // Messages: 1) All player hands with diamonds 2) Lock start message
+// Messages: 1) All player hands with diamonds 2) Lock start message
 var RIVER_SHUFFLER = 'LookRiverCard'; //Shelvin's Shuffler
-    // Messages: 1) River card value (NEXT) 2) Lock start message 
+// Messages: 1) River card value (NEXT) 2) Lock start message 
 var RIVER_SHUFFLER_USE = 'SwapRiverCard';
-    // Messages: None
+// Messages: None
 var POKER_PEEKER = 'PokerPeeker';
-    // Messages: 1) Other player cards 2) Lock start message
+// Messages: 1) Other player cards 2) Lock start message
 var SOCIAL_SPOTTER = 'SocialSpotter';
-    // Messages: 1) All player hands 2-4) up to 3 additional messages with value of community cards as dealt 
+// Messages: 1) All player hands 2-4) up to 3 additional messages with value of community cards as dealt 
+var TUCKER_TABLE_SLIDE_UNDER = 'TableTuckerSlideUnder';
+var TUCKER_TABLE_SLIDE_OUT = 'TableTuckerSlideOut';
+var TUCKER_TABLE_EXCHANGE = 'TableTuckerExchange';
+var SNAKE_OIL_MARKER = 'SnakeOilMarker';
+;
+var ANTI_OIL_MARKER = 'AntiOilMarker';
+var SNAKE_OIL_MARKER_COUNTERED = 'SnakeOilMarkerCountered';
+var KEEP_FACE_CARDS = 'FaceMelter';
 
+/*------------------------------------------------------------------------------------------*/
+/* other constants, not for play */
+var GET_TABLE = 'getTable';
+var CREATE_TABLE = 'createTable';
+
+// web page
+var HOME_PAGE = 'Home.php';
+var FRONT_STREET = 'FrontStreet.php';
+var CHEATING_PLAY = 'CheatingPlay.php';
+var SAFE_PLAY = 'SafePlay.php';
 /*------------------------------------------------------------------------------------------*/
 // helper functions
 
 function O(obj) {
     if (typeof obj === 'object')
-        return obj;
+	return obj;
     else
-        return document.getElementById(obj);
+	return document.getElementById(obj);
 }
 function S(obj) {
-    return O(obj).style;
+    try {
+	return O(obj).style;
+    } catch (e) {
+	console.log('Error getting style for ' + obj);
+	return null;
+    }
 }
 function C(name) {
     return document.getElementsByClassName(name);
@@ -85,21 +111,30 @@ function unDimItem(id) {
     $('#' + id).removeClass("fade");
 }
 
+function greyItem(itemName) {
+    S(itemName).opacity = 0.5;
+}
+
+function unGreyItem(itemName) {
+    S(itemName).opacity = 1;
+}
 /*******************************************************************************************/
 //FIXME: may want to keep an array of reverse key value pair
 function getPlayerPositionTag(playerId) {
     switch (String(playerId)) {
-        case O('player0Id').innerHTML:
-            return 'player0';
-            break;
-        case O('player1Id').innerHTML:
-            return 'player1';
-            break;
-        case O('player2Id').innerHTML:
-            return 'player2';
-            break;
-        default:
-            return 'player3';
+	case O('player0Id').innerHTML:
+	    return 'player0';
+	    break;
+	case O('player1Id').innerHTML:
+	    return 'player1';
+	    break;
+	case O('player2Id').innerHTML:
+	    return 'player2';
+	    break;
+	default:
+	    return 'player3';
     }
 }
 
+/*******************************************************************************************/
+/* clonning function */

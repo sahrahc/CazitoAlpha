@@ -2,7 +2,6 @@
 
 include(dirname(__FILE__) . '/../PokerPlayerService.php');
 include_once(dirname(__FILE__) . '/../Metadata.php');
-include('showObject.php');
 
 /* * ********************************************************************************
  * Setup
@@ -41,10 +40,11 @@ $itemType = ItemType::SOCIAL_SPOTTER;
 $activeItems = CheatingHelper::GetPlayersWithItemType($gameInstance->gameSessionId, $itemType);
 echo "Active Player items before test: " . json_encode($activeItems) . "<br /><br />";
 //showGameInstanceSetupValues($par, $gameStatusDto);
-PlayerVisibleCard::ResetVisible($playerId);
+$visible = new PlayerVisibleCards($playerId);
+$visible->ResetVisible();
 
 echo 'TEST CASE 33.1 start marking cards for JP <br /><br />';
-$dto = CheatingHelper::StartCardMarking($playerId, $gameSessionId, $statusDT, ItemType::SOCIAL_SPOTTER);
+$dto = CheatingHelper::ApplySocialSpotter($playerId, $gameSessionId, $statusDT, ItemType::SOCIAL_SPOTTER);
 echo "startCardMarking return object (should be null): " . json_encode($dto) . "<br />";
 $activeItems = CheatingHelper::GetPlayersWithItemType($gameInstance->gameSessionId, $itemType);
 echo "Active Player items after starting card marking: " . json_encode($activeItems) . "<br /><br />";
@@ -53,8 +53,10 @@ echo '******************************************************<br />';
 echo 'TEST CASE 33.2: Mark cards for instance <br /><br />';
 $dto = CheatingHelper::MarkGameCards($gameInstance);
 echo "markGameCards return object (smarkhould be null): " . json_encode($dto) . "<br />";
-$dto = PlayerVisibleCard::getVisibleCardCodes($playerId, $gameSessionId);
-$gameCards = CardHelper::getGameCardsForInstance($gameInstance->id);
+$visibles = new PlayerVisibleCards($playerId, $gameSessionId);
+$dto = $visibles->GetSavedCardCodes();
+$gameCards = new GameInstanceCards($gameInstance->id);
+$gameCards->GetSavedCards();
 echo "visible card are (should be null): " . json_encode($dto) . "<br />";
 echo "... and should match instance's community cards: " . json_encode($gameCards->communityCards) . "<br />";
 echo "... plus the instance's player cards" . json_encode($gameCards->playerHands) . "<br />";
@@ -70,18 +72,22 @@ $gameInstance2 = EntityHelper::GetGameInstance($gameStatusDto->gameInstanceId);
 //showGameInstanceSetupValues($par, $gameStatusDto);
 
 echo 'TEST CASE 33.3: Reveal cards on same game instance <br /><br />';
-$dto = PlayerVisibleCard::RevealMarkedCards($gameInstance, ItemType::SOCIAL_SPOTTER);
-$gameCards = CardHelper::getGameCardsForInstance($gameInstance->id);
-$visibleList = PlayerVisibleCard::getVisibleCardCodes($playerId, $gameSessionId);
+$dto = CheatingHelper::RevealMarkedCards($gameInstance);
+$gameCards = new GameInstanceCards($gameInstance->id);
+$gameCards->GetSavedCards();
+$visibles = new PlayerVisibleCards($playerId, $gameSessionId);
+$visibleList = $visibles->GetSavedCardCodes();
 echo "Visible cards " . json_encode($visibleList) . "<br />";
 echo "... and should match instance's community cards: " . json_encode($gameCards->communityCards) . "<br />";
 echo "... plus the instance's player cards" . json_encode($gameCards->playerHands) . "br />";
 
 echo 'TEST CASE 33.3: Reveal cards on next game instance <br /><br />';
-$dto = PlayerVisibleCard::RevealMarkedCards($gameInstance2, ItemType::SOCIAL_SPOTTER);
-$gameCards = CardHelper::getGameCardsForInstance($gameInstance2->id);
+$dto = CheatingHelper::RevealMarkedCards($gameInstance2);
+$gameCards = new GameInstanceCards($gameInstance2->id);
+$gameCards->GetSavedCards();
 // the next is redundant but used to avoid the queue. remove later
-$visibleList = PlayerVisibleCard::getVisibleCardCodes($playerId, $gameSessionId);
+$visibles = new PlayerVisibleCards($playerId, $gameSessionId);
+$visibleList = $visibles->GetSavedCardCodes();
 echo "Visible cards " . json_encode($visibleList) . "<br />";
 echo "... and should match instance's community cards: " . json_encode($gameCards->communityCards) . "<br />";
 echo "... plus the instance's player cards" . json_encode($gameCards->playerHands) . "br />";

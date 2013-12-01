@@ -2,15 +2,10 @@
  * After document loaded but before content loaded
  */
 jQuery(document).ready(function() {
-    jQuery('.jcarousel-skin-card').jcarousel({
-        vertical: false,
-        start: 1,
-        size: 13,
-        scroll: 7,
-        visible: 8
-    });
-    // enable tool tips for the cheating items
+    // enable tool tips for the cheating items (only one on front-street)
     $(".preCheatImg").tooltip();
+
+    cazito.setGlobalVar("hiddenItemType", "sleeveCards");
 });
 
 /**
@@ -19,35 +14,34 @@ jQuery(document).ready(function() {
  */
 window.onload = function() {
     if ($.cookies.get("userPlayerId") === null) {
-        $('#dialog-login').dialog('open');
-        O('playerName').select();
+	window.location.replace("Home.php");
     }
-    else{
-        // load the hidden cards if any
-        var obj = {
-            userPlayerId: $.cookies.get("userPlayerId")
-        };
+    else {
+	// load the hidden cards if any
+	var obj = {
+	    userPlayerId: $.cookies.get("userPlayerId")
+	};
 
-        // this is show card on sleeve...
-        WSClient.call(LOAD_CARD_ON_SLEEVE, //"cheatLoadSleeve",
-            obj,
-            loadCardsOnSleeveCallback);
+	// this is show card on sleeve...
+	if ($.cookies.get("sleeveCards") === null) {
+	    WSClient.call("cheatGetSleeve",
+		    obj,
+		    loadCardsOnSleeveCallback);
+	}
+	else {
+	    var cardList = $.cookies.get("sleeveCards", cardList);
+	    if (cardList !== null) {
+		cheatUpdateHiddenCards($("#sleeve"), cardList);
+	    }
+	}
     }
-    var playerName = $.cookies.get("playerName");
-    if (playerName !== null) {
-        // check if innerHTML or text?
-        O('hello').innerHTML = 'Hello ' + playerName;
-    }
+    refreshHeader();
 };
 
 /********************************************************************************************/
-function addToSleeve(card) {
-    $("#selectedCards").append("<img class='cImg' src='../../../images/PokerCard_" + card 
-        + "_small.png' title='" + card + "' alt='" + card + "' />");
-}
-
-function showCardSelector() {
-    $('#dialog-card-selector').dialog('open');
+function removeFromSleeve(obj) {
+// TODO: implement on right click on card on sleeve, UI and back-end
+    $(obj).remove();
 }
 
 /********************************************************************************************/
@@ -55,32 +49,36 @@ function showCardSelector() {
 function loadCardsOnSleeveCallback(cardList) {
     S('sleeve').display = 'block';
     // display them on sleeve. cardList is of type CheaterCardDto
-    for (var j=0, m=cardList.length; j<m; j++) {
-        $("#sleeve").append("<img class='cImg' src='../../../images/PokerCard_" + cardList[j]
-            + "_small.png' title='" + cardList[j] + "' alt='" + cardList[j] + "' />")
+    if (cardList === null) {
+	return;
     }
+    cheatUpdateHiddenCards($("#sleeve"), cardList);
+    // empty the card list on dialog
+    $("selectedCards").empty();
 }
 
 function loadCardsOnSleeve() {
     var cardNameList = [];
     $("#selectedCards").children().each(function() {
-        var child = $(this);
-        cardNameList.push(child.attr("title"));
+	var child = $(this);
+	cardNameList.push(child.attr("title"));
     });
     var obj = {
-        itemType: LOAD_CARD_ON_SLEEVE,
-        userPlayerId: $.cookies.get("userPlayerId"),
-        gameSessionId: null,
-        gameInstanceId: null,
-        cardNameList: cardNameList
+	itemType: LOAD_CARD_ON_SLEEVE,
+	userPlayerId: $.cookies.get("userPlayerId"),
+	gameSessionId: null,
+	gameInstanceId: null,
+	cardNameList: cardNameList
     };
     /* mocked data
-    var cardList = [ "hearts_J", "spades_3", "clubs_A"];
-    loadCardsOnSleeveCallback(cardList);
-    */
-    WSClient.call(CHEAT,
-        obj,
-        loadCardsOnSleeveCallback);
+     var cardList = [ "hearts_J", "spades_3", "clubs_A"];
+     loadCardsOnSleeveCallback(cardList);
+     */
+    WSClient.call("cheatLoadSleeve",
+	    obj,
+	    loadCardsOnSleeveCallback);
 }
 
-
+function startSeedyPlay() {
+    window.location.replace("CheatingPlay.php");
+}

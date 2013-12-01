@@ -31,28 +31,38 @@ class Player {
     
     public function Update() {
         global $logPlayer;
-        global $dateTimeFormat;
         
-        $seatValue = $this->currentSeatNumber;
-        $waitingStartDT = "null";
+		$casinoTableId = $this->currentCasinoTableId;
+        if (is_null($casinoTableId)) {
+			$casinoTableId = 'null';
+		}
+		$seatValue = $this->currentSeatNumber;
+        $waitingStartDT = 'null';
         // set seat
-        if (is_null($this->currentSeatNumber)) {
-            $seatValue = "null";
-            $waitingStartDT = Context::GetStatusDT()->format($dateTimeFormat);
+        if (is_null($seatValue)) {
+            $seatValue = 'null';
+			if (!is_null($this->currentCasinoTableId)) {
+            $waitingStartDT = "'" . Context::GetStatusDTString() . "'";
+			}
         }
         $reservedSeat = $this->reservedSeatNumber;
-        if (is_null($this->reservedSeatNumber)) {
-            $reservedSeat = "null";
+        if (is_null($reservedSeat)) {
+            $reservedSeat = 'null';
         }
+		$buyIn = $this->buyIn;
+        if (is_null($buyIn)) {
+			$casinoTableId = 'null';
+		}
+		$statusDT = "'" . Context::GetStatusDTString() . "'";
         executeSQL("UPDATE Player SET 
-            CurrentCasinoTableId = $this->currentCasinoTableId,
+            CurrentCasinoTableId = $casinoTableId,
             CurrentSeatNumber = $seatValue, 
             ReservedSeatNumber = $reservedSeat,
-            WaitStartDateTime = '$waitingStartDT',
-            BuyIn = $this->buyIn, 
-            LastUpdateDateTime = '$waitingStartDT'
+            WaitStartDateTime = $waitingStartDT,
+            BuyIn = $buyIn, 
+            LastUpdateDateTime = $statusDT
             WHERE Id = $this->id", __FUNCTION__ . "
-                : Error updating Player player id $this->id");
+                : Error updating Player id $this->id");
         // log updated player record
         $logPlayer->info("");
         }
@@ -65,13 +75,12 @@ class Player {
      */
     public function UpdatePlayerSeat($seatNum, $isReserved = false) {
         global $logPlayer;
-        global $dateTimeFormat;
         
-        $statusDT = Context::GetStatusDT()->format($dateTimeFormat);
+        $statusDT = "'" . Context::GetStatusDTString() . "'";
         if ($isReserved) {
             $this->reservedSeatNumber = $seatNum;
             executeSQL("UPDATE Player SET ReservedSeatNumber = $seatNum,
-                    CurrentSeatNumber = null, LastUpdateDateTime = '$statusDT' WHERE Id =
+                    CurrentSeatNumber = null, LastUpdateDateTime = $statusDT WHERE Id =
                     $this->id", __FUNCTION__ .
                     ": Error updating Player id $this->id to reserved seat number $seatNum");
             $logPlayer->info("");
@@ -79,7 +88,7 @@ class Player {
         }
         $this->currentSeatNumber = $seatNum;
         executeSQL("UPDATE Player SET CurrentSeatNumber = $seatNum,
-                    ReservedSeatNumber = null, LastUpdateDateTime = '$statusDT' WHERE Id =
+                    ReservedSeatNumber = null, LastUpdateDateTime = $statusDT WHERE Id =
                     $this->id", __FUNCTION__ .
                 ": Error updating Player id $this->id to seat number $seatNum");
             $logPlayer->info("");

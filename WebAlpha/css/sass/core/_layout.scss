@@ -1,44 +1,16 @@
 /* Position the major areas. Because of reset, all the sizes must add up*/
 /* layout **************************************************************/
-/* the main part, may be contain left and right frames */
-.main {
-    width: 1024px;
-    height: 768px;
-    padding: 5px 5px;
-    z-index:-1;
-    background-image:url('../../../images/window-bg.png');
-    background-repeat:no-repeat;
-}
-.main left-frame {
-    width:220px;
-    height: 444px;
-    padding: 5px 5px 5px 0px;
-    float:left;     
-}
-.main right-frame {
-    position:relative;  /* elements within must align top or bottom */
-    width: 152px;
-    height: 436px;
-    border-radius: 3px;
-    /* left: 642px; /* = container width */
-    float: right;  
-}
-.log{
-    width:1014px;
-    height: 80px;
-    background-color: white;
-    text-align:left;
-    color:blue;
-    clear: both;
-    opacity: 0.6;
-    border-radius: 3px;
-    padding: 5px 5px;
-    margin-bottom: 5px;
-    overflow: auto;
+/* the main part, may be contain left and right frames 
+/* dimensions and positioning for the header and footer on respective css files */
+.region {
+    position: absolute;
+    top: $header-height;
+    height: $region-height;
+    padding: $region-padding-vertical $region-padding-horizontal;
 }
 /* header **************************************************************/
 /* ul on the top area is for session information only hence no display */
 .hiddenVariables {
     display:none;
 }
-
+.dialog-modal {display: none;}

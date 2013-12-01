@@ -1,24 +1,20 @@
 <?php
+/*
 // check if logged in
-session_start();
-if (!isset($_SESSION['UserName'])) {
-    header("location:Login.php");
-}
-include 'Includes/HeaderTop.html';
-include 'Includes/HeaderMiddle.html';
-include 'Includes/HeaderNavNoPlay.html';
+if (!isset($_SESSION['ProtoTester'])) {
+	header("location:Login.php");
+} */
+
+include '../Includes/fileInclude.html';
+include '../Includes/headerPlay.php';
+
+include '../Includes/onlineFriends.html';
+include '../Includes/pokerPlay.html';
+include '../Includes/messaging.html';
 ?>
-<div class="main">
-    <div class='left-frame'>
-        <p>Online friends here</p>
-        </p>
-    </div>
-    <div>
-        <?php include 'Includes/PokerPlay.html' ?>
-    </div>
-    <div class='right-frame'>
-        <?php include 'Includes/Messaging.html' ?>
-    </div>
-</div>
-<script src="../js/poker-play.js" type="text/javascript"></script>
-<?php include 'Includes/Footer.html'; ?>
+<script src="../js/core/queue.js" type="text/javascript"></script>
+<script src="../js/core/game-status.js" type="text/javascript"></script>
+<script src="../js/core/game-canvas.js" type="text/javascript"></script>
+<script src="../js/core/game-actions.js" type="text/javascript"></script>
+<script src="../js/pages/safe-play.js" type="text/javascript"></script>
+<?php include '../Includes/footer.html'; ?>

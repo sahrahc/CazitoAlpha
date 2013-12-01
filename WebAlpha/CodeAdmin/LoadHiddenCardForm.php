@@ -1,7 +1,7 @@
 <?php
 // check if logged in
 session_start();
-if (!isset($_SESSION['UserName'])) {
+if (!isset($_SESSION['ProtoTester'])) {
     $_SESSION['srcLocation'] = 'LoadHiddenCardForm.php';
     header("location:Login.php");
 }

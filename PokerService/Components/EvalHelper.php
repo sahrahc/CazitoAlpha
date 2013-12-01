@@ -1,10 +1,12 @@
 <?php
 
 /* * ********************************************************************** */
+
 /**
  * Poker evaluator helper functions. All functions in this class are static.
  */
 class EvalHelper {
+    public $ranks = array('2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A');
 
     private static $log = null;
 
@@ -13,33 +15,6 @@ class EvalHelper {
             self::$log = Logger::getLogger(__CLASS__);
         return self::$log;
     }
-
-    /**
-     * Get a deck of 52 cards randomly shuffled for use in a game. There is an index value for the card order after shuffling. This original order may be changed at the seedy saloon.
-     * @return GameCard array
-     */
-    public static function shuffleDeck() {
-        // FIXME: cache these!
-        $DECK = self::init_deck();
-
-        $indexArray = range(1, 52);
-        shuffle($indexArray);
-        for ($i = 1; $i <= 52; $i++) {
-            
-            $cardCode = self::findCardCode($DECK[$indexArray[$i-1]]);
-
-            $returnList[$i] = GameCard::InitShuffledCard($indexArray[$i-1], $i, $cardCode);
-        }
-        return $returnList;
-    }
-
-    /**
-     * Given the list of card codes, identify the hand
-     * @param type $cardCodes
-     * @return string
-     */
-    public static function evalHand($cardCodes) {return "2 Pair";}
-
     /**
      * 2+2 EVALUATOR ONLY
      * Given a group of 7 cards, return the hand info. Let pCards be (a pointer to) an array of seven integers, each with a value between 1 and 52.
@@ -54,9 +29,9 @@ class EvalHelper {
         mysql_select_db('cazito', $con);
         $p = 53;
         for ($i = 0; $i < 7; $i++) {
-            self::log()->Debug(__FUNCTION__ . " - card index $i: " . $pCards[$i]);
+            //self::log()->Debug(__FUNCTION__ . " - card index $i: " . $pCards[$i]);
             $nextIndex = $p + $pCards[$i];
-            self::log()->Debug(__FUNCTION__ . " - table index: " . $nextIndex);
+            //self::log()->Debug(__FUNCTION__ . " - table index: " . $nextIndex);
             $sql = "SELECT * FROM HandRank WHERE i = $nextIndex";
             $result = mysql_query($sql);
             if (!$result) {
@@ -64,7 +39,6 @@ class EvalHelper {
             }
             $row = mysql_fetch_array($result);
             $p = $row["v"];
-            self::log()->Debug(__FUNCTION__ . " - retrieved value is: $p");
         }
         mysql_select_db($dbName, $con);
         return $p;
@@ -77,7 +51,7 @@ class EvalHelper {
      * @return type
      */
     public static function findHandName($handCategory) {
-        switch ($handCategory) {
+        switch ($handCategory+1) {
             case 9: return 'Straight Flush';
             case 8: return '4 Of A Kind';
             case 7: return 'Full House';
@@ -124,7 +98,7 @@ class EvalHelper {
      * @param type $x
      * @return type 
      */
-    private static function evalRank($x) {
+    public static function evalRank($x) {
         return ((self::urshift($x, 8)) & 0xF);
     }
 
@@ -181,10 +155,12 @@ class EvalHelper {
 // JMD: added "void" return type
     /**
      * 2+2 EVALUATOR ONLY
-     *
+     * Deck is an array of 52 prime numbers. Tested, these values are correct
+     * order: c, d, h, s from 2 to A
+     * {"1":98306,"2":164099,"3":295429,"4":557831,"5":1082379,"6":2131213,"7":4228625,"8":8423187,"9":16812055,"10":33589533,"11":67144223,"12":134253349,"13":268471337,"14":81922,"15":147715,"16":279045,"17":541447,"18":1065995,"19":2114829,"20":4212241,"21":8406803,"22":16795671,"23":33573149,"24":67127839,"25":134236965,"26":268454953,"27":73730,"28":139523,"29":270853,"30":533255,"31":1057803,"32":2106637,"33":4204049,"34":8398611,"35":16787479,"36":33564957,"37":67119647,"38":134228773,"39":268446761,"40":69634,"41":135427,"42":266757,"43":529159,"44":1053707,"45":2102541,"46":4199953,"47":8394515,"48":16783383,"49":33560861,"50":67115551,"51":134224677,"52":268442665}
      * @return type 
      */
-    public static function init_deck() {
+    public static function init2x2deck() {
         $n = 1;
         $suit = 0x8000;
         $primes = array(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41);
@@ -207,28 +183,40 @@ class EvalHelper {
      * FIXME: this will be refactored to deal cards as needed but
      * duplicates will be checked
      */
-    public static function findDeckIndex($rank, $suit, $deck) {
+    public static function find2x2DeckIndex($rank, $suitBit, $deck) {
         for ($i = 1; $i < 53; $i++) {
             $c = $deck[$i];
-            if (($c & $suit) && (self::evalRank($c) == $rank))
-                return( $i );
+            if (($c & $suitBit) && (self::evalRank($c) == $rank))
+                return( $i - 1); /* TODO -1? */
         }
         return( -1 );
     }
 
+    public static function getSuitBit($suitChar) {
+        switch($suitChar) {
+            case 's':
+                return 0x1000;
+            case 'c':
+                return 0x2000;
+            case 'd':
+                return 0x4000;
+            case 'h':
+                return 0x8000;
+        }
+    }
 // ported from pokerlib.cpp
 // slightly modified to print rank and suite for single card not an entire hand
 // returns string value in suit underscore rank format (e.g., 'spades_7')
-    private static function findCardCode($deckValue) {
+    public static function findCardCode($deck2x2Value) {
         $rank = array('2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A');
 
         //$r = ($deckValue >> 8) & 0xF;
-        $r = (self::urshift($deckValue, 8)) & 0xF;
-        if ($deckValue & 0x8000)
+        $r = (self::urshift($deck2x2Value, 8)) & 0xF;
+        if ($deck2x2Value & 0x8000)
             $suit = 'c';
-        else if ($deckValue & 0x4000)
+        else if ($deck2x2Value & 0x4000)
             $suit = 'd';
-        else if ($deckValue & 0x2000)
+        else if ($deck2x2Value & 0x2000)
             $suit = 'h';
         else
             $suit = 's';

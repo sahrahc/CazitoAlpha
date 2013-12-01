@@ -5,179 +5,198 @@
 
 class PlayerActiveItem {
 
-    public $playerId;
-    public $gameSessionId;
-    public $gameInstanceId;
-    public $itemType;
-    public $startDateTime;
-    public $endDateTime;
-    public $lockEndDateTime;
-    public $isActive;
-    public $isAvailable;
-    public $numberCards;
-    private $log;
+	public $playerId;
+	public $gameSessionId;
+	public $gameInstanceId;
+	public $itemType;
+	public $startDateTime;
+	public $endDateTime;
+	public $lockEndDateTime;
+	public $otherPlayerId;
+	// value sent to browser, in synch with lockEndDateTime except for 
+	// UseCard, tuck in/tuck out, if no more cards are available
+	public $isLocked;
+	public $numberCards;
+	private $log;
 
-    function __construct($playerId, $gSessionId, $itemType) {
-        $this->log = Logger::getLogger(__CLASS__);
-        $statusDT = Context::GetStatusDT();
-        $this->playerId = $playerId;
-        $this->gameSessionId = $gSessionId;
-        $this->itemType = $itemType;
-        $this->startDateTime = $statusDT;
-        $this->numberCards = null;
-    }
+	function __construct($playerId, $gSessionId, $itemType, $timeOut = null) {
+		$this->log = Logger::getLogger(__CLASS__);
+		$this->isLocked = 0;
+		if ($timeOut != null) {
+			$lockEndDateTime = Context::GetStatusDT();
+			$lockEndDateTime->add(new DateInterval($timeOut));
+			$this->lockEndDateTime = $lockEndDateTime;
+			$this->isLocked = 1; // lock out period
+		}
+		$this->playerId = $playerId;
+		$this->gameSessionId = $gSessionId;
+		$this->itemType = $itemType;
+		$this->numberCards = null;
+	}
 
-    function RecordItemUse() {
-        global $dateTimeFormat;
-        /* validate that the record can be inserted first */
-        $startDT = $this->startDateTime->format($dateTimeFormat);
-        $result = executeSQL("SELECT * from PlayerActiveItem where PlayerId = $this->playerId
-                AND ItemType = '$this->itemType' and LockEndDateTime >= '$startDT'
-                AND IsActive = 1 and GameSessionId = $this->gameSessionId", __FUNCTION__ . ": Error selecting PlayerActiveItem for player $this->playerId
-                AND item type $this->itemType");
-        if (mysql_num_rows($result) > 0) {
-            $this->log->warn(__FUNCTION__ . "$this->playerId attempted to reset $this->itemType before it expired");
-            return;
-        }
-        $lockString = $this->lockEndDateTime->format($dateTimeFormat);
-        $endString = 'null';
-        if (!is_null($this->endDateTime)) {
-            $endString = $this->endDateTime->format($dateTimeFormat);
-        }
-        $numberCards = $this->numberCards;
-        if (is_null($numberCards)) {
-            $numberCards = 'null';
-            ;
-        }
-        $instanceId = $this->gameInstanceId;
-        if (is_null($instanceId)) {
-            $instanceId = 'null';
-        }
-        executeSQL("INSERT INTO PlayerActiveItem (PlayerId, GameSessionId, GameInstanceId, ItemType,
-            StartDateTime, EndDateTime, LockEndDateTime, IsActive, IsAvailable, NumberCards)
-            VALUES ($this->playerId, $this->gameSessionId, $instanceId, '$this->itemType',
-                '$startDT', '$endString', '$lockString',
-                $this->isActive, $this->isAvailable, $numberCards)", __FUNCTION__ . "
+	function SetEndDate($timeOut) {
+		$endDateTime = Context::GetStatusDT();
+		if ($timeOut != '') {
+			$endDateTime->add(new DateInterval($timeOut));
+		}
+		$this->endDateTime = $endDateTime;
+	}
+
+	function RecordItemUse() {
+		global $dateTimeFormat;
+		/* validate that the record can be inserted first */
+		$this->startDateTime = Context::GetStatusDT();
+		$startDT = $this->startDateTime->format($dateTimeFormat);
+		/*
+		  if (!$this->IsItemUnlockedForPlayer()) {
+		  $this->log->warn(__FUNCTION__ . "$this->playerId attempted to reset $this->itemType before it expired");
+		  return;
+		  } */
+		$lockString = 'null';
+		if (!is_null($this->lockEndDateTime)) {
+			$lockString = "'" . $this->lockEndDateTime->format($dateTimeFormat). "'";
+		}
+		$endString = 'null';
+		if (!is_null($this->endDateTime)) {
+			$endString = "'" . $this->endDateTime->format($dateTimeFormat) . "'";
+		}
+		$numberCards = $this->numberCards;
+		if (is_null($numberCards)) {
+			$numberCards = 'null';
+			;
+		}
+		$instanceId = $this->gameInstanceId;
+		if (is_null($instanceId)) {
+			$instanceId = 'null';
+		}
+		$sessionId = $this->gameSessionId;
+		if (is_null($sessionId)) {
+			$sessionId = 'null';
+		}
+		$otherPlayerId = $this->otherPlayerId;
+		if (is_null($otherPlayerId)) {
+			$otherPlayerId = 'null';
+		}
+		executeSQL("INSERT INTO PlayerActiveItem (PlayerId, GameSessionId, GameInstanceId, ItemType,
+            StartDateTime, EndDateTime, LockEndDateTime, IsLocked, NumberCards, OtherPlayerId)
+            VALUES ($this->playerId, $sessionId, $instanceId, '$this->itemType',
+                '$startDT', $endString, $lockString,
+                $this->isLocked, $numberCards, $otherPlayerId)", __FUNCTION__ . "
                 : Error inserting PlayerActiveItem for player id $this->playerId and
                 item type $this->itemType");
-    }
+	}
 
-    function SetItemToInactive() {
-        // TODO: separate this into update function
-        executeSQL("UPDATE PlayerActiveItem SET IsActive = 0 WHERE IsActive = 1 AND
-                PlayerId = $this->playerId AND ItemType = '$this->itemType' AND GameSessionId = $this->gameSessionId"
-                , __FUNCTION__ . ": Error updating item to inactive for player $this->playerId
+	public function UpdateItemEndLock() {
+		global $dateTimeFormat;
+		$endDateTime = 'null';;
+		if ($this->endDateTime != null) {
+			$endDateTime = "'" . $this->endDateTime->format($dateTimeFormat) . "'";
+		}
+		$lockEndDT = 'null';
+		if ($this->lockEndDateTime != null) {
+			$lockEndDT = "'" . $this->lockEndDateTime->format($dateTimeFormat) . "'";
+		}
+		executeSQL("UPDATE PlayerActiveItem SET IsLocked = $this->isLocked, "
+				. "LockEndDateTime = $lockEndDT, "
+				. "EndDateTime = $endDateTime "
+				. "WHERE PlayerId = $this->playerId AND GameSessionId = $this->gameSessionId "
+				. "AND ItemType = '$this->itemType' ", __FUNCTION__
+				. ": Error updating PlayerActiveItem for player id $this->playerId and "
+				. "item type $this->itemType and session $this->gameSessionId");
+	}
+
+	public function UpdateItemSession() {
+		$statusDTString = Context::GetStatusDTString();
+		executeSQL("UPDATE PlayerActiveItem SET GameSessionId = $this->gameSessionId "
+				. " WHERE PlayerId = $this->playerId AND GameSessionId is null " 
+				. " AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') "
+				. " AND ItemType = '$this->itemType' ", __FUNCTION__
+				. ": Error updating PlayerActiveItem session for player id $this->playerId and "
+				. "item type $this->itemType and session $this->gameSessionId");
+	}
+
+	function SetInstanceItemToInactive() {
+		$statusDateTime = Context::GetStatusDTString();
+		// TODO: separate this into update function
+		executeSQL("UPDATE PlayerActiveItem SET EndDateTime = '$statusDateTime' WHERE
+                PlayerId = $this->playerId AND ItemType = '$this->itemType' "
+				. "AND GameInstanceId = $this->gameInstanceId"
+				, __FUNCTION__ . ": Error updating item to inactive for player $this->playerId
                     session $this->gameSessionId and item $this->itemType");
-    }
+	}
 
-    function Delete() {
-        executeSQL("DELETE FROM PlayerActiveItem WHERE PlayerId = $this->playerId AND
+	function Delete() {
+		executeSQL("DELETE FROM PlayerActiveItem WHERE PlayerId = $this->playerId AND
                  itemType = '$this->itemType' and GameSessionId = 
                 $this->gameSessionId", __FUNCTION__ . ": Error deleting 
                     (unlocking) item for player $this->playerId AND
                  itemType = '$this->itemType' and GameSessionId = $this->gameSessionId");
-    }
+	}
 
-    public static function GetEndedItems() {
-        global $dateTimeFormat;
-        $statusDateTime = Context::GetStatusDT();
-        /* if end datetime reached: set the IsActive to 0 */
-        $result = executeSQL("SELECT i.*, ps.GameSessionId AS PlayerSessionId, 
-                ps.GameInstanceId AS PlayerInstanceId, ps.status AS Status 
-                FROM PlayerActiveItem i 
-                LEFT JOIN PlayerState ps ON i.PlayerId = ps.PlayerId 
-                WHERE IsActive = 1 AND
-            EndDateTime <= '$statusDateTime'", __FUNCTION__ . ": Error selecting ended
-                active items");
-        $i = 0;
-        $endedItems = null;
-        while ($row = mysql_fetch_array($result)) {
-            $playerId = (int) $row["PlayerId"];
-            $sessionId = (int) $row["GameSessionId"];
-            $itemType = $row["ItemType"];
-            $endedItems[$i] = new PlayerActiveItem($playerId, $sessionId, $itemType);
-            $endedItems[$i]->lockEndDateTime = DateTime::createFromFormat($dateTimeFormat, $row["LockEndDateTime"]);
-            // the following properties are not part of the object
-            $endedItems[$i]->playerSessionId = (int) $row["PlayerSessionId"];
-            $endedItems[$i]->playerStatus = $row["Status"];
-        }
-        return $endedItems;
-    }
+	public function IsItemUnlockedForPlayer($isInstanceId = false) {
+		$statusDT = Context::GetStatusDTString();
+		if ($isInstanceId) {
+			$result = executeSQL("SELECT * from PlayerActiveItem "
+					. "WHERE PlayerId = $this->playerId "
+					. "AND ItemType = '$this->itemType' and LockEndDateTime >= '$statusDT' "
+					. "AND GameInstanceId = $this->gameInstanceId", __FUNCTION__
+					. ": Error selecting PlayerActiveItem for player $this->playerId "
+					. "AND item type $this->itemType");
+		} else {
+			$result = executeSQL("SELECT * from PlayerActiveItem "
+					. "WHERE PlayerId = $this->playerId "
+					. "AND ItemType = '$this->itemType' "
+					. "AND LockEndDateTime >= '$statusDT' "
+					. "AND GameSessionId = $this->gameSessionId", __FUNCTION__
+					. ": Error selecting PlayerActiveItem for player $this->playerId "
+					. "AND item type $this->itemType");
+		}
+		if (mysql_num_rows($result) > 0) {
+			return false;
+		}
+		return true;
+	}
 
-    public static function GetLockEndedItems() {
-        $statusDT = Context::GetStatusDT();
-        // FIXME: should record on log
-        $result = executeSQL("SELECT i.*, ps.GameSessionId AS PlayerSessionId, 
-                ps.GameInstanceId AS PlayerInstanceId, ps.status AS Status 
-                FROM PlayerActiveItem i 
-                LEFT JOIN PlayerState ps ON i.PlayerId = ps.PlayerId 
-                AND ps.status != ''
-                WHERE LockEndDateTime <= '$statusDT'", __FUNCTION__ . "
-                    : Error selecting items past the locked date");
-        $i = 0;
-        $unlockedItems = null;
-        while ($row = mysql_fetch_array($result)) {
-            // send communication
-            $sessionId = (int) $row["GameSessionId"];
-            $playerId = (int) $row["PlayerId"];
-            $itemType = $row["ItemType"];
-            $unlockedItems[$i] = new PlayerActiveItem($playerId, $sessionId, $itemType);
-            // communicate only if the user is in the same session and not left
-            $unlockedItems[$i]->playerSessionId = (int) $row["PlayerSessionId"];
-            $unlockedItems[$i]->playerStatus = $row["Status"];
-        }
-        return $unlockedItems;
-    }
+	/**
+	 * Public for testing only
+	 * @param type $pId
+	 * @param type $gSessionId
+	 * @param type $itemType
+	 * @return \PlayerActiveItem
+	 */
+	public function GetSavedPlayerItem() {
+		//$statusDTString = Context::GetStatusDTString();
+		if ($this->otherPlayerId != null) {
+			$result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameSessionId =
+            $this->gameSessionId AND PlayerId = $this->playerId AND ItemType = '$this->itemType' "
+					. " AND OtherPlayerId > $this->otherPlayerId"
+					, __FUNCTION__ . "
+                : Error selecting active item for player $this->playerId and session $this->gameSessionId and
+                type $this->itemType");
+		} else {
+			$result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameSessionId =
+            $this->gameSessionId AND PlayerId = $this->playerId AND ItemType = '$this->itemType' "
+//				AND EndDateTime > '$statusDTString'
+					, __FUNCTION__ . "
+                : Error selecting active item for player $this->playerId and session $this->gameSessionId and
+                type $this->itemType");
+		}
+		if (mysql_num_rows($result) > 0) {
+			$row = mysql_fetch_array($result);
+			$this->mapPlayerActiveItem($row);
+		}
+	}
 
-    /**
-     * Public for testing only
-     * @param type $pId
-     * @param type $gSessionId
-     * @param type $itemType
-     * @return \PlayerActiveItem
-     */
-    public static function VerifyPlayerActiveItem($playerId, $gSessionId, $itemType) {
-        global $dateTimeFormat;
-        $result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameSessionId =
-            $gSessionId AND PlayerId = $playerId AND ItemType = '$itemType' AND EndDateTime > now()
-                AND IsActive = 1", __FUNCTION__ . "
-                : Error selecting active item for player $playerId and session $gSessionId and
-                type $itemType");
-        $row = mysql_fetch_array($result);
-        $activeItem = new PlayerActiveItem($playerId, $gSessionId, $itemType);
-        $activeItem->startDateTime = DateTime::createFromFormat($dateTimeFormat, $row['StartDateTime']);
-        $activeItem->endDateTime = DateTime::createFromFormat($dateTimeFormat, $row['EndDateTime']);
-        $activeItem->lockEndDateTime = DateTime::createFromFormat($dateTimeFormat, $row['LockEndDateTime']);
-        $activeItem->isActive = (int) $row['IsActive'];
-        $activeItem->isAvailable = (int) $row['IsAvailable'];
-        $activeItem->numberCards = (int) $row['NumberCards'];
-        return $activeItem;
-    }
-
-    /**
-     * Public for testing only
-     * Gets the list of player Id's who have an un-ended social spotter.
-     * @param GameInstance $gInstStatus
-     * @return int array
-     */
-    public static function GetPlayersWithItemType($gSessionId, $itemType) {
-        /* returns a list of player ids */
-        /* possible for an item to expire in the future but set to inactive before that time */
-        $leftStatus = PlayerStatusType::LEFT;
-        $result = executeSQL("SELECT i.PlayerId FROM PlayerActiveItem i 
-                INNER JOIN PlayerState ps on i.PlayerId = ps.PlayerId 
-                AND i.GameSessionId = ps.GameSessionId
-                WHERE ps.status != '$leftStatus' AND i.GameSessionId =
-            $gSessionId AND ItemType = '$itemType' AND EndDateTime > now() AND IsActive = 1
-                ", __FUNCTION__ . "
-                : Error selecting active items for session $gSessionId");
-        $playerIdList = null;
-        $counter = 0;
-        while ($row = mysql_fetch_array($result)) {
-            $playerIdList[$counter++] = (int) $row['PlayerId'];
-        }
-        return $playerIdList;
-    }
+	function mapPlayerActiveItem($row) {
+		global $dateTimeFormat;
+		$this->gameInstanceId = $row['GameInstanceId'];
+		$this->startDateTime = DateTime::createFromFormat($dateTimeFormat, $row['StartDateTime']);
+		$this->endDateTime = DateTime::createFromFormat($dateTimeFormat, $row['EndDateTime']);
+		$this->lockEndDateTime = DateTime::createFromFormat($dateTimeFormat, $row['LockEndDateTime']);
+		$this->isLocked = (int) $row['IsLocked'];
+		$this->numberCards = (int) $row['NumberCards'];
+		$this->otherPlayerId = (int) $row['OtherPlayerId'];
+	}
 
 }
 

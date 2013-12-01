@@ -11,10 +11,12 @@
  */
 class CheatOutcomeDto {
 
+    public $itemType;
     public $dtoType; // string
     public $dto;
     
-    function __construct($dtoType, $dto) {
+    function __construct($itemType, $dtoType, $dto) {
+        $this->itemType = $itemType;
         $this->dtoType = $dtoType;
         $this->dto = $dto;
     }

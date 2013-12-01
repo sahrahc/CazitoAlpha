@@ -13,7 +13,8 @@ class PracticeSession {
     public $tableMinimum;
     public $numberSeats;
     // transient data */
-    public $isPractice = true;
+    public $isPractice = true; 
+	public $isActive;
     private $log;
 
     public function __construct($gameSessionId, $playerId = null) {
@@ -25,6 +26,7 @@ class PracticeSession {
             $this->requestingPlayerId = (int)$playerId;
         }
         $this->tableMinimum = $defaultTableMin;
+		$this->isActive = true;
     }
 
     /**
@@ -128,7 +130,7 @@ class PracticeSession {
         $playerId = $this->requestingPlayerId;
         $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $instanceId);
 
-        $message = new QueueMessage($eventType, $gameStatusDto);
+        $message = new QueueMessage($eventType, $gameStatusDto, $this->id);
         //queueMessage($playerId, json_encode($message));
         QueueManager::SendToPlayer($ex, $playerId, json_encode($message));
     }
@@ -175,6 +177,10 @@ class PracticeSession {
         $playerInstance->Insert();
     }
 
+	function EndSession() {
+		executeSQL("UPDATE GameSession SET IsActive = 0 "
+				. "WHERE Id = " . $this->id, ": Error ending game session id " . $this->id);
+	}
 }
 
 ?>

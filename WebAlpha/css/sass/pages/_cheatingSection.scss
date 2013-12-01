@@ -1,38 +1,43 @@
-.cheatersCatalog{
-    position:absolute;
-}
+/* #region-cheating {
+    //   position: absolute;
+    width: $region-main-width; 
+}*/
 .cheaterItemDetail{
-    position:relative;
+    // position:relative;
 }
 /* not working, why? */
 .cheaterItemDetail > div {
-    position:absolute;
-    left: 103px;
+    // position:absolute;
+    left: $cheating-catalog-width + $cheating-catalog-padding-horizontal - 12px;
 }
 /* both sleeve and next card are hidden */
 .hiddenCard {
+    position: absolute;
+    left: $cheating-catalog-width + $cheating-catalog-padding-horizontal - 12px;
     background-color:#7E8493;
     padding: 4px 4px;
-    width:112px;
-    height:108px;
+    width: $cheating-cards-width;
+    height: $cheating-cards-height;
     border-radius: 3px;
     border: 2px solid #B6BFD7;
     color: #D9E1F5;
     font-family: Comic Sans MS;
     font-size: 0.8em;
     overflow: auto;
-    .sleeveCard {
-        top: 0px;
-    }
-    .nextCard {
-    top: 325px;
-    z-index:1;
-    }
 }
+#sleeveCards {
+    top: $header-height + 0px;
+    z-index:1;
+}
+#grooveCards {
+    top: $header-height + 350px;
+    z-index:1;
+}
+/*
 .cheatingItemAction {
     display:none;
     position:absolute;
-    top: 124px;
+    top: 148px;
     width:117px;
     height: 70px;
     background-color:#F1F6FB;
@@ -46,15 +51,16 @@
     padding: 1px 2px 2px 1px;
     text-align: center;
     font-size:small;
-}
-.cheatingItemAction input {
-    display: inline-block;
-    width: 80px;
-    font-size:0.8em;
-}
+    .cheatingItemAction input {
+	//display: inline-block;
+	width: 80px;
+	font-size:0.8em;
+    }
+} */
 .cheatingItemDesc {
     display:none;
-    top: 205px;
+    position: absolute;
+    top: 228px;
     background-color:#F0F6F9;
     font-size:small;
     width:200px;
@@ -71,11 +77,86 @@ overflow: auto; */
     width: 80px;
     height: 35px;
 }
+#SwapRiverCard-div {
+     background-image: url('../../../images/cheatItem6.png');
+     background-repeat: no-repeat;
+     background-size: cover;
+     display: table-cell;
+}
+
+#SwapRiverCard-image {
+    display: block;
+    height: 25px;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+    vertical-align: middle;
+    margin-top: 2px;
+}
 /*-----------------------------------------------------------------------------------*/
 .cheatingCard {
     /* display:none; */
     height: 42px;
     width: 30px;
-	z-index: 5;
-    margin: 2px;
+    z-index: 5;
+    display:inline;
+}
+
+/*-----------------------------------------------------------------------------------*/
+
+.logFrame {
+    position:absolute; 
+    /*z-index:3; */
+    left: $region-social-width;  
+    width: $region-main-width;
+    top: $header-height + $region-height - $log-height;
+    height: 80px;
+    background-color: $log-frame;
+    text-align: left;
+    color: blue;
+    clear: both;
+    opacity: 0.6;
+    border-radius: 3px;
+    padding: 5px 5px;
+    margin-bottom: 5px;
+    overflow: auto;
+}
+/*
+.logFrame {
+    width:$region-main-width;
+    height: $log-height;
+    background-color: white;
+    text-align:left;
+    color:blue;
+    clear: both;
+    opacity: 0.6;
+    border-radius: 3px;
+    padding: $region-padding-vertical $region-padding-horizontal;
+    //margin-bottom: 5px;
+    overflow: auto;
+}
+*/
+
+.cheatingCard.ui-draggable-dragging {
+    height: 30px;
+    width: auto;
+}
+.clonedCheatingCard {
+    height: 30px;
+    width: auto;
+    z-index: 99;
+    display:inline;
+}
+.clonedCheatingItem {
+    height: 20px;
+    width: auto;    
+    z-index: 99;
+    display: inline;    
+}
+.cheatImg.ui-draggable-dragging {
+    height: 20px;
+    width: auto;
+}
+.hovered {
+    opacity: 0.7;
 }
