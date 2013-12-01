@@ -1,0 +1,119 @@
+/* Position the major areas. Because of reset, all the sizes must add up*/
+h1 {
+	font-size: 1.8em;
+	padding: 0 0 0 0;
+	margin: 0 0 0 0;
+}
+h2 {
+	font-size: 1.8em;
+}
+strong {
+	font-weight:bold;
+}
+#windowFrame {
+	background-image:url('../../../images/window-bg.png');
+    background-repeat:no-repeat;
+	z-index:-1;
+	width: 1024px;
+	height: 514px;
+	padding: 5px 5px;
+}
+#topFrame {
+	width:1014px; /* must = width of cheaters + messaging (220 + 144 + 642 = 1006)*/
+    background-color: #9EB8F0;
+	opacity: 0.6;
+	height:30px;
+	clear:both;
+	padding: 5px 5px;
+	border-radius: 3px;
+	margin: 0 0 0 0;
+}
+/* ul on the top area is for session information only hence no display */
+#topFrame ul {
+	display:none;
+}
+#cheatersFrame{
+	width:220px;
+	height: 444px;
+	padding: 5px 5px 5px 0px;
+	float:left; 
+}
+#boardContainer {
+	 position:relative;
+	 width: 642px;
+ 	 height:444px; 
+	 /* left:220px; = to the cheaters frame width */
+	 float: left;
+	 padding: 5px 0px 0px 5px;
+}
+#messagingFrame {
+	position:relative;  /* elements within must align top or bottom */
+	width: 152px;
+	height: 436px;
+	border-radius: 3px;
+	/* left: 642px; /* = container width */
+	float: right;
+}
+/* Size the minor areas within each major area */
+#messagingFrame div
+{
+    height: 201px;
+	margin: 1px 0px 0px 5px;
+    border: 2px solid #B6BFD7;
+    background-color: #EEEEEE;
+	border-radius: 3px;
+}
+#messagingFrame > p
+{
+	width: 144px;
+	text-align:center;
+	border: 1px solid #7E8493;
+    border-radius: 3px;
+	margin: 5px 1px 0px 5px;
+    color: #D9E1F5;
+    font-family: Comic Sans MS;
+	font-size: 0.8em;
+    background-color:#7E8493;
+}
+.msg
+{
+	/* top: 0px; */
+	margin-bottom:0px;
+}
+.msgForm {
+	display:block;
+}
+.msgText {
+	width: 140px;
+	height: 161px;
+	background-color: white;
+	border: 1px outset grey;
+	margin: 0px 1px 2px 1px;
+	font-family:"Trebuchet MS", Helvetica, sans-serif;
+	font-size: 0.8em;
+}
+.msgInput {
+	width: 98px;
+	border: 1px inset grey;
+	height: 30px;
+	font-size:0.6em;
+}
+.msgSend {
+	width: 35px;
+	font-size: 0.6em;
+}
+#footer
+{
+	width:1014px;
+	height: 20px;
+    background-color: #9EB8F0;
+    text-align: center;
+	clear: both;
+	opacity: 0.6;
+	border-radius: 3px;
+	padding: 0px 5px;
+}
+#casinoTableHeader
+{
+margin-bottom: 0;
+}

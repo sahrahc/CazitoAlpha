@@ -1,0 +1,1249 @@
+<?php
+// check if logged in
+session_start();
+if (!isset($_SESSION['myusername'])) {
+    header("location:Login.php");
+}
+?>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Excel.Sheet>
+<meta name=Generator content="Microsoft Excel 14">
+<link rel=File-List href="UseCasesTableMgmt_files/filelist.xml">
+<style id="UseCasesTableMgmt_30606_Styles"><!--table
+	{mso-displayed-decimal-separator:"\.";
+	mso-displayed-thousand-separator:"\,";}
+.font530606
+	{color:red;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:italic;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;}
+.xl1530606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl6330606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:none;
+	border-bottom:.5pt solid gray;
+	border-left:none;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl6430606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt solid gray;
+	border-left:none;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl6530606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border:.5pt solid gray;
+	background:#FDE9D9;
+	mso-pattern:black none;
+	white-space:normal;}
+.xl6630606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl6730606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl6830606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl6930606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl7030606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt solid gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl7130606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt solid gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl7230606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt solid gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl7330606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt solid gray;
+	border-left:.5pt solid gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl7430606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt solid gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl7530606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:12.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl7630606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:left;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:none;
+	border-bottom:.5pt solid gray;
+	border-left:.5pt solid gray;
+	background:#EEECE1;
+	mso-pattern:black none;
+	white-space:normal;}
+.xl7730606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:left;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:none;
+	border-bottom:.5pt solid gray;
+	border-left:none;
+	background:#EEECE1;
+	mso-pattern:black none;
+	white-space:normal;}
+.xl7830606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:left;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt solid gray;
+	border-left:none;
+	background:#EEECE1;
+	mso-pattern:black none;
+	white-space:normal;}
+.xl7930606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border-top:none;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt solid gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl8030606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:none;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl8130606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:none;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl8230606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border:.5pt solid gray;
+	background:#FDE9D9;
+	mso-pattern:black none;
+	white-space:normal;}
+.xl8330606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt solid gray;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt solid gray;
+	border-left:.5pt solid gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl8430606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl8530606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt solid gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl8630606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl8730606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl8830606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt dashed gray;
+	border-bottom:.5pt solid gray;
+	border-left:.5pt solid gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl8930606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt solid gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl9030606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:"\@";
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt dashed gray;
+	border-bottom:none;
+	border-left:.5pt solid gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl9130606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt dashed gray;
+	border-bottom:none;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:normal;}
+.xl9230606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt dashed gray;
+	border-bottom:none;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl9330606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:black;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt solid gray;
+	border-bottom:none;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+.xl9430606
+	{padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	color:red;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:italic;
+	text-decoration:none;
+	font-family:Calibri, sans-serif;
+	mso-font-charset:0;
+	mso-number-format:General;
+	text-align:general;
+	vertical-align:bottom;
+	border-top:.5pt dashed gray;
+	border-right:.5pt solid gray;
+	border-bottom:.5pt dashed gray;
+	border-left:.5pt dashed gray;
+	mso-background-source:auto;
+	mso-pattern:auto;
+	white-space:nowrap;}
+--></style>
+</head>
+
+<body>
+<!--[if !excel]>&nbsp;&nbsp;<![endif]-->
+<!--The following information was generated by Microsoft Excel's Publish as Web
+Page wizard.-->
+<!--If the same item is republished from Excel, all information between the DIV
+tags will be replaced.-->
+<!----------------------------->
+<!--START OF OUTPUT FROM EXCEL PUBLISH AS WEB PAGE WIZARD -->
+<!----------------------------->
+
+<div id="UseCasesTableMgmt_30606" align=center x:publishsource="Excel">
+
+<table border=0 cellpadding=0 cellspacing=0 width=1272 style='border-collapse:
+ collapse;table-layout:fixed;width:954pt'>
+ <col class=xl8430606 width=64 style='width:48pt'>
+ <col width=311 style='mso-width-source:userset;mso-width-alt:11373;width:233pt'>
+ <col width=106 style='mso-width-source:userset;mso-width-alt:3876;width:80pt'>
+ <col width=456 style='mso-width-source:userset;mso-width-alt:16676;width:342pt'>
+ <col width=335 style='mso-width-source:userset;mso-width-alt:12251;width:251pt'>
+ <tr height=20 style='height:15.0pt'>
+  <td colspan=5 height=20 class=xl7630606 width=1272 style='border-right:.5pt solid gray;
+  height:15.0pt;width:954pt'>New User - Join Table</td>
+ </tr>
+ <tr height=43 style='mso-height-source:userset;height:32.25pt'>
+  <td height=43 class=xl8230606 width=64 style='height:32.25pt;border-top:none;
+  width:48pt'>Use Case Number</td>
+  <td class=xl6530606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>Use Case Name</td>
+  <td class=xl6530606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Status</td>
+  <td class=xl6530606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Descripton</td>
+  <td class=xl6530606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>Details</td>
+ </tr>
+ <tr height=140 style='height:105.0pt'>
+  <td height=140 class=xl7130606 width=64 style='height:105.0pt;border-top:
+  none;width:48pt'>1.1</td>
+  <td class=xl6630606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user first to join table</td>
+  <td class=xl6630606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6630606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>New user joins a casino table that does not have any players.
+  User cannot start a game until at least one additional user joins.<span
+  style='mso-spacerun:yes'> </span></td>
+  <td class=xl6730606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) Start game option is disabled<br>
+    2) Leave table option is enabled<br>
+    3) Message 'waiting for another user' displayed to user<br>
+    4) Game play buttons fold, check, raise, call are positioned around seat
+  but disabled.<br>
+    </td>
+ </tr>
+ <tr height=240 style='height:180.0pt'>
+  <td height=240 class=xl7230606 width=64 style='height:180.0pt;border-top:
+  none;width:48pt'>1.2</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user joins inactive table</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>New user joins a casino table that has one or more users waiting
+  for play to start, there is no active game, and not all seats are taken. The
+  user is given the next available seat by position. The waiting user is
+  notified that another user joined. Any of the users may start the game.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) User is given the next available seat<br>
+    2) Start game button is enabled<br>
+    3) Leave table is enabled<br>
+    4) Message that game can be started displayed<br>
+    5) Game play buttons fold, check, raise, call are positioned around seat
+  but disabled.<br>
+    6) Game boards for all other players in the table are updated with joined
+  user.<br>
+    7) Start game button enabled for other players in table.<br>
+    8) Message that game can be started displayed to all other players in
+  table.</td>
+ </tr>
+ <tr height=161 style='mso-height-source:userset;height:120.75pt'>
+  <td height=161 class=xl7230606 width=64 style='height:120.75pt;border-top:
+  none;width:48pt'>1.3</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user joins inactive but full table</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>New user joins a casino table where every seat is taken but
+  there is no one in the waiting list. Users are waiting for game play to
+  start. New user is placed first on the waiting list.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) Game boards for user updated with seated players info<br>
+    2) User notified he/she on waiting list<br>
+    3) User notified one player on waiting list to user<br>
+    4) Message with number of players in waiting list updated for all other
+  players in table<br>
+    <font class="font530606">5) TODO: show location on waiting list</font></td>
+ </tr>
+ <tr height=41 style='mso-height-source:userset;height:30.75pt'>
+  <td height=41 class=xl7230606 width=64 style='height:30.75pt;border-top:none;
+  width:48pt'>1.4</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user joins inactive table with waiting list</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl7530606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Same as previous case but user placed at end of waiting list.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>Same as previous case</td>
+ </tr>
+ <tr height=120 style='height:90.0pt'>
+  <td height=120 class=xl7230606 width=64 style='height:90.0pt;border-top:none;
+  width:48pt'>1.5</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>Game started on table with waiting users (see game play use
+  cases for other game start scenarios)</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>One of the seated users starts game. Game boards for all
+  players, seated and waiting, are refreshed on game start and after every move
+  or timeout action.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) See game play use case for details on seated users<br>
+    2) Waiting users can see whose turn it is, move type, move amount and
+  player status<br>
+    3) Waiting users can see pot size and community cards</td>
+ </tr>
+ <tr height=100 style='height:75.0pt'>
+  <td height=100 class=xl7230606 width=64 style='height:75.0pt;border-top:none;
+  width:48pt'>1.6</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user joins active table without waiting list</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>New user joins a table that has empty seats but there is an
+  active game being played. The new user is given a seat; he can observe the
+  game play but is not part of the game until a new game starts.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) User is given the next available seat<br>
+    2) Start game button is enabled<br>
+    3) Leave table is enabled<br>
+    4) Game boards for all other players in table updated with new waiting user
+  info</td>
+ </tr>
+ <tr height=180 style='mso-height-source:userset;height:135.0pt'>
+  <td height=180 class=xl7230606 width=64 style='height:135.0pt;border-top:
+  none;width:48pt'>1.7</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user joins active table with waiting list</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>New user joins a full table with active game play and a waiting
+  list. The new user's game board is updated with the current game play and
+  refreshed with each move. All other players in table are notified of the new
+  waiting list size.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) User notified he or she in waiting list<br>
+    2) User notified of waiting list length<br>
+    3) User's game board updated with game current status<br>
+    4) User's game board updated with every game play<br>
+    5) All other table players (seated and waiting) updated to new waiting list
+  size.<br>
+    <font class="font530606">3) TODO: show user's place in waiting list</font></td>
+ </tr>
+ <tr height=40 style='mso-height-source:userset;height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>1.8</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user joins table after game ends</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Same as 1.5 or 1.6 but game status includes hand info for all
+  players.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>Same as 1.5 or 1.6 but game status includes hand info for every
+  player, winner and updated stakes for all players.</td>
+ </tr>
+ <tr height=120 style='height:90.0pt'>
+  <td height=120 class=xl7230606 width=64 style='height:90.0pt;border-top:none;
+  width:48pt'>1.9</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user closes browser while playing a game and rejoins the
+  table</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>New user closes browser while playing an active game. He rejoins
+  the table before his turn time outs and rejoins game play as an active
+  player.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) User's game board refreshed with current game status upon
+  re-entry<br>
+    2) User's game board shows next player's turn whether his or another
+  player's<br>
+    3) Other player's game boards not updated on exit or re-entry</td>
+ </tr>
+ <tr height=79 style='mso-height-source:userset;height:59.25pt'>
+  <td height=79 class=xl7330606 width=64 style='height:59.25pt;border-top:none;
+  width:48pt'>1.10</td>
+  <td class=xl7030606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user on waiting list closes browser and rejoins a game.</td>
+  <td class=xl7030606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl7030606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>New user closes browser while on waiting list. He rejoins the
+  table before a table becomes available to him/her and resumes his place on
+  the waiting list. He is not placed at the end of the queue.</td>
+  <td class=xl7430606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) User's game board refreshed with current game status upon
+  re-entry<br>
+    2) User's game board shows next player's turn<br>
+    3) Other player's game boards not updated on exit or re-entry</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td colspan=5 height=20 class=xl7630606 width=1272 style='border-right:.5pt solid gray;
+  height:15.0pt;width:954pt'>Existing User - Join Table</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td height=20 class=xl8330606 width=64 style='height:15.0pt;border-top:none;
+  width:48pt'>2.1 - 2.9</td>
+  <td class=xl6330606 width=311 style='border-top:none;width:233pt'>Same as
+  with new users for now.</td>
+  <td class=xl6330606 width=106 style='border-top:none;width:80pt'>&nbsp;</td>
+  <td class=xl6330606 width=456 style='border-top:none;width:342pt'>&nbsp;</td>
+  <td class=xl6430606 width=335 style='border-top:none;width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td colspan=5 height=20 class=xl7630606 width=1272 style='border-right:.5pt solid gray;
+  height:15.0pt;width:954pt'>Leave Table</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7130606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.1</td>
+  <td class=xl6630606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>Seated player leaves inactive table without waiting list</td>
+  <td class=xl6630606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6630606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>A seated player leaves the casino table before game starts. Game
+  boards for all other players in table are refreshed.<span
+  style='mso-spacerun:yes'> </span></td>
+  <td class=xl6730606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) Play buttons (call, fold, check, raise) disappear<br>
+    2) Seat updated as empty seat</td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl7930606 width=64 style='height:45.0pt;width:48pt'>3.2</td>
+  <td class=xl8030606 width=311 style='border-left:none;width:233pt'>Seated
+  player leaves inactive table with waiting list</td>
+  <td class=xl8030606 width=106 style='border-left:none;width:80pt'>Verified</td>
+  <td class=xl8030606 width=456 style='border-left:none;width:342pt'>A seated
+  player leaves the casino table before game starts. First player on waiting
+  list is automatically given a seat. Game boards for all other players in
+  table are refreshed.<span style='mso-spacerun:yes'> </span></td>
+  <td class=xl8130606 width=335 style='border-left:none;width:251pt'>TODO: make
+  notification that user got a seat more prominent.</td>
+ </tr>
+ <tr height=100 style='height:75.0pt'>
+  <td height=100 class=xl7230606 width=64 style='height:75.0pt;border-top:none;
+  width:48pt'>3.3</td>
+  <td class=xl8030606 width=311 style='border-left:none;width:233pt'>Seated
+  player leaves active table</td>
+  <td class=xl8030606 width=106 style='border-left:none;width:80pt'>Verified</td>
+  <td class=xl8030606 width=456 style='border-left:none;width:342pt'>A seated
+  player leaves a table in the middle of the game. User is taken back to safe
+  saloon. Game boards for all remaining players are updated to show that the
+  player left and he no longer has a turn in the game (see game play rules). A
+  seat offer is made to the first player in waiting list.</td>
+  <td class=xl8130606 width=335 style='border-left:none;width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.4</td>
+  <td class=xl8030606 width=311 style='border-left:none;width:233pt'>Player who
+  is a dealer leaves active table</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Partly Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>A dealer leaves a table in the middle of the game. All rules in
+  3.2 apply. Card dealing unchanged; source of cars is same seat.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>BUG: fix source of dealing not to change to the next player.</td>
+ </tr>
+ <tr height=40 style='mso-height-source:userset;height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.5</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>Waiting user leaves active or inactive table<span
+  style='mso-spacerun:yes'> </span></td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>A waiting user leaves an inactive table and is taken back to the
+  salon he came from. Remaining players at table notified of updated size of
+  waiting list. Waiting players after user moved up one place.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.6</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user joins inactive table with decreased waiting list</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Regression - same as 1.2</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.7</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New user joins active table with decreased waiting list</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Regression - same as 1.4</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.8</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New game started after game end on table with replaced users</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Users who joined during the previous game are included in the
+  new game as active players.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>1) Play buttons for all waiting users show up as disabled
+  (unless turn) on all player's game boards.</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.9</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>New game started after game end on table with decreased waiting
+  list</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Game starts with same seated players.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.10</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>In-progress game restarted on table with decreased waiting list</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Regression - same as regular game play</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.11</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>In-progress game restarted on table with replaced users</td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>Same as 3.8</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl7230606 width=64 style='height:30.0pt;border-top:none;
+  width:48pt'>3.12</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>Seated user attempts leaving active table with two seated
+  players and without waiting list<span style='mso-spacerun:yes'> </span></td>
+  <td class=xl6830606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>If only two players remain in table and are playing a game, and
+  one of them leaves, the remaining player wins.</td>
+  <td class=xl6930606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl7330606 width=64 style='height:45.0pt;border-top:none;
+  width:48pt'>3.13</td>
+  <td class=xl7030606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>Seated user attempts leaving active table with two active seated
+  players and at least one waiting but seated player.</td>
+  <td class=xl7030606 width=106 style='border-top:none;border-left:none;
+  width:80pt'>Verified</td>
+  <td class=xl7030606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>If only two active players remain in table and one of them
+  leaves, the remaining player wins.</td>
+  <td class=xl7430606 width=335 style='border-top:none;border-left:none;
+  width:251pt'>&nbsp;</td>
+ </tr>
+ <tr height=20 style='height:15.0pt'>
+  <td colspan=5 height=20 class=xl7630606 width=1272 style='border-right:.5pt solid gray;
+  height:15.0pt;width:954pt'>Take Seat</td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl8530606 style='height:45.0pt'>5.1</td>
+  <td class=xl6830606 width=311 style='border-left:none;width:233pt'>Player
+  accepts seat offer</td>
+  <td class=xl8630606 style='border-left:none'>Verified</td>
+  <td class=xl6830606 width=456 style='border-left:none;width:342pt'>A player
+  is offered a seat and given 10 seconds to accept. Upon acceptance, the seat
+  information is updated on all players in the table (seated or in waiting
+  list) and status for user changed to waiting.</td>
+  <td class=xl9430606 style='border-left:none'>TODO: timeout not implemented.</td>
+ </tr>
+ <tr height=100 style='height:75.0pt'>
+  <td height=100 class=xl9030606 style='height:75.0pt;border-top:none'>5.2</td>
+  <td class=xl9130606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>Game starts before seat offer accepted.</td>
+  <td class=xl9230606 style='border-top:none;border-left:none'>Verified</td>
+  <td class=xl9130606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>A player does not accept a seat offer within the alloted time.
+  The player is placed at the end of the waiting list. The next player in the
+  waiting list is offered the seat and given 10 minutes to accept. All other
+  players in table (except second user) not aware of offer/timeout/reoffer.</td>
+  <td class=xl9330606 style='border-top:none;border-left:none'>&nbsp;</td>
+ </tr>
+ <tr height=56 style='mso-height-source:userset;height:42.0pt'>
+  <td height=56 class=xl9030606 style='height:42.0pt'>5.3</td>
+  <td class=xl9130606 width=311 style='border-left:none;width:233pt'>Second
+  seat offer to player times out</td>
+  <td class=xl9130606 width=106 style='border-left:none;width:80pt'>Not
+  Implemented</td>
+  <td class=xl9130606 width=456 style='border-left:none;width:342pt'>A player
+  who does not accept or reject a seat within 10 seconds is removed from the
+  waiting list. His is ejected from the table and put in the saloon he came
+  from. All other players in table notified change in waiting list size.</td>
+  <td class=xl9330606 style='border-left:none'>&nbsp;</td>
+ </tr>
+ <tr height=80 style='height:60.0pt'>
+  <td height=80 class=xl9030606 style='height:60.0pt'>5.4</td>
+  <td class=xl9130606 width=311 style='border-left:none;width:233pt'>User
+  rejects seat offer</td>
+  <td class=xl9130606 width=106 style='border-left:none;width:80pt'>Not
+  Implemented</td>
+  <td class=xl9130606 width=456 style='border-left:none;width:342pt'>A player
+  rejects a seat offer. He remains first in the waiting list for as long as he
+  keeps rejecting a seat instead of timing out. The next player in the waiting
+  list is offered the seat upon rejection.<span style='mso-spacerun:yes'> 
+  </span>All other players in table (except second user) not aware of
+  offer/rejection/reoffer.</td>
+  <td class=xl9330606 style='border-left:none'>&nbsp;</td>
+ </tr>
+ <tr height=40 style='height:30.0pt'>
+  <td height=40 class=xl8530606 style='height:30.0pt'>5.5</td>
+  <td class=xl6830606 width=311 style='border-left:none;width:233pt'>Seat offer
+  times out</td>
+  <td class=xl9130606 width=106 style='border-left:none;width:80pt'>Not
+  Implemented</td>
+  <td class=xl6830606 width=456 style='border-left:none;width:342pt'>A player
+  does not accept a seat offer before it expires. The next player in the
+  waiting list is offered the seat upon expiration.<span
+  style='mso-spacerun:yes'> </span></td>
+  <td class=xl8730606 style='border-left:none'>&nbsp;</td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl8530606 style='height:45.0pt;border-top:none'>5.6</td>
+  <td class=xl6830606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>First player on waiting list closes browser and a seat becomes
+  available before he rejoins</td>
+  <td class=xl9130606 width=106 style='border-left:none;width:80pt'>Not
+  Implemented</td>
+  <td class=xl6830606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>A seat offer for a player who has temporarily closed his browser
+  is still available and the offer made when the user rejoins and if the offer
+  has not expired.</td>
+  <td class=xl8730606 style='border-top:none;border-left:none'>&nbsp;</td>
+ </tr>
+ <tr height=60 style='height:45.0pt'>
+  <td height=60 class=xl8830606 style='height:45.0pt;border-top:none'>5.7</td>
+  <td class=xl7030606 width=311 style='border-top:none;border-left:none;
+  width:233pt'>Player closes browser and misses seat offer before he rejoins</td>
+  <td class=xl7030606 width=106 style='border-left:none;width:80pt'>Not
+  Implemented</td>
+  <td class=xl7030606 width=456 style='border-top:none;border-left:none;
+  width:342pt'>A seat offer for a player who has temporarily closed his browser
+  is given to the next player if he does not rejoin before the offer expires.
+  The player is placed at the end of the queue.</td>
+  <td class=xl8930606 style='border-top:none;border-left:none'>&nbsp;</td>
+ </tr>
+ <![if supportMisalignedColumns]>
+ <tr height=0 style='display:none'>
+  <td width=64 style='width:48pt'></td>
+  <td width=311 style='width:233pt'></td>
+  <td width=106 style='width:80pt'></td>
+  <td width=456 style='width:342pt'></td>
+  <td width=335 style='width:251pt'></td>
+ </tr>
+ <![endif]>
+</table>
+
+</div>
+
+
+<!----------------------------->
+<!--END OF OUTPUT FROM EXCEL PUBLISH AS WEB PAGE WIZARD-->
+<!----------------------------->
+</body>
+
+</html>
+

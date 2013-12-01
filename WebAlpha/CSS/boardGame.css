@@ -1,0 +1,569 @@
+/* all relative elements within the game board
+	The following are overlayed:
+	1) game background
+	2) canvas - for animated elements
+	3) board table DIV - this is where the elements that are not animated are positioned
+*/
+#gameBackground
+{
+    position:absolute;
+    /* background-color: #B2C97E; */
+	border: 3px outset #958E3E;
+    background-image:url('../../../images/board-bg.png');
+    background-repeat:repeat;
+    border-radius: 5px;
+    z-index:1;
+	width:640px;
+ 	height:400px; 
+}
+#playGameCanvasId {
+    position:absolute;
+    z-index:2;
+	/* top and left are seven to adjust for the border */
+	top: 7px;
+	left: 7px;
+	width:640px;
+ 	height:400px; 
+}
+#boardTable
+{
+    position:relative; 
+    z-index:3;
+    float: left;
+    background-color: transparent;
+	text-align: middle;
+	width:640px;
+ 	height:400px; 
+}
+/* all the elements within the board table are positioned and shown dynamically via javascript */
+#boardTable ul	 {
+    display:none; /* ul's are player status info only, not to be displayed */
+}
+#takeSeatButton {
+	display: none;
+    position:absolute;
+    opacity: 0.8;
+    filter: alpha(opacity=80);
+    background-color: #D7AF82;
+    font-weight:bold;
+    font-style:italic;
+	border-radius: 5px;
+    width: 150px;
+    height: 80px;
+}
+/*************************************************************************************/
+/* div enveloping each player info */
+.playerInfo
+{
+    position:absolute;
+    /* display:none; */
+    width: 150px;
+    height: 80px;
+    border-radius: 5px;
+    padding: 0px auto;
+}
+.playerInfoNormal {
+    border: 2px ridge grey;
+	background-color: #D3D3D3;
+}
+.playerInfoTimeOut {
+    border: 2px ridge grey;
+	background-color: #E59093;
+}
+.playerInfoWinner{
+	border: 3px double grey;
+	background-color: #1463FF;
+}
+.playerInfoNext{
+	border: 3px dotted grey;
+	background-color: #70B251;
+}
+.playerInfoUser {
+	border: 3px ridge #9086D9;
+	background-color: #BEBBD5;
+}
+.playerInfo p {
+    text-align:center;
+}
+/*
+.playerInfo img {
+    margin: 0px 20px 20px 0px;
+    height:30px;	
+} */
+.avatarImg {
+	display:block;
+	margin-top: 2px;
+	margin-bottom: 2px;
+	margin-left: auto;
+	margin-right: auto;
+	height:30px;
+}
+#player0Info {
+	top: 310px; /* 400 - 80px (height) - 5 */
+    left: 5px;
+}
+#player1Info {
+    top: 5px;
+    left: 5px;
+}
+#player2Info {
+    top: 5px;
+    left:  482px; /* 642 - 150 px - 5 */
+}
+#player3Info {
+    top: 310px;
+    left: 482px;
+}
+.playerName
+{
+    font-weight:bold;	
+}
+.playerStake{
+	font-size:small;
+}
+.playerStatus
+{
+    font-weight:bold;
+    color:red;
+}
+.playerStatusWinner
+{
+    font-weight:bold;
+    color:white;
+}
+.dealerButton
+{
+    /* display: none; */
+	position: absolute;
+    border: 2px groove #503A2E;
+	border-radius: 5px;
+    background-color: #C85E25;
+    font-family:Calibri;
+    font-size:120%;
+    height: 20px;
+    width: 20px;
+	z-index: 4;
+}
+#player0DealerButton {
+    top: 371px; /* 400 -20- 5 */
+    left: 165px; /* 150 + 5 -+5 */
+}
+#player1DealerButton {
+    top: 5px;
+    left: 165px;
+}
+#player2DealerButton {
+    top: 5px;
+    left: 455px; /* 642- 150 - 5 - 5 */
+}
+#player3DealerButton {
+    top: 371px;
+    left: 455px;
+}
+.playerCard {
+    position:absolute;
+    /* display:none; */
+    height: 42px;
+    width: 30px;
+	z-index: 5;
+}
+.userCard {
+    position:absolute;
+    /* display:none; */
+    height: 70px;
+    width: 50px;
+	z-index: 5;
+}
+/* player cards go off the dealer */
+.player0Card1 {
+    top: 323px; /* 400 - 80 - 20 - 5 - 5 */
+    left: 165px; /* 150 + 5*3 */
+}
+.player0Card2 {
+    top: 323px; /* 400 - 70 - 20 - 5 - 5 */
+    left: 200px; /* card1 + 50 + 5 */
+}
+.player1Card1 {
+    top: 33px; /* 5 + 20 + 5 */
+    left: 165px;
+}
+.player1Card2 {
+    top: 33px;
+    left: 200px;
+}
+.player2Card1 {
+    top: 33px;
+    left: 412px; /* 642 - 150 - 5 - 5 - 5*/
+}
+.player2Card2 {
+    top: 33px;
+    left: 448px; /* card1 - 50 - 5*/
+}
+.player3Card1 {
+    top: 323px;
+    left: 412px;
+}
+.player3Card2 {
+    top: 323px;
+    left: 448px;
+}
+
+/* user card */
+.player0UserCard1 {
+    top: 295px; /* player card - 28 */
+    left: 165px; 
+}
+.player0UserCard2 {
+    top: 295px; 
+    left: 220px; /* player card + 20 */
+}
+.player1UserCard1 {
+    top: 33px; /* 5 + 20 + 5 */
+    left: 165px;
+}
+.player1UserCard2 {
+    top: 33px;
+    left: 220px;
+}
+.player2UserCard1 {
+    top: 33px;
+    left: 372px; /* player card - 20 */
+}
+.player2UserCard2 {
+    top: 33px;
+    left: 428px; 
+}
+.player3UserCard1 {
+    top: 295px;
+    left: 372px; /* playercard1 412 - 40 */
+}
+.player3UserCard2{
+    top: 295px;
+    left: 428px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* small markers on the back */
+.cardSmallMarker {
+    position:absolute;
+    /* display:none; */
+    height: 21px; /* 42 */
+    width: 15px; /* 30 */
+	z-index: 7;
+}
+.player0Card1SmallMarker {
+    top: 342px; /* + 323 + (42 - 21) - 2 */
+    left: 178px; /* + 165 + (30 - 15) - 2 */
+}
+.player0Card2SmallMarker {
+    top: 342px; 
+    left: 213px; /* 200 + (30-15) - 2 */
+}
+.player1Card1SmallMarker {
+    top: 52px; /* 33 + (42-21) -2 */
+    left: 178px;
+}
+.player1Card2SmallMarker {
+    top: 52px;
+    left: 213px;
+}
+.player2Card1SmallMarker {
+    top: 52px;
+    left: 426px; /* 412 + (42 - 21) - 5 offset - 2 */
+}
+.player2Card2SmallMarker {
+    top: 52px;
+    left: 461px; /* 448 + (30 - 15)- 2 */
+}
+.player3Card1SmallMarker {
+    top: 342px;
+    left: 426px;
+}
+.player3Card2SmallMarker {
+    top: 342px;
+    left: 461px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* large cheating marker */
+.cardLargeMarker{
+    position:absolute;
+    /* display:none; */
+    height: 30px;
+    width: 21px;
+	z-index: 6;
+}
+.player0Card1LargeMarker {
+    top: 333px; /* 323 + (42-30) - 2*/
+    left: 172px; /* 165 + (30-21) - 2*/
+}
+.player0Card2LargeMarker {
+    top: 333px; 
+    left: 207px; /* 200 + (30-21) - 2 */
+}
+.player1Card1LargeMarker {
+    top: 43px; /* 33 + (42-30) - 2 */
+    left: 172px;
+}
+.player1Card2LargeMarker {
+    top: 43px;
+    left: 207px;
+}
+.player2Card1LargeMarker {
+    top: 43px;
+    left: 419px; /* 412 + (42-30) -5 offset - 2 - 2*/
+}
+.player2Card2LargeMarker {
+    top: 43px;
+    left: 455px; /* 448 + (30-21) - 2*/
+}
+.player3Card1LargeMarker {
+    top: 333px;
+    left: 419px;
+}
+.player3Card2LargeMarker {
+    top: 333px;
+    left: 455px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* bigger card sizes for user */
+/* player cards go off the dealer */
+.cardSmallUserMarker{
+    position:absolute;
+    height: 24px;
+    width: 17px;
+	z-index: 7;
+}
+
+.player0Card1SmallUserMarker {
+    top: 336px; /* 295 + (70-24) - 5 */
+    left: 193px; /* 165 + (50-17) - 5 */
+}
+.player0Card2SmallUserMarker {
+    top: 336px; 
+    left: 248px; /* 220 + (50-17) - 5 */
+}
+.player1Card1SmallUserMarker {
+    top: 74px; /* 33 + (70-24) - 5 */
+    left: 193px;
+}
+.player1Card2SmallUserMarker {
+    top: 74px;
+    left: 248px;
+}
+.player2Card1SmallUserMarker {
+    top: 74px;
+    left: 400px; /* 372 + (50-17) - 5 */
+}
+.player2Card2SmallUserMarker {
+    top: 74px;
+    left: 456px; /* 428 + (50-17) - 5 */
+}
+.player3Card1SmallUserMarker {
+    top: 336px;
+    left: 400px; 
+}
+.player3Card2SmallUserMarker{
+    top: 336px;
+    left: 456px;
+}
+
+/*-----------------------------------------------------------------------------------*/
+/* bigger card sizes for user */
+/* player cards go off the dealer */
+.cardLargeUserMarker{
+    position:absolute;
+    /* display:none; */
+    height: 50px;
+    width: 36px;
+	z-index: 6;
+}
+.player0Card1LargeUserMarker {
+    top: 310px; /* 295 + (70-50) - 5 */
+    left: 174px;  /* 165 + (50 - 36) - 5 */
+}
+.player0Card2LargeUserMarker {
+    top: 310px; 
+    left: 229px; /* 220 + (50 - 36) - 5 */
+}
+.player1Card1LargeUserMarker {
+    top: 48px; /* 33 + (70-50) - 5 */
+    left: 174px;
+}
+.player1Card2LargeUserMarker {
+    top: 48px;
+    left: 229px; 
+}
+.player2Card1LargeUserMarker {
+    top: 48px;
+    left: 381px; /* 372 + (50-36) - 5 */
+}
+.player2Card2LargeUserMarker {
+    top: 48px;
+    left: 437px;  /* 428 + (50-36) - 5 */
+}
+.player3Card1LargeUserMarker {
+    top: 310px;
+    left: 381px; 
+}
+.player3Card2LargeUserMarker{
+    top: 310px;
+    left: 437px;
+}
+/*************************************************************************************/
+.communityCard {
+	position:absolute;
+    display:none;
+	top: 150px;
+    height: 60px;
+    width: 43px;
+}
+#communityCard0{
+	left: 212px;
+}
+#communityCard1{
+	left: 260px;
+}
+#communityCard2{
+	left: 308px;
+}
+#communityCard3{
+	left: 356px;
+}
+#communityCard4{
+	left: 404px;
+}
+/*************************************************************************************/
+/* this is the message at the center of the table */
+#centerMessageId {
+    display:block;
+	text-align:center;
+    font-size: 20px;
+    font-weight: bolder;
+    color: white;
+	margin:200px 0 0 0;
+}
+#userChoices {
+    position:absolute;
+	padding: 0px;
+    top:410px;
+	width: 638px;
+	height: 36px;
+    clear: both;
+    float:left;
+}
+#userChoicesInput
+{
+	display: block;
+    margin-left: auto;
+	margin-right: auto;
+	width: 194px;
+}
+
+#userChoicesInput input
+{
+	font-size: 0.6em;
+	color: #EAD6E5;
+	display:inline-block;
+    background-color: #953E81;
+	text-align: center;
+	width: 94px;
+}
+#boardTable input {
+    position:absolute; 
+}
+/*************************************************************************************/
+#userCallAmount {
+	display: none;
+}
+#userRaiseAmount {
+	display: none;
+}
+.userButton{
+    position:absolute;
+    height: 28px;
+	display: inline-block;
+	border-radius: 0;
+	background-color:#7E8493;
+	border-style: outset;
+}
+#userRaiseButton {
+    width: 95px;
+} 
+#userFoldButton {
+    width: 55px;
+}
+#userCallButton {
+    width: 95px;
+}
+#userCheckButton {
+    width: 55px;
+}
+.player0Raise {
+	top: 249px;
+	left: 5px;
+}
+.player0Fold {
+	top: 249px;
+	left: 103px;
+}
+.player0Check{
+	top: 279px;
+	left: 5px;
+}
+.player0Call{
+	top: 279px;
+	left: 63px;
+}
+/* player 1 positions */
+.player1Raise {
+	top: 90px;
+	left: 5px;
+}
+.player1Fold {
+	top: 90px;
+	left: 103px;
+}
+.player1Check{
+	top: 120px;
+	left: 5px;
+}
+.player1Call{
+	top: 120px;
+	left: 63px;
+}
+/* player 2 button positions */
+.player2Raise {
+	top: 90px;
+	left: 482px;
+}
+.player2Fold {
+	top: 90px;
+	left: 580px; /* 482 + 98 */
+}
+.player2Check{
+	top: 120px;
+	left: 482px; 
+}
+.player2Call{
+	top: 120px;
+	left: 540px; /* 482 + 68 */
+}
+/* player 3 positions */
+.player3Raise {
+	top: 249px;
+	left: 482px;
+}
+.player3Fold {
+	top: 249px;
+	left: 580px;
+}
+.player3Check{
+	top: 279px;
+	left: 482px;
+}
+.player3Call{
+	top: 279px;
+	left: 540px;
+}
