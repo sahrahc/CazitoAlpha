@@ -277,4 +277,17 @@ $indexCards[0] = array(
 initTest($indexCards[0]);
 processPlayer(0);
 processPlayer(1);
+
+echo "/**********************************************************************************************/<br/>";
+echo "Testing problems <br/><br/>";
+$indexCards[0] = array(
+	'Td', '9d', 'Qh', 'Jd', 'Th',
+	'Ah', 'Qc', // player 1: 
+	'Ad', '4h', // player 1: 
+	'Jh', '6d' // player 2
+	);
+initTest($indexCards[0]);
+processPlayer(0);
+processPlayer(1);
+processPlayer(2);
 ?>

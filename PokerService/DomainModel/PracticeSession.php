@@ -5,28 +5,20 @@
 /**
  * TODO: set up as child of GameSession
  */
-class PracticeSession {
+class PracticeSession extends GameSession {
 
-    public $id;
-    public $requestingPlayerId; // the player for whom the practice session is created
     public $startDateTime;
     public $tableMinimum;
     public $numberSeats;
-    // transient data */
-    public $isPractice = true; 
-	public $isActive;
-    private $log;
 
-    public function __construct($gameSessionId, $playerId = null) {
+    public function __construct($gameSessionId, $playerId) {
         global $defaultTableMin;
-        
-        $this->log = Logger::getLogger(__CLASS__);
-        $this->id = $gameSessionId == null ? null : (int)$gameSessionId;
-        if (!is_null($playerId)) {
-            $this->requestingPlayerId = (int)$playerId;
-        }
+        global $numberSeats;
+		parent::__construct($gameSessionId, $playerId);
+
+		$this->isPractice = true;
         $this->tableMinimum = $defaultTableMin;
-		$this->isActive = true;
+		$this->numberSeats = $numberSeats;
     }
 
     /**
@@ -46,7 +38,7 @@ class PracticeSession {
      * saves the practice instance in database.
      * @param type $statusDT 
      */
-    function InitNewPracticeInstance() {
+    function InitNewGameInstance() {
         global $defaultTableMin;
 
         $statusDT = Context::GetStatusDT();
@@ -68,33 +60,29 @@ class PracticeSession {
 
     public function InitPlayers($playerId, $gameInstanceId) {
         // create requesting player state first
-        $player = EntityHelper::getPlayer($playerId);
+        $player = Player::GetPlayer($playerId);
         $player->UpdatePlayerSeat(0);
         $this->_createPracticePlayerInstance(0, $player->id, $gameInstanceId);
 
         // create dummy practice players
         $playerName = 'Practice 1 - ' . $this->id;
-        $player1 = EntityHelper::createPracticePlayer($playerName, 1);
+		$player1 = new Player(null, $playerName, null, 1);
+        $player1->CreatePracticePlayer(1);
         $this->_createPracticePlayerInstance(1, $player1->id, $gameInstanceId);
 
         $playerName = 'Practice 2 - ' . $this->id;
-        $player2 = EntityHelper::createPracticePlayer($playerName, 2, $this->startDateTime);
+		$player2 = new Player(null, $playerName, null, 1);
+        $player2->CreatePracticePlayer(2);
         $this->_createPracticePlayerInstance(2, $player2->id, $gameInstanceId);
 
         $playerName = 'Practice 3 - ' . $this->id;
-        $player3 = EntityHelper::createPracticePlayer($playerName, 3, $this->startDateTime);
+        $player3 = new Player(null, $playerName, null, 1);
+		$player3->CreatePracticePlayer(3);
         $this->_createPracticePlayerInstance(3, $player3->id, $gameInstanceId);
     }
 
     /**
      * Indirectly called on practice games.
-     * @param type $pId
-     * @param type $gInstanceId
-     * @param type $statusDT
-     * @param type $check
-     * @param type $call
-     * @param type $raise
-     * @return PlayerAction
      */
     function GenerateRandomAction($move) {
         /* --------------------------------------------------------------------- */
@@ -121,7 +109,7 @@ class PracticeSession {
      *
      * @param type $instanceSetupDto
      */
-    function CommunicateGameStarted($gameStatusDto) {
+    function CommunicateGameStarted($gameStatusDto, $recipientPlayers) {
         $ex = Context::GetExchangePlayer();
 
         $eventType = EventType::GameStarted;
@@ -177,10 +165,21 @@ class PracticeSession {
         $playerInstance->Insert();
     }
 
-	function EndSession() {
-		executeSQL("UPDATE GameSession SET IsActive = 0 "
-				. "WHERE Id = " . $this->id, ": Error ending game session id " . $this->id);
-	}
+	    public function CreatePracticeSession() {
+
+        $nextSessionId = getNextSequence('GameSession', 'Id');
+		$this->id = $nextSessionId;
+        $this->startDateTime = Context::GetStatusDT();
+        $startString = Context::GetStatusDTString();
+
+		$vars = "Id, RequestingPlayerId, StartDateTime, TableMinimum, NumberSeats, IsPractice";
+		$values = "$this->id, $this->requestingPlayerId, '$startString', $this->tableMinimum, "
+				. "$this->numberSeats, $this->isPractice";
+		$event = "INSERT INTO GameSession ($vars) VALUES ($values)";
+		$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
+		$this->history->info("INSERTED $eventCount: $vars -INTO- $values");
+    }
+
 }
 
 ?>

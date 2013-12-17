@@ -22,7 +22,7 @@ class PlayerStatusDto {
         if (!is_null($entity)) {
             $playerStatusDto->playerId = $entity->playerId;
             if ($addNames) {
-              $player = EntityHelper::getPlayer($entity->playerId);
+              $player = Player::GetPlayer($entity->playerId);
               $playerStatusDto->playerName = $player->name;
               $playerStatusDto->playerImageUrl = $player->imageUrl;
             }

@@ -26,7 +26,7 @@ include_once(dirname(__FILE__) . '/../../../Libraries/Helper/DataHelper.php');
 
 $con = connectToStateDB();
 $result = executeSQL("SELECT max(Id) from CasinoTable", 'ERROR');
-$row = mysql_fetch_array($result);
+$row = mysql_fetch_array($result, MYSQL_NUM);
 $casinoTableId1 = $row[0] + 1;
 
 mysql_query("Delete from Player WHERE Name in ('Anna', 'Bob', 'Charles, 'David', 'Eric', 'Fred', 'Gary', 'Helen')");
@@ -249,7 +249,7 @@ echo "Casino players after Fred takes seat: <br />";
 printCasinoTableSeating($casinoTableId);
 
 function printCasinoTableSeating($casinoTableId) {
-    $players = EntityHelper::GetPlayersForCasinoTable($casinoTableId);
+    $players = Player::GetPlayersForCasinoTable($casinoTableId);
     for ($i = 0; $i < count($players); $i++) {
         echo " - Player " . $players[$i]->name . " is on seat " .
         $players[$i]->currentSeatNumber . " and reserved seat " . $players[$i]->reservedSeatNumber . "<br />";

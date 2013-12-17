@@ -28,13 +28,13 @@ class PokerCoordinator {
 
 		// validate last game was finished. Abandoned games do finish 
 		// with all players timing out.
-		$lastInstance = EntityHelper::getSessionLastInstance($gameSessionId);
+		$lastInstance = GameSession::GetSessionLastInstance($gameSessionId);
 		if ($lastInstance && $lastInstance->status !== GameStatus::ENDED) {
 			$analytics->info("Game instance for session $gameSessionId requested by $requestingPlayerId but live instance $lastInstance->id");
 			$log->error("Game instance for session $gameSessionId requested by $requestingPlayerId but live instance $lastInstance->id");
 			return;
 		} else if ($lastInstance) {
-			$casinoTable = EntityHelper::getCasinoTableForSession($gameSessionId);
+			$casinoTable = CasinoTable::GetCasinoTableForSession($gameSessionId);
 			$activePlayers = PlayerInstance::GetPlayersWithStates($lastInstance->id, $casinoTable->id);
 			$count = count($activePlayers);
 			if ($count <= 1) {
@@ -49,11 +49,11 @@ class PokerCoordinator {
 		}
 
 		// init objects
-		$casinoTable = EntityHelper::getCasinoTableForSession($gameSessionId);
+		$casinoTable = CasinoTable::GetCasinoTableForSession($gameSessionId);
 		$blindBetAmounts = $casinoTable->FindBlindBetAmounts();
 		$tableSize = $casinoTable->tableMinimum;
 
-		$gameSession = EntityHelper::GetGameSession($casinoTable->currentGameSessionId);
+		$gameSession = GameSession::GetGameSession($casinoTable->currentGameSessionId);
 		// validate it is a practice session
 		if ($gameSession->isPractice) {
 			$log->error("Practice game $gameSessionId confused as live session.");
@@ -62,7 +62,7 @@ class PokerCoordinator {
 
 		// sequencing of poker game start - same sequencing for live vs.
 		// practice games (excluding communication and wait list)
-		$gameInstance = $gameSession->InitNewLiveGameInstance();
+		$gameInstance = $gameSession->InitNewGameInstance();
 		$playerStatuses = $gameInstance->ResetActivePlayers();
 
 		$gameInstance->InitInstanceWithDealerAndBlinds($blindBetAmounts, $playerStatuses);
@@ -77,10 +77,10 @@ class PokerCoordinator {
 		$gameStatusDto = GameStatusDto::SetStartedGame($gameInstance);
 		$gameStatusDto->playerStatusDtos = PlayerInstance::GetPlayersWithStates($gameInstance->id, $casinoTable->id);
 		$gameStatusDto->nextMoveDto = new ExpectedPokerMoveDto($firstMove);
-		$gameStatusDto->waitingListSize = $casinoTable->GetWaitingListSize();
+		$gameStatusDto->waitingListSize = SeatingHelper::GetWaitingListSize($casinoTable->id);
 		// communicate to all playing and waiting players. Can't use PlayerStatuses because instance only
 		// usePlayerHandDto specific for each user, set by communicate function
-		$gameSession->CommunicateGameStarted($gameStatusDto, EntityHelper::GetPlayersForCasinoTable($casinoTable->id));
+		$gameSession->CommunicateGameStarted($gameStatusDto, Player::GetPlayersForCasinoTable($casinoTable->id));
 
 		CheatingHelper::RevealMarkedCards($gameInstance);
 	}
@@ -94,25 +94,15 @@ class PokerCoordinator {
 	 * @global type $log
 	 * @global type $dateTimeFormat
 	 */
-	//
-
-	/**
-	 * Start a practice game. Validation 
-	 * 
-	 * @global type $log
-	 * @param int $gameSessionId
-	 */
 	public static function StartPracticeGame($gameSessionId, $indexCards = null) {
 		global $log;
 
 		// can't start game if another is being played
-		if (is_null(EntityHelper::getSessionLastInstance($gameSessionId))) {
+		if (is_null(GameSession::GetSessionLastInstance($gameSessionId))) {
 			return;
 		}
 
-		$statusDateTime = Context::GetStatusDT();
-
-		$gameSession = EntityHelper::GetGameSession($gameSessionId);
+		$gameSession = GameSession::GetGameSession($gameSessionId);
 		// validate it is a practice session
 		if (!$gameSession->isPractice) {
 			$log->error("Live game $gameSessionId confused as practice session.");
@@ -124,7 +114,7 @@ class PokerCoordinator {
 
 		// sequencing of poker game start - same sequencing for live vs.
 		// practice games (excluding communication)
-		$gameInstance = $gameSession->InitNewPracticeInstance();
+		$gameInstance = $gameSession->InitNewGameInstance();
 		$playerStatuses = $gameInstance->ResetActivePlayers(true);
 
 		$gameInstance->InitInstanceWithDealerAndBlinds($blindBetAmounts, $playerStatuses);
@@ -137,21 +127,34 @@ class PokerCoordinator {
 		$gameStatusDto->playerStatusDtos = PlayerInstance::GetPlayersWithStates($gameInstance->id, null);
 		$gameStatusDto->nextMoveDto = new ExpectedPokerMoveDto($firstMove);
 		// communicate to user
-		$gameSession->CommunicateGameStarted($gameStatusDto, $statusDateTime);
+		$gameSession->CommunicateGameStarted($gameStatusDto, null);
 	}
 
 	public static function EndPracticeSession($gameSessionId, $userPlayerId) {
-		$gameSession = EntityHelper::GetGameSession($gameSessionId);
-		$gameSession->EndSession();
-		$gameInstance = EntityHelper::getSessionLastInstance($gameSessionId);
-		$players = PlayerInstance::GetPlayerInstancesForGame($gameSessionId, true);
-		foreach ($players as $player) {
-			$player->status = PlayerStatusType::LEFT;
-			$player->UpdatePlayerLeftStatus();
+		$gameSession = GameSession::GetGameSession($gameSessionId);
+		$gameInstance = GameSession::GetSessionLastInstance($gameSessionId);
+		$playerInstances = PlayerInstance::GetPlayerInstancesForGame($gameSessionId, true);
+		if ($playerInstances) {
+			foreach ($playerInstances as $playerInstance) {
+				$leavingPlayer = Player::GetPlayer($playerInstance->playerId);
+				$playerInstance->Delete();
+				if ($leavingPlayer->isVirtual) {
+					$leavingPlayer->Delete();
+				} else {
+					$leavingPlayer->currentCasinoTableId = null;
+					$leavingPlayer->currentSeatNumber = null;
+					$leavingPlayer->buyIn = null;
+					$leavingPlayer->waitStartDateTime = null;
+					$leavingPlayer->reservedSeatNumber = null;
+					$leavingPlayer->Update();
+				}
+			}
 		}
 		$gameInstance->status = GameStatus::ENDED;
-		$gameInstance->UpdateInstanceEnded();
-		// clean up - purge queue and reset sleeves
+		$gameInstance->Update();
+		$gameInstance->Delete();
+		$gameSession->Delete();
+		// cleaning up of queue
 		$ch = Context::GetQCh();
 		$q = QueueManager::GetPlayerQueue($userPlayerId, $ch);
 		QueueManager::DeleteQueue($q);
@@ -165,42 +168,46 @@ class PokerCoordinator {
 	private static function endGame(&$gameInstance, &$gameStatusDto) {
 		$gameInstance->status = GameStatus::ENDED;
 		// FindWinner updates the winning player and all player hands
-		$playerStatusesBefore = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);
+		$playerStatuses = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);
 		$count = 0;
-		foreach ($playerStatusesBefore as $playerStatus) {
-			if ($playerStatus->status !== PlayerStatusType::FOLDED &&
-					$playerStatus->status !== PlayerStatusType::LEFT) {
+		if (count($playerStatuses) === 0) {return;}
+		foreach ($playerStatuses as $playerStatus) {
+			// LEFT already excluded
+			if ($playerStatus->status !== PlayerStatusType::FOLDED) {
 				$count++;
 			}
 		}
 		if ($count > 1) {
-			$gameInstance->FindWinner();
-			$gameStatusDto->winningPlayerId = $gameInstance->winningPlayerId;
+			// find winner updates player hands, status and stake
+			$gameInstance->FindWinner($playerStatuses);
 			$playerHandsDto = PlayerHandDto::mapPlayerHands($gameInstance->playerHands);
 			$gameStatusDto->playerHandsDto = $playerHandsDto;
-		}
-		$playerStatuses = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);
-		if ($count === 1) {
+		} else if ($count === 1) {
 			foreach ($playerStatuses as $playerStatus) {
 				if ($playerStatus->status === PlayerStatusType::FOLDED ||
 						$playerStatus->status === PlayerStatusType::LEFT) {
 					/* don't set to status if left, implied lost */
+					$playerStatus->Update();
 					continue;
 				}
 				$gameInstance->lastUpdateDateTime = Context::GetStatusDT();
 				$gameInstance->winningPlayerId = $playerStatus->playerId;
-				// update instance with winner info
-				$gameInstance->_updateWinner();
-				$gameStatusDto->winningPlayerId = $playerStatus->playerId;
 				$playerStatus->status = PlayerStatusType::WON;
-				$playerStatus->UpdatePlayerStatus(PlayerStatusType::WON);
+				$playerStatus->Update();
 			}
 		}
+		$gameStatusDto->winningPlayerId = $gameInstance->winningPlayerId;
+		// update instance with winner info
+		$gameInstance->Update();
 		/* --------------------------------------------------------------------- */
 		/* mark cards that are to be seen if item is enabled */
 		CheatingHelper::AddVisibleCards($gameInstance);
 
-		$gameStatusDto->playerStatusDtos = PlayerStatusDto::MapPlayerStatuses($playerStatuses);
+		//$gameStatusDto->playerStatusDtos = PlayerStatusDto::MapPlayerStatuses($playerStatuses);
+		// moved 
+		$casinoTable = CasinoTable::GetCasinoTableForSession($gameInstance->gameSessionId);
+		$tId = is_null($casinoTable) ? null : $casinoTable->id;
+		$gameStatusDto->playerStatusDtos = PlayerInstance::GetPlayersWithStates($gameInstance->id, $tId);
 		CheatingHelper::SetItemToInactiveForInstance($gameInstance->id, ItemType::SOCIAL_SPOTTER);
 	}
 
@@ -211,7 +218,7 @@ class PokerCoordinator {
 		if (is_null($expectedMove)) {
 			$expectedMove = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstance->id);
 		}
-		$badPlayer = EntityHelper::getPlayerInstance($gameInstance->id, $expectedMove->playerId);
+		$badPlayer = PlayerInstance::GetPlayerInstance($gameInstance->id, $expectedMove->playerId);
 		// "catch up" game instance to real expected move ...
 		$nextMove = ExpectedPokerMove::FindNextExpectedMoveForInstance($gameInstance, $badPlayer->turnNumber);
 		// ... and increment counter with the obsolete move that is being skipped
@@ -230,7 +237,7 @@ class PokerCoordinator {
 	public static function MakePokerMove($playerAction, $validateMove) {
 		global $log;
 
-		$gameInstance = EntityHelper::GetGameInstance($playerAction->gameInstanceId);
+		$gameInstance = GameInstance::GetGameInstance($playerAction->gameInstanceId);
 		if ($gameInstance->IsGameEnded()) {
 			$log->error("User attempted move but game is ended: " . json_encode($playerAction));
 			return;
@@ -247,7 +254,7 @@ class PokerCoordinator {
 				$nextMove = self::adjustNextForLeftUser($gameInstance);
 				$gameInstance->lastInstancePlayNumber += 1;
 				if (!is_null($nextMove) && $nextMove->playerId == $playerAction->playerId) {
-					$playerInstanceStatus = $gameInstance->ApplyPlayerAction($playerAction);
+					$playerInstanceStatus = $playerAction->ApplyPlayerAction($gameInstance);
 				} else {
 					$log->warn(__CLASS__ . "-" . __FUNCTION__ . "Got new expected move but wrong player $playerAction->playerId moved. Player $nextMove->playerId expected.");
 					return;
@@ -257,11 +264,11 @@ class PokerCoordinator {
 			else if (!$isMoveValid) {
 				return;
 			} else if ($isMoveValid) {
-				$playerInstanceStatus = $gameInstance->ApplyPlayerAction($playerAction);
+				$playerInstanceStatus = $playerAction->ApplyPlayerAction($gameInstance);
 			}
 		} else {
 			// updates PlayerStatus
-			$playerInstanceStatus = $gameInstance->ApplyPlayerAction($playerAction);
+			$playerInstanceStatus = $playerAction->ApplyPlayerAction($gameInstance);
 		}
 		// current play may have triggered game end
 		if ($gameInstance->IsGameEnded()) {
@@ -294,7 +301,7 @@ class PokerCoordinator {
 		}
 		// only send the player who changed status
 		$gameStatusDto->turnPlayerStatusDto = PlayerStatusDto::mapPlayerStatus($playerInstanceStatus);
-		$gameInstance->UpdateInstanceAfterMove();
+		$gameInstance->Update();
 		$gameStatusDto->gameStatus = $gameInstance->status;
 		$gameStatusDto->currentPotSize = $gameInstance->currentPotSize;
 
@@ -319,15 +326,15 @@ class PokerCoordinator {
 
 		// updates PlayerStatus
 		$playerId = $pokerMove->playerId;
-		$playerInstanceStatus = $gameInstance->SkipTurn($pokerMove);
+		$playerInstanceStatus = $pokerMove->SkipTurn($gameInstance);
 		/* skipping may have set the player status to left
-		if ($playerInstanceStatus->status == PlayerStatusType::LEFT) {
-			$pokerMove = self::adjustNextForLeftUser($gameInstance, $pokerMove);
-			$gameInstance->lastInstancePlayNumber +=1;
-		} */
+		  if ($playerInstanceStatus->status == PlayerStatusType::LEFT) {
+		  $pokerMove = self::adjustNextForLeftUser($gameInstance, $pokerMove);
+		  $gameInstance->lastInstancePlayNumber +=1;
+		  } */
 		if ($playerInstanceStatus->numberTimeOuts >= 3 && $playerInstanceStatus->status !== PlayerStatusType::LEFT) {
 			// || $playerInstanceStatus->status == PlayerStatusType::LEFT) {
-			$casinoTable = EntityHelper::getCasinoTableForSession($gameInstance->gameSessionId);
+			$casinoTable = CasinoTable::GetCasinoTableForSession($gameInstance->gameSessionId);
 			// note that pokerMove is null; this avoids infinite loops between SkipPokerMove and RemoveUserFromTable
 			$vacatedSeat = TableCoordinator::RemoveUserFromTable($casinoTable, $playerId);
 			TableCoordinator::ReserveAndOfferSeat($casinoTable, $vacatedSeat);
@@ -368,7 +375,7 @@ class PokerCoordinator {
 			// only send the player who changed status
 			$gameStatusDto->turnPlayerStatusDto = PlayerStatusDto::mapPlayerStatus($playerInstanceStatus);
 		}
-		$gameInstance->UpdateInstanceAfterMove();
+		$gameInstance->Update();
 		$gameStatusDto->gameStatus = $gameInstance->status;
 		$gameStatusDto->currentPotSize = $gameInstance->currentPotSize;
 
@@ -384,8 +391,8 @@ class PokerCoordinator {
 	 */
 	public static function CheckGameEnd($gameInstanceId) {
 		// Logic --------------------------------------------------------------------------------
-		$gameInstance = EntityHelper::GetGameInstance($gameInstanceId);
-		if ($gameInstance === null || $gameInstance->IsGameEnded()) {
+		$gameInstance = GameInstance::GetGameInstance($gameInstanceId);
+		if ($gameInstance === null || !$gameInstance->IsGameEnded()) {
 			return;
 		}
 		// follow player status update with instance level follow-up
@@ -411,9 +418,9 @@ class PokerCoordinator {
 		}
 
 		// an active game instance is required for the next items
-		$gameInstance = EntityHelper::GetGameInstance($gameInstanceId);
+		$gameInstance = GameInstance::GetGameInstance($gameInstanceId);
 		if (is_null($gameInstance)) {
-			$gameInstance = EntityHelper::getSessionLastInstance($gameSessionId);
+			$gameInstance = GameSession::GetSessionLastInstance($gameSessionId);
 		}
 		if (is_null($gameInstance)) {
 			// no message out, possible fraud

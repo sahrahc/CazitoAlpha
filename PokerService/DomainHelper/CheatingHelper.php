@@ -32,17 +32,16 @@ class CheatingHelper {
 		/* returns a list of player ids */
 		/* possible for an item to expire in the future but set to inactive before that time */
 		$leftStatus = PlayerStatusType::LEFT;
-		$result = executeSQL("SELECT i.PlayerId FROM PlayerActiveItem i 
+		$query = "SELECT i.PlayerId FROM PlayerActiveItem i 
                 INNER JOIN PlayerState ps on i.PlayerId = ps.PlayerId 
                 AND i.GameSessionId = ps.GameSessionId
                 WHERE ps.status != '$leftStatus' AND i.GameSessionId =
             $sessionId AND ItemType = '$itemType' "
-				. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString')
-                ", __FUNCTION__ . "
-                : Error selecting active items for session $sessionId type $itemType");
+				. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString')";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$playerIdList = null;
 		$counter = 0;
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$playerIdList[$counter++] = (int) $row['PlayerId'];
 		}
 		return $playerIdList;
@@ -57,17 +56,15 @@ class CheatingHelper {
 		/* returns a list of player ids */
 		/* possible for an item to expire in the future but set to inactive before that time */
 		$leftStatus = PlayerStatusType::LEFT;
-		$result = executeSQL("SELECT i.* FROM PlayerActiveItem i 
+		$query = "SELECT i.* FROM PlayerActiveItem i 
                 INNER JOIN PlayerState ps on i.PlayerId = ps.PlayerId 
                 AND i.GameSessionId = ps.GameSessionId
                 WHERE ps.status != '$leftStatus' AND i.GameSessionId =
             $sessionId AND ItemType = '$itemType' AND i.PlayerId = $playerId "
-				. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString')
-                ", __FUNCTION__ . "
-                : Error selecting active item for player id $playerId on session $sessionId type $itemType");
-
+				. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString')";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		if (mysql_num_rows($result) > 0) {
-			$row = mysql_fetch_array($result);
+			$row = mysql_fetch_array($result, MYSQL_ASSOC);
 			$playerItem = new PlayerActiveItem($row['PlayerId'], $sessionId, $itemType);
 			$playerItem->mapPlayerActiveItem($row);
 			return $playerItem;
@@ -83,15 +80,13 @@ class CheatingHelper {
 	 */
 	public static function GetActiveItemsWithOtherPlayer($gSessionId, $itemType, $otherPlayerId) {
 		$statusDTString = Context::GetStatusDTString();
-		$result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameSessionId =
+		$query = "SELECT * FROM PlayerActiveItem WHERE GameSessionId =
             $gSessionId AND OtherPlayerId = $otherPlayerId AND ItemType = '$itemType' "
-				. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') "
-				, __FUNCTION__ . "
-                : Error selecting active items for affected player $otherPlayerId "
-				. " and session $gSessionId and type $itemType");
+				. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') ";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$i = 0;
 		$activeItems = null;
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$activeItems[$i] = new PlayerActiveItem($row['PlayerId'], $gSessionId, $itemType);
 			$activeItems[$i]->mapPlayerActiveItem($row);
 			$i++;
@@ -102,21 +97,18 @@ class CheatingHelper {
 	public static function GetActiveItemsOfItemType($gSessionId, $itemType) {
 		$statusDTString = Context::GetStatusDTString();
 		if ($gSessionId === null) {
-			$result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameSessionId IS NULL
+			$query = "SELECT * FROM PlayerActiveItem WHERE GameSessionId IS NULL
             AND ItemType = '$itemType' "
-					. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') "
-					, __FUNCTION__ . "
-                : Error selecting active items for session $gSessionId and type $itemType");
+					. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') ";
 		} else {
-			$result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameSessionId =
+			$query = "SELECT * FROM PlayerActiveItem WHERE GameSessionId =
             $gSessionId AND ItemType = '$itemType' "
-					. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') "
-					, __FUNCTION__ . "
-                : Error selecting active items for session $gSessionId and type $itemType");
+					. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') ";
 		}
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$i = 0;
 		$activeItems = null;
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$activeItems[$i] = new PlayerActiveItem($row['playerId'], $gSessionId, $itemType);
 			$activeItems[$i]->mapPlayerActiveItem($row);
 			$i++;
@@ -127,21 +119,18 @@ class CheatingHelper {
 	public static function GetActiveItemsOfItemTypeforPlayer($playerId, $gSessionId, $itemType) {
 		$statusDTString = Context::GetStatusDTString();
 		if ($gSessionId === null) {
-			$result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameSessionId IS NULL
+			$query = "SELECT * FROM PlayerActiveItem WHERE GameSessionId IS NULL
             AND ItemType = '$itemType' AND PlayerId = $playerId "
-					. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') "
-					, __FUNCTION__ . "
-                : Error selecting active items for session $gSessionId and type $itemType");
+					. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') ";
 		} else {
-			$result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameSessionId =
+			$query = "SELECT * FROM PlayerActiveItem WHERE GameSessionId =
             $gSessionId AND ItemType = '$itemType' AND PlayerId = $playerId "
-					. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') "
-					, __FUNCTION__ . "
-                : Error selecting active items for session $gSessionId and type $itemType");
+					. "AND (EndDateTime IS NULL OR EndDateTime > '$statusDTString') ";
 		}
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$i = 0;
 		$activeItems = null;
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$activeItems[$i] = new PlayerActiveItem($row['PlayerId'], $gSessionId, $itemType);
 			$activeItems[$i]->mapPlayerActiveItem($row);
 			$i++;
@@ -153,20 +142,21 @@ class CheatingHelper {
 		global $dateTimeFormat;
 		$statusDateTime = Context::GetStatusDTString();
 
-		$result = executeSQL("SELECT i.*, ps.GameSessionId AS PlayerSessionId, 
+		$query = "SELECT i.*, ps.GameSessionId AS PlayerSessionId, 
                 ps.GameInstanceId AS PlayerInstanceId, ps.status AS Status 
                 FROM PlayerActiveItem i 
                 LEFT JOIN PlayerState ps ON i.PlayerId = ps.PlayerId 
-                WHERE EndDateTime <= '$statusDateTime'", __FUNCTION__ . ": Error selecting ended
-                active items");
+                WHERE EndDateTime <= '$statusDateTime' AND i.IsNotified = 0";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$i = 0;
 		$endedItems = null;
 
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$playerId = (int) $row["PlayerId"];
 			$sessionId = (int) $row["GameSessionId"];
 			$itemType = $row["ItemType"];
 			$endedItems[$i] = new PlayerActiveItem($playerId, $sessionId, $itemType);
+			$endedItems[$i]->id = $row["Id"];
 			$endedItems[$i]->lockEndDateTime = DateTime::createFromFormat($dateTimeFormat, $row["LockEndDateTime"]);
 			// the following properties are not part of the object
 			$endedItems[$i]->playerSessionId = (int) $row["PlayerSessionId"];
@@ -177,31 +167,30 @@ class CheatingHelper {
 	}
 
 	public static function DeleteVisibleCards($playerId, $itemType, $sessionId) {
-		executeSQL("Delete FROM PlayerVisibleCard "
-				. "WHERE PlayerId = $playerId AND "
-				. "ItemType = '$itemType' AND "
-				. "GameSessionId = $sessionId", __FUNCTION__ . ": Error deleting "
-				. " all cards visible by $playerId because of $itemType on session $sessionId");
+		$visibleCards = new PlayerVisibleCards($playerId, $sessionId, $itemType);
+		$cardCodes = $visibleCards->GetSavedCardCodes();
+		$visibleCards->RemoveCardCodes($cardCodes);
 	}
 	
 	public static function GetLockEndedItems() {
 		$statusDT = Context::GetStatusDTString();
 		// FIXME: should record on log
-		$result = executeSQL("SELECT i.*, ps.GameSessionId AS PlayerSessionId, 
+		$query = "SELECT i.*, ps.GameSessionId AS PlayerSessionId, 
                 ps.GameInstanceId AS PlayerInstanceId, ps.status AS Status 
                 FROM PlayerActiveItem i 
                 LEFT JOIN PlayerState ps ON i.PlayerId = ps.PlayerId 
                 AND ps.status != ''
-                WHERE LockEndDateTime <= '$statusDT'", __FUNCTION__ . "
-                    : Error selecting items past the locked date");
+                WHERE LockEndDateTime <= '$statusDT'";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$i = 0;
 		$unlockedItems = null;
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			// send communication
 			$sessionId = (int) $row["GameSessionId"];
 			$playerId = (int) $row["PlayerId"];
 			$itemType = $row["ItemType"];
 			$unlockedItems[$i] = new PlayerActiveItem($playerId, $sessionId, $itemType);
+			$unlockedItems[$i]->id = (int) $row["Id"];
 			// communicate only if the user is in the same session and not left
 			$unlockedItems[$i]->playerSessionId = (int) $row["PlayerSessionId"];
 			$unlockedItems[$i]->playerStatus = $row["Status"];
@@ -351,19 +340,19 @@ class CheatingHelper {
 	 */
 	public static function SetItemToInactiveForInstance($gameInstanceId, $itemType) {
 		$statusDateTime = Context::GetStatusDTString();
-		$result = executeSQL("SELECT * FROM PlayerActiveItem WHERE GameInstanceId =
+		$query = "SELECT * FROM PlayerActiveItem WHERE GameInstanceId =
             $gameInstanceId AND ItemType = '$itemType' "
-				. "AND EndDateTime <= '$statusDateTime'", __FUNCTION__ . "
-                : Error selecting active item for instance $gameInstanceId and
-                type $itemType");
+				. "AND EndDateTime <= '$statusDateTime'";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$i = 0;
 		$items = null;
 
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$playerId = (int) $row["PlayerId"];
 			$sessionId = (int) $row["GameSessionId"];
 			$itemType = $row["ItemType"];
 			$items[$i] = new PlayerActiveItem($playerId, $sessionId, $itemType);
+			$items[$i]->id = (int) $row["Id"];
 			$items[$i]->gameInstanceId = (int) $row["GameInstanceId"];
 			$items[$i]->SetInstanceItemToInactive();
 			$i++;

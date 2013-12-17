@@ -37,11 +37,21 @@ function executeSQL($sql, $msg){
     if (!$result) {
         $log->fatal($msg . ': ' . mysql_error());
         $log->warn($sql);
-        die($msg);
+        die($msg . ': ' . mysql_error());
     }
     return $result;
 }
 
+function executeNonQuery($sql, $msg){
+    global $log;
+    $result = mysql_query($sql);
+    if (!$result) {
+        $log->fatal($msg . ': ' . mysql_error());
+        $log->warn($sql);
+        die($msg . ': ' . mysql_error());
+    }
+    return mysql_affected_rows();
+}
 function executeDDL($objName, $sql) {
     global $log;
     global $dbName;
@@ -53,6 +63,7 @@ function executeDDL($objName, $sql) {
         echo $msg . mysql_error() . '<br />';
         $log->fatal($msg . ': ' . mysql_error());
         $log->warn($sql);
+        die($msg . ': ' . mysql_error());
     }
     echo '<br />';    
 }

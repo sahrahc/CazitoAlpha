@@ -30,10 +30,11 @@ class CheatingAnotherItem extends CheatingItem {
 		$otherHand = CardHelper::getPlayerHandDto($otherPlayerId, $gameInstance->id);
 		//$dto1 = new PlayerCardDto($otherPlayerId, 1, $otherHand->pokerCard1Code, null);
 		//$dto2 = new PlayerCardDto($otherPlayerId, 2, $otherHand->pokerCard2Code, null);
-		$dto = new PlayerCardDto($otherPlayerId, $playerCardNumber, $otherHand->pokerCard2Code, null);
+		$cardCode = $playerCardNumber === 1 ? $otherHand->pokerCard1Code : $otherHand->pokerCard2Code;
+		$dto = new PlayerCardDto($otherPlayerId, $playerCardNumber, $cardCode, null);
 		$messagesOut[0] = new CheatOutcomeDto($itemType, CheatDtoType::CheatedCards, array($dto));
 		//$messagesOut[1] = new CheatOutcomeDto($itemType, CheatDtoType::CheatedHands, $dto2);
-		$player = EntityHelper::getPlayer($otherPlayerId);
+		$player = Player::GetPlayer($otherPlayerId);
 
 		$dateString = Context::GetStatusDTString();
 		$lockEndString = $activeItem->lockEndDateTime->format($dateTimeFormat);
@@ -97,7 +98,7 @@ class CheatingAnotherItem extends CheatingItem {
 		}
 
 		// ****** message to current player
-		$otherPlayer = EntityHelper::getPlayer($otherPlayerId);
+		$otherPlayer = Player::GetPlayer($otherPlayerId);
 		$dateString = Context::GetStatusDTString();
 		$lockEndString = $activeItem->lockEndDateTime->format($dateTimeFormat);
 		$info = new CheatInfoDto("$itemType - Applied to " . $otherPlayer->name . "'s cards on $dateString. "
@@ -112,7 +113,7 @@ class CheatingAnotherItem extends CheatingItem {
 	 * Original player needs to be found
 	 */
 	public function NotifyAntiOilMarkerUse() {
-		$player = EntityHelper::getPlayer($this->otherPlayerId);
+		$player = Player::GetPlayer($this->otherPlayerId);
 		$castingItemType = ItemType::ANTI_OIL_MARKER;
 		$castingItems = CheatingHelper::GetActiveItemsWithOtherPlayer($this->gameSessionId, 
 				$castingItemType, $this->otherPlayerId);
@@ -138,7 +139,7 @@ class CheatingAnotherItem extends CheatingItem {
 		$otherPlayerId = $this->otherPlayerId;
 		$sessionId = $this->gameSessionId;
 		$itemType = $this->itemType;
-		$otherPlayer = EntityHelper::getPlayer($otherPlayerId);
+		$otherPlayer = Player::GetPlayer($otherPlayerId);
 		if ($otherPlayer == null) {
 			$info = new CheatInfoDto("$itemType on invalid user");
 			$messagesOut[0] = new CheatOutcomeDto($itemType, $itemTypeCheatDtoType::ItemLog, $info);

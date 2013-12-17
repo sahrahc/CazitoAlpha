@@ -110,9 +110,9 @@ $indexCards[1] = array('7h', '9s', // player 0
 	'3d', '5d', '6d', '7d', '8d', 'Td', 'Jd', 'Qd', 'Kd', 'Ad',
 	'2h', '3h', '4h', '5h', '8h', '9h', 'Th', 'Jh', 'Qh', 'Ah',
 	'2s', '3s', '4s', '5s', '6s', '7s', '8s', 'Js',  'Ks', 'As');
-$indexCards[2] = array('Ks', '6d', // player 0
-	'2s', 'Qc', // player 1
-	'8d', 'Th', // player 2
+$indexCards[2] = array('2s', '6d', // player 0
+	'8d', 'Qc', // player 1
+	'Ks', 'Th', // player 2
 	'Ac', '8c', // player 3
 	'5c', 'Jh', 'Ad', '4d', '6h', // community cards
     '2c', '3c', '4c', '6c', '7c', '9c', 'Tc', 'Jc', 'Kc', 
@@ -246,7 +246,7 @@ testMove(1, $playerIds[2], PokerActionType::CALLED, $lastBet, 11);
 // start card marking, check next round game start cards are revealed
 echo '====================================================== <br />';
 echo 'GAME 1 CHEATING - start social spotter <br/>';
-testCheatStartSocialSpotter(3);
+testCheatStartSocialSpotter(3); // id 4
 echo '====================================================== <br />';
 
 echo ' GAME 1 Play 12 ********************************************************<br/>';
@@ -302,7 +302,7 @@ echo 'GAME 2 - validate cards dealt as specified <br/>';
 validateGameCards($indexCards[1]);
 echo '====================================================== <br />';
 echo 'GAME 2 CHEATING - test social spotter worked <br/>';
-// playerNumber 3 is now 1 because reset turns
+// playerId 4 is now in position 1 because reset turns
 testCheatSocialSpotterWorks(1, $previousGameCards, $indexCards[1]);
 echo '====================================================== <br />';
 echo ' GAME 2 Play 1 ********************************************************<br/>';
@@ -348,13 +348,15 @@ echo 'GAME 2 CHEATING - request oil marker <br/>';
 testCheatStartOilMarker(0); // Id #2
 testCheatStartOilMarker(2); // Id #1
 echo '====================================================== <br />';
+sleep(20);
+ProcessExpiredPokerMoves();
 
 echo ' GAME 2 Play 9 ********************************************************<br/>';
 testMove(2, $playerIds[0], PlayerStatusType::SKIPPED, NULL, 9);
 
 echo '====================================================== <br />';
 echo 'GAME 2 CHEATING - tuck card under table groove <br/>';
-testCheatTableTuckerLoad(2, $tableGroove);
+testCheatTableTuckerLoad(2, $tableGroove); // Id #1
 echo '====================================================== <br />';
 echo 'GAME 2 CHEATING - request face card <br/>';
 testCheatFaceCard(3); // id 5
@@ -382,11 +384,11 @@ echo '        Back to four players <br />';
 // remove info since leaving in between games
 // arguments: playerNumber, playerId, seatNumber, $playerName, buyIn, position (
 MakePlayerActive(3, $playerIds[3], 2, $playerNames[4], $buyIn, 1);
-
+// new turn order: 5, 4, 1, 2
 UpdateTurnsNextGame();
-UpdateTurnsNextGame();
+//UpdateTurnsNextGame();
 
-// initialize
+// initialized
 InitGameStart(0, 4);
 
 queueStartLiveGame($gameSessionId, $playerIds[0], $indexCards[2]);
@@ -395,16 +397,17 @@ ConsumeTableQueue();
 // initialize to expected values if clean game
 InitPlayerHands($indexCards[2]);
 
-testGameStart(0, true);
-testGameStart(1);
+testGameStart(1, true);
 testGameStart(2);
+testGameStart(3);
+
 echo '====================================================== <br />';
 echo 'GAME 3 CHEATING - test keep face card worked <br/>';
 // arguments: playerNumber, cardIndex
-UpdatePlayerHandsFaceCard(3, 2); // id = 5
-testCheatFaceCardWorks(3, 2);
+UpdatePlayerHandsFaceCard(0, 2); // id = 5
+testCheatFaceCardWorks(0, 2);
 
-testGameStart(3);
+testGameStart(0);
 
 $expectedDto->userPlayerHandDto = null;
 $expectedDto->gameStatus = GameStatus::IN_PROGRESS;
@@ -417,15 +420,15 @@ echo '====================================================== <br />';
 echo 'GAME 3 CHEATING - test anti oil marker worked <br/>';
 // player numbers unchanged because new player
 // arguments: playernumber, otherplayernumber
-testCheatAntiOilMarkerWorks(0, 1); // from 4 on 1
+testCheatAntiOilMarkerWorks(1, 2); // from 4 on 1
 echo '====================================================== <br />';
 echo 'GAME 3 CHEATING - test social spotter worked <br/>';
-// playerNumber 1 is 0 now
-testCheatSocialSpotterWorks(0, $previousGameCards, $indexCards[2]);
+// playerId 4 is stil1 1
+testCheatSocialSpotterWorks(1, $previousGameCards, $indexCards[2]);
 echo '====================================================== <br />';
 echo 'GAME 3 CHEATING - test snake oil marker worked <br/>';
-// playerNumber 1 is 0 now
-testCheatOilMarkerWorks(2, $indexCards[2]);
+// playerId 2 is now in position 3
+testCheatOilMarkerWorks(3, $indexCards[2]);
 echo '====================================================== <br />';
 
 echo ' GAME 3 Play 1 ********************************************************<br/>';
@@ -435,8 +438,8 @@ testMove(0, $playerIds[1], PokerActionType::CALLED, $lastBet, 2);
 
 echo '====================================================== <br />';
 echo 'GAME 3 CHEATING - use card tucked under table groove <br/>';
-// player number 2 is now 1
-testCheatTableTuckerUse(1, 2, 0);
+// player id 1 is now in position 2
+testCheatTableTuckerUse(2, 2, 0); // by id 1
 echo '====================================================== <br />';
 
 echo ' GAME 3 Play 3 ********************************************************<br/>';
@@ -454,8 +457,8 @@ testMove(1, $playerIds[2], PokerActionType::CHECKED, NULL, 7);
 echo '====================================================== <br />';
 echo 'GAME 3 CHEATING - anti oil marker <br/>';
 // arguments: playerNumber, otherPlayerNumber
-testCheatAntiOilMarker(3, 2, true);
-echo '====================================================== <br />';
+testCheatAntiOilMarker(0, 3, true); // on id 2 from id 5
+echo '======================================================o <br />';
 
 echo ' GAME 3 Play 8 ********************************************************<br/>';
 testMove(2, $playerIds[3], PokerActionType::RAISED, $lastBet*=2, 8);

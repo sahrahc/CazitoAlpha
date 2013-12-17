@@ -76,7 +76,7 @@ class StompSender {
         $msg_send = "SEND\ndestination:$q\nreceipt:ok\n\n$m\x00";
         $msg_disconnect = "DISCONNECT\n\n\x00";
 
-        if (!($r = fsockopen($this->host, $this->port))) throw new StompException('fsockopen failed');
+		if (!($r = fsockopen($this->host, $this->port))) { throw new StompException('fsockopen failed'); }
         
         // set the timeout on the stream
         stream_set_timeout($r, $this->timeout);

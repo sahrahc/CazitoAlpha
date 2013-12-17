@@ -60,7 +60,7 @@ class GameStatusDto {
         $gameStatusDto->gameSessionId = $casinoTable->currentGameSessionId;
         $gameStatusDto->casinoTableId = $casinoTable->id;
         $userDto = new PlayerDto($requestingPlayer);
-        $gameInstance = EntityHelper::getSessionLastInstance($casinoTable->currentGameSessionId);
+        $gameInstance = GameSession::GetSessionLastInstance($casinoTable->currentGameSessionId);
 		if ($gameInstance) {
         $gameCards = new GameInstanceCards($gameInstance->id, $gameInstance->numberCommunityCardsShown);
             $gameStatusDto->gameInstanceId = $gameInstance->id;
@@ -72,12 +72,12 @@ class GameStatusDto {
 			$gameStatusDto->nextMoveDto = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstance->id);
             $gameStatusDto->currentPotSize = $gameInstance->currentPotSize;
             
-            $gameStatusDto->communityCards = $gameCards->GetSavedCommunityCardDtos();
+            $gameStatusDto->communityCards = $gameCards->GetSavedCommunityCardCodes();
             $gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($requestingPlayer->id, $gameInstance->id);
             if ($gameInstance->status === GameStatus::ENDED) {
                 $gameStatusDto->winningPlayerId = $gameInstance->winningPlayerId;
 				$gameCards = new GameInstanceCards($gameInstance->id);
-				$gameCards->GetSavedCards();
+				$gameCards->GetSavedCards(true);
                 $gameStatusDto->playerHandsDto = PlayerHandDto::mapPlayerHands($gameCards->playerHands);
             }
         } else {
@@ -88,7 +88,7 @@ class GameStatusDto {
 		$gameStatusDto->userPlayerId = $userDto->playerId;
         $gameStatusDto->userSeatNumber = $userDto->currentSeatNumber;
 
-        $gameStatusDto->waitingListSize = $casinoTable->getWaitingListSize();
+        $gameStatusDto->waitingListSize = SeatingHelper::GetWaitingListSize($casinoTable->id);
         return $gameStatusDto;
     }
  
@@ -101,7 +101,7 @@ class GameStatusDto {
             $gameStatusDto->gameStatus = GameStatus::NONE;
             $gameStatusDto->statusDateTime = Context::GetStatusDTString();
             $gameStatusDto->playerStatusDtos = PlayerStatusDto::mapPlayers($players, PlayerStatusType::WAITING, true);
-        $gameStatusDto->waitingListSize = $casinoTable->getWaitingListSize();
+        $gameStatusDto->waitingListSize = SeatingHelper::GetWaitingListSize($casinoTable->id);
         return $gameStatusDto;
 		
 	}

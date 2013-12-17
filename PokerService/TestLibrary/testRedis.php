@@ -10,8 +10,7 @@ $redis->connect($redisIpAddr, $redisPort);
 $redis->setOption(Redis::OPT_SERIALIZER, Redis::SERIALIZER_IGBINARY);
 $redis->setOption(Redis::OPT_PREFIX, 'cazito');
 
-$casinoTable = new CasinoTable();
-$casinoTable->id = 1;
+$casinoTable = new CasinoTable(1);
 $casinoTable->name = 'test';
 $key = 'ct' + $casinoTable->id;
 $redis->setex('ct' + $casinoTable->id, 300, $casinoTable);

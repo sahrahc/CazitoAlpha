@@ -177,25 +177,27 @@ echo ' GAME 2 Play 6 ********************************************************/<b
 testMove(2, $playerIds[0], PokerActionType::CALLED, $lastBet, 6);
 
 echo ' User leaves ********************************************************/<br/>';
+// player who has turn leaves
 //testPlayerLeaveTable(0, $playerIds[0], false);
-scriptPlayerLeaves(0);
+scriptPlayerLeaves(0, 7);
+RemovePlayer(0);
+// playerId's shifted because player removed
 
 echo ' GAME 2 Play 8 ********************************************************/<br/>';
-testMove(1, $playerIds[2], PokerActionType::CALLED, $lastBet, 8);
+testMove(0, $playerIds[1], PokerActionType::CALLED, $lastBet, 8);
 echo ' GAME 2 Play 9 ********************************************************/<br/>';
-testMove(2, $playerIds[1], PlayerStatusType::CHECKED, NULL, 9);
+testMove(1, $playerIds[0], PlayerStatusType::CHECKED, NULL, 9);
 
 echo ' GAME 2 Play 11 ********************************************************/<br/>';
-testMove(1, $playerIds[2], PokerActionType::CALLED, $lastBet, 11);
-echo ' Play 12 ********************************************************/<br/>';
-testMove(2, null, PokerActionType::CALLED, $lastBet, 12);
+testMove(0, $playerIds[0], PokerActionType::CALLED, $lastBet, 11);
+echo ' GAME 2 Play 12 ********************************************************/<br/>';
+testMove(1, null, PokerActionType::CALLED, $lastBet, 12);
 
 echo '****************************************************** <br />';
 /////////////////////////////////////////////////
 // cleanup
 
-RemovePlayer(0);
-MakePlayerActive(2, $playerIds[2], 2, $playerNames[4], $buyIn, 0);
+//MakePlayerActive(2, $playerIds[2], 2, $playerNames[4], $buyIn, 0);
 
 echo '****************************************************** <br />';
 echo 'GAME 3: Testing game play correctly starts with seat taken by <br />';
@@ -205,16 +207,17 @@ echo '        - Remaining single user wins <br />';
 echo '        - Upon one user coming back, same seat given, game resets to waiting <br />';
 echo '        - Upon new user joining, seat replacement <br />';
 
-
+/*
 connectToStateDB();
 echo 'GameSessionId : ' . $gameSessionId . '<br />';
 cleanUpGameSessionById($gameSessionId);
 for ($i=0;$i<count($playerIds);$i++) {
     cleanUpPlayerById($playerIds[$i]);
 }
+
 // no need? clean up if something went wrong?
 cleanUpOrphanCasino();
 CleanUpAbandonedPlays();
-
+*/
 session_destroy();
 ?>

@@ -42,14 +42,14 @@ function joinCasinoTable() {
 function joinCasinoTableCallback(gameStatusDto) {
     $.cookies.set("joinedTable", 1);
     if (gameStatusDto.userSeatNumber !== null) {
-	O('main').getElementsByTagName("h1")[0].innerHTML = 'Casino Table ' + gameStatusDto.casinoTableId;
+	O('main').getElementsByTagName("h1")[0].innerHTML = 'Casino Table ' + $.cookies.get('tableName');
 // the user elements will need to be displayed 
 // not needed on starting practice session because game instance automatically started
 // or closing/reopening browser (same as joining a table previously joined)
 // or on game start - the user is seated at a seat that didn't have a user before.
     }
     else {
-	O('main').getElementsByTagName("h1")[0].innerHTML = 'Casino Table ' + gameStatusDto.casinoTableId + ' (On Waiting List)';
+	O('main').getElementsByTagName("h1")[0].innerHTML = 'Casino Table ' + $.cookies.get('tableName') + ' (On Waiting List)';
     }
 
     if (gameStatusDto.userPlayerId !== $.cookies.get("userPlayerId")) {
@@ -69,12 +69,15 @@ function joinCasinoTableCallback(gameStatusDto) {
     if (gameStatusDto.waitingListSize !== null && gameStatusDto.waitingListSize > 0) {
 	updateWaitlistCount(gameStatusDto.waitingListSize);
     }
-	for (var i = 0; i<4; i++) {
-	    O('player' + i + 'Name').innerHTML = "Empty Seat";
-	    O('player' + i + 'Stake').innerHTML = "";
-	    O('player' + i + 'Status').innerHTML = "";
-	    O('player' + i + 'Image').src = "../../../images/Avatar_user0.jpeg";
-	}
+    for (var i = 0; i < 4; i++) {
+	O('player' + i + 'Name').innerHTML = "Empty Seat";
+	O('player' + i + 'Stake').innerHTML = "";
+	O('player' + i + 'Status').innerHTML = "";
+	O('player' + i + 'Image').src = "../../../images/Avatar_user0.jpeg";
+    }
+    var playerTag = 'player' + gameStatusDto.userSeatNumber;
+    O(playerTag + 'Id').innerHTML = gameStatusDto.userPlayerId;
+    
     for (var i = 0; i < gameStatusDto.playerStatusDtos.length; i++) {
 	updatePlayerIdentity(gameStatusDto.playerStatusDtos[i]);
     }

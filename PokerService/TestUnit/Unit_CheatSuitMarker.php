@@ -15,10 +15,10 @@ $result = executeSQL("SELECT g.*, i.GameSessionId as GameSessionId
     INNER JOIN GameInstance i ON g.GameInstanceId = i.Id WHERE p.Name = 'JP'
         AND g.PlayerCardNumber = 1
     ORDER BY g.GameInstanceId desc LIMIT 1 ", 'ERROR');
-$row = mysql_fetch_array($result);
+$row = mysql_fetch_array($result, MYSQL_ASSOC);
 $gameInstanceId = $row['GameInstanceId'];
 $gameSessionId = $row['GameSessionId'];
-$gameInstance = EntityHelper::GetGameInstance($gameInstanceId);
+$gameInstance = GameInstance::GetGameInstance($gameInstanceId);
 $playerId = $row['PlayerId'];
 echo "Test Data: Instance is $gameInstanceId and playerId $playerId for JP <br /><br />";
 $gameCards = new GameInstanceCards($gameInstance->id);
