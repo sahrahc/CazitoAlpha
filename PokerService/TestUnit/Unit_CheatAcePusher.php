@@ -11,7 +11,7 @@ $gameStatusDto = json_decode($dtoEncoded);
 $gameSessionId = $gameStatusDto->gameSessionId;
 $gameInstanceId = $gameStatusDto->gameInstanceId;
 
-$gameInstance = EntityHelper::GetGameInstance($gameInstanceId);
+$gameInstance = GameInstance::GetGameInstance($gameInstanceId);
 $playerHand = CardHelper::getPlayerHandDto($playerId, $gameInstanceId);
 
 echo "Player hand before pushing ace: " . json_encode($playerHand) . "<br />";

@@ -396,7 +396,9 @@ function ValidatePlayerStatusDtos($actualDtos, $expectedDtos, $status = null, $i
 			$countFailed += NotEquals("Player $i Status $status", $actual->status, $status);
 		}
 		$countFailed += NotEquals("Player $i Status", $actual->status, $exp->status);
-		$countFailed += NotEquals("Player $i Stake", $actual->currentStake, $exp->currentStake);
+		if ($actual->status !== PlayerStatusType::SEATED) {
+			$countFailed += NotEquals("Player $i Stake", $actual->currentStake, $exp->currentStake);
+		}
 		$countFailed += NotEquals("Player $i Last Amt", $actual->lastPlayAmount, $exp->lastPlayAmount);
 		$countFailed += NotEquals("Player $i Last Play", $actual->lastPlayInstanceNumber, $exp->lastPlayInstanceNumber);
 		$i++;
@@ -422,14 +424,7 @@ function validateGameCards($indexCards) {
 	global $playerIds;
 	global $playerHands;
 	global $communityCards;
-	/* testing eval helper DECK 
-	  $DECK = EvalHelper::init2x2deck();
-	  echo "deck is: " . json_encode($DECK). '<br />';
-	  for ($i=1; $i<=count($DECK); $i++) {
-	  $actualCardCodes[$i] = EvalHelper::findCardCode($DECK[$i]);
-	  }
-	  echo "deck cards are: " . json_encode($actualCardCodes) . '<br/>';
-	 */
+
 	connectToStateDB();
 
 	echo "<br/>Validating game cards<br/>";
@@ -448,7 +443,7 @@ function validateGameCards($indexCards) {
 	}
 	// verify community Cards - from queue message
 	$gameCards = new GameInstanceCards($gameInstanceId);
-	$actualCommunityCards = $gameCards->GetSavedCommunityCardDtos(5);
+	$actualCommunityCards = $gameCards->GetSavedCommunityCardCodes(5);
 	if (isset($printCheatingAPI) && $printCheatingAPI) {
 		echo " - Community cards: " . json_encode($actualCommunityCards) . '<br/>';
 		$nextCards = array_slice($indexCards, $activePlayers * 2 + 5, 5);

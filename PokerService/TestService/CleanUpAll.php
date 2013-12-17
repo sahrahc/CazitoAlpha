@@ -10,6 +10,5 @@ executeSQL("DELETE FROM CasinoTable", "Error deleting CasinoTable");
 executeSQL("DELETE FROM Player", "Error deleting Player");
 executeSQL("DELETE FROM PlayerActiveItem", "Error deleting PlayerActiveItem");
 executeSQL("DELETE FROM PlayerHiddenCard", "Error deleting PlayerHiddenCard");
-executeSQL("DELETE FROM PlayerAction", "Error deleting PlayerAction");
 executeSQL("DELETE FROM PlayerVisibleCard", "Error deleting PlayerVisibleCard");
 ?>

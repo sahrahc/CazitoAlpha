@@ -29,8 +29,9 @@ function startPracticeSession($par) {
 
 	// sequencing of poker game start
 
-	$practiceSession = EntityHelper::CreatePracticeSession($playerId);
-	$gameInstance = $practiceSession->InitNewPracticeInstance();
+	$practiceSession = new PracticeSession(null, $playerId);
+	$practiceSession->CreatePracticeSession();
+	$gameInstance = $practiceSession->InitNewGameInstance();
 	$practiceSession->InitPlayers($playerId, $gameInstance->id);
 
 	// resets the queue for the requesting player and creates one for game session
@@ -161,7 +162,7 @@ function joinTable($par) {
 	Context::Init();
 	// Logic --------------------------------------------------------------------------------
 	// 1. get or create a new table if it does not exist
-	$casinoTable = EntityHelper::getCasinoTable($tableId);
+	$casinoTable = CasinoTable::GetCasinoTable($tableId);
 	if ($casinoTable->code != $tableCode) {
 		return "You are trying to hack me!";
 	}
@@ -194,9 +195,9 @@ function logout($par) {
 	  $statusDateTime = date($dateTimeFormat);
 	 */
 
-	$player = EntityHelper::getPlayer($playerId);
+	$player = Player::GetPlayer($playerId);
 	if ($player->currentCasinoTableId !== null) {
-		$casinoTable = EntityHelper::getCasinoTable($player->currentCasinoTableId);
+		$casinoTable = CasinoTable::GetCasinoTable($player->currentCasinoTableId);
 		TableCoordinator::RemoveUserFromTable($casinoTable, $playerId);
 	}
 	//session_start();
@@ -223,7 +224,7 @@ function login($par) {
 	$statusDateTime = date($dateTimeFormat);
 
 	// 1. get, update or create the player first, so it can be added to the response player list
-	$newPlayer = EntityHelper::getOrCreatePlayer($playerName, $statusDateTime);
+	$newPlayer = Player::GetOrCreatePlayer($playerName);
 	$player = array('userPlayerId' => $newPlayer->id, 'playerName' => $newPlayer->name);
 
 //	session_start();

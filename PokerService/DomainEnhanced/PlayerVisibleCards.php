@@ -12,10 +12,10 @@ class PlayerVisibleCards {
 	public $itemType;
 	public $gameSessionId;
 	//public $cardCodeList;
-	private $log;
+	private $history;
 
 	function __construct($playerId, $gameSessionId = null, $itemType = null, $cardCodeList = null) {
-		$this->log = Logger::getLogger(__CLASS__);
+		$this->history = Logger::getLogger(__CLASS__);
 
 		$this->playerId = $playerId;
 		$this->itemType = $itemType;
@@ -25,13 +25,13 @@ class PlayerVisibleCards {
 
 	public function ResetVisible($all = true) {
 		if ($all) {
-			executeSQL("DELETE FROM PlayerVisibleCard WHERE PlayerId = $this->playerId", __FUNCTION__ . "
-            :Error deleting from PlayerVisibleCard where player is $this->playerId");
+			$where = " PlayerId = $this->playerId";
 		} else {
-			executeSQL("DELETE FROM PlayerVisibleCard WHERE PlayerId = $this->playerId "
-					. "AND ItemType = '$this->itemType'", __FUNCTION__ . "
-            :Error deleting from PlayerVisibleCard where player is $this->playerId");
+			$where = "PlayerId = $this->playerId AND ItemType = '$this->itemType'";
 		}
+		$event = "DELETE FROM PlayerVisibleCard WHERE $where";
+		$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
+		$this->history->info("DELETED " . $eventCount . ": -WHERE- $where");
 	}
 
 	/**
@@ -55,21 +55,25 @@ class PlayerVisibleCards {
 		// insert
 		//$counter = count($playerCardCodes);
 		foreach ($newCards as $cardCode) {
-			$query = "INSERT INTO PlayerVisibleCard (PlayerId, CardCode, GameSessionId, ItemType) "
-					. "VALUES ($this->playerId, '$cardCode', $this->gameSessionId, '$this->itemType')";
-			executeSQL($query, __FUNCTION__ . ": Error inserting into PlayerVisibleCard "
-					. "where player is $this->playerId and session is $this->gameSessionId "
-					. "and item type is $this->itemType");
+			$vars = "PlayerId, CardCode, GameSessionId, ItemType";
+			$values = "$this->playerId, '$cardCode', $this->gameSessionId, '$this->itemType'";
+			$event = "INSERT INTO PlayerVisibleCard ($vars) VALUES ($values)";
+			$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
+			$this->history->info("INSERTED $eventCount: $vars -INTO- $values");
 		}
 	}
 
 	public function SaveSingleCard($cardCode, $gameInstanceId) {
-		executeSQL("INSERT INTO PlayerVisibleCard (PlayerId, CardCode, GameSessionId, ItemType)
-                    SELECT $this->playerId, CardCode, $this->gameSessionId, "
-				. "'$this->itemType' FROM GameCard "
-				. "WHERE DeckPosition = $cardCode "
-				. "AND GameInstanceId = $gameInstanceId ", __FUNCTION__ . ": Error
-                        inserting into PlayerVisibleCard player $this->playerId");
+		$query = "SELECT CardCode FROM GameCard WHERE DeckPosition = $cardCode "
+				. "AND GameInstanceId = $gameInstanceId";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
+		$row = mysql_fetch_array($result, MYSQL_ASSOC);
+
+		$vars = "PlayerId, CardCode, GameSessionId, ItemType";
+		$values = "$this->playerId, '" . $row["CardCode"] . "', $this->gameSessionId, '$this->itemType'";
+		$event = "INSERT INTO PlayerVisibleCard ($vars) values ($values)";
+		$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
+		$this->history->info("INSERTED $eventCount: $vars -INTO- $values");
 	}
 
 	/**
@@ -78,12 +82,12 @@ class PlayerVisibleCards {
 	 * @return type 
 	 */
 	public function GetSavedCardCodes() {
-		$result = executeSQL("SELECT CardCode FROM PlayerVisibleCard WHERE PlayerId = $this->playerId
-                AND GameSessionId = $this->gameSessionId AND ItemType = '$this->itemType'", __FUNCTION__ . ":
-                Error selecting player visible card for player $this->playerId and session $this->gameSessionId");
+		$query = "SELECT CardCode FROM PlayerVisibleCard WHERE PlayerId = $this->playerId
+                AND GameSessionId = $this->gameSessionId AND ItemType = '$this->itemType'";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$visibleList = null;
 		$counter = 0;
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$visibleList[$counter++] = $row['CardCode'];
 		}
 		return $visibleList;
@@ -102,10 +106,11 @@ class PlayerVisibleCards {
 			$csv = $csv . "'" . $cardCodes[$i] . "',";
 		}
 		$csv = $csv . "''";
-		$query = "DELETE FROM PlayerVisibleCard WHERE PlayerId = $this->playerId AND CardCode in ($csv)
-            AND GameSessionId = $this->gameSessionId AND ItemType = '$this->itemType'";
-		executeSQL($query, __FUNCTION__ . ": Error deleting from PlayerVisibleCard where player is $this->playerId");
-		echo $query;
+		$where = "PlayerId = $this->playerId AND CardCode in ($csv) "
+				. "AND GameSessionId = $this->gameSessionId AND ItemType = '$this->itemType'";
+		$event = "DELETE FROM PlayerVisibleCard WHERE $where";
+		$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
+		$this->history->info("DELETED " . $eventCount . ": -WHERE- $where");
 	}
 
 }

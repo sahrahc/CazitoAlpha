@@ -1,11 +1,7 @@
 <?php
 session_start();
-/*
-  // check if logged in
-  if (!isset($_SESSION['ProtoTester'])) {
-  header("location:Login.php");
-  }
- */
+include '../Includes/betaLock.php';
+
 include '../Includes/fileInclude.html';
 include '../Includes/header.php';
 // login and register only on home

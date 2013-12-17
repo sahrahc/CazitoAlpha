@@ -36,19 +36,7 @@ class CardHelper {
 
 	public static function initRandomDeck() {
 		global $CARDS;
-		// FIXME: cache these!
-		/* $DECK = EvalHelper::init2x2deck();
-		  $indexArray = range(1, 52);
-		  shuffle($indexArray);
 
-		  for ($i = 1; $i <= 52; $i++) {
-
-		  $cardCode = EvalHelper::findCardCode($DECK[$indexArray[$i - 1]]);
-
-		  $returnList[$i] = GameCard::InitShuffledCard($indexArray[$i - 1], $i, $cardCode);
-		  }
-		 * 
-		 */
 		$newDeck = range(1,52);
 		shuffle($newDeck);
 		for ($i = 0; $i <= 51; $i++) {
@@ -67,19 +55,6 @@ class CardHelper {
 	 */
 	public static function initTestingDeck($testCardCodes) {
 		global $CARDS;
-		/*
-		  $DECK = EvalHelper::init2x2deck();
-		  for ($i = 0; $i < count($testCardCodes); $i++) {
-		  $ranks = array('2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A');
-		  //$ranks = array('A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2');
-		  $rank = array_search($testCardCodes[$i][0], $ranks);
-		  $suitBit = EvalHelper::getSuitBit($testCardCodes[$i][1]);
-		  $cardIndex = EvalHelper::find2x2DeckIndex($rank, $suitBit, $DECK);
-
-		  $returnList[$i + 1] = GameCard::InitShuffledCard($cardIndex, $i, $testCardCodes[$i]);
-		  }
-		 *
-		 */
 		for ($i = 0; $i < count($testCardCodes); $i++) {
 			$returnList[$i] = GameCard::InitShuffledCard($CARDS[$testCardCodes[$i]], $i, $testCardCodes[$i]);
 		}
@@ -104,7 +79,7 @@ class CardHelper {
 		$playerHand->handInfo = EvalHelper::getHandValue($cards);
 		$playerHand->handCategory = EvalHelper::urshift($playerHand->handInfo, 12); // 12
 		$playerHand->pokerHandType = $HANDTYPES[$playerHand->handCategory];
-//		$playerHand->pokerHandType = EvalHelper::findHandName($playerHand->handCategory);
+
 		$playerHand->rankWithinCategory = $playerHand->handInfo & 0x00000FFF;
 
 		//return $pH;
@@ -139,36 +114,19 @@ class CardHelper {
 	 * @return PlayerHandDto
 	 */
 	public static function getPlayerHandDto($pId, $gInstId) {
-		$result = executeSQL("SELECT * from GameCard where GameInstanceId = $gInstId
-                AND PlayerId = $pId ORDER BY PlayerCardNumber", __FUNCTION__ . "
-                : ERROR selecting game card for game instance id $gInstId and player
-                id $pId");
+		$query = "SELECT * from GameCard where GameInstanceId = $gInstId
+                AND PlayerId = $pId ORDER BY PlayerCardNumber";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		if (mysql_num_rows($result) == 0) {
 			return null;
 		}
 
 		$i = 0;
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$pokerCardCode[$i++] = $row["CardCode"];
 		}
 
 		return new PlayerHandDto($pId, $pokerCardCode[0], $pokerCardCode[1]);
-	}
-
-	/**
-	 * Update the value of one of a player hand's two cards.
-	 * @param type $pId
-	 * @param type $gInstId
-	 * @param type $cNumber
-	 * @param type $cIndex
-	 * @param type $cCode 
-	 */
-	public static function updatePlayerCard($pId, $gInstId, $cNumber, $cIndex, $cCode) {
-		executeSQL("UPDATE GameCard SET CardIndex = $cIndex, CardCode = '$cCode'
-                WHERE GameInstanceId = $gInstId AND PlayerId = $pId and
-                PlayerCardNumber = $cNumber", __FUNCTION__ . ": 
-                Error updating game card for instance $gInstId,
-                player $pId and card number $cNumber");
 	}
 
 	public static function IsFaceCard($cardCode) {

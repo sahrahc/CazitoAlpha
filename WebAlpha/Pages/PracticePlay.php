@@ -1,9 +1,7 @@
 <?php
-/*
-// check if logged in
-if (!isset($_SESSION['ProtoTester'])) {
-	header("location:Login.php");
-} */
+session_start();
+include '../Includes/betaLock.php';
+
 include '../Includes/fileInclude.html';
 include '../Includes/header.php';
 

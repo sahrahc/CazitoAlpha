@@ -85,13 +85,15 @@ function UpdateExpPlayerStatusDto($playerNumber, $status, $amount, $playNumber) 
 	$expectedDto->playerStatusDtos[$playerNumber]->lastPlayInstanceNumber = $playNumber;
 }
 
-function UpdateExpTurnPlayerStatusDto($playerNumber, $status, $amount, $stake, $playNumber) {
+function UpdateExpTurnPlayerStatusDto($playerNumber, $status, $amount, $stake, $playNumber, $left = false) {
 	global $expectedDto;
 	global $playerIds;
 
 	$expectedDto->turnPlayerStatusDto = new PlayerStatusDto();
 	$expectedDto->turnPlayerStatusDto->playerId = $playerIds[$playerNumber];
 	$expectedDto->turnPlayerStatusDto->status = $status;
+	if ($left) {
+	$expectedDto->turnPlayerStatusDto->status = PlayerStatusType::LEFT; }
 	$expectedDto->turnPlayerStatusDto->currentStake = $stake - $amount;
 /// null amount if folded
 	if (is_null($amount) && $status != PlayerStatusType::CHECKED) {
@@ -128,7 +130,8 @@ function UpdateExpPlayerStatusDtoFinal($actualDto, $updatedFlag = null) {
 		if ($expectedDto->playerStatusDtos[$i]->status == PlayerStatusType::WAITING) {
 			continue;
 		}
-		if ($expectedDto->playerStatusDtos[$i]->status != PlayerStatusType::LEFT) {
+		if ($expectedDto->playerStatusDtos[$i]->status != PlayerStatusType::LEFT &&
+			$expectedDto->playerStatusDtos[$i]->status !== PlayerStatusType::SEATED) {
 			$expectedDto->playerStatusDtos[$i]->status = PlayerStatusType::LOST;
 		}
 		if ($i == $winnerNumber) {
@@ -260,34 +263,42 @@ function RemovePlayer($playerNumber) {
 
 	connectToStateDB();
 
-	$leavingPlayerId = $playerIds[$playerNumber];
+	//$leavingPlayerId = $playerIds[$playerNumber];
 // update $expectedDto and playerStatusDtos to remove the user who left
 	array_splice($playerIds, $playerNumber, 1);
 	//array_splice($playerNames, $playerNumber, 1);
 	array_splice($q, $playerNumber, 1);
+	/*
 	if (!is_null($expectedDto->playerStatusDtos)) {
 		array_splice($expectedDto->playerStatusDtos, $playerNumber, 1);
 	}
-	cleanUpPlayerById($leavingPlayerId);
+	 * 
+	 */
+	//cleanUpPlayerById($leavingPlayerId);
 	$numberPlayers--;
 	$activePlayers--;
 }
 
-function InsertInactivePlayer($playerId) {
+function InsertInactivePlayer($playerId, $playerName, $seatNumber, $buyIn) {
 	global $playerIds;
 	global $q;
 	global $numberPlayers;
 	//global $activePlayers;
 	global $qCh;
+	global $expectedDto;
 
 	connectToStateDB();
 
+	/* add new seated player at the end */
 	$playerNumber = count($playerIds);
 	array_push($playerIds, $playerId);
 	$qNew = QueueManager::GetPlayerQueue($playerId, $qCh);
 	array_push($q, 'x');
 	$q[$playerNumber] = $qNew;
-	// player status dtos not added here but by UpdateTurnsNextGame
+	array_push($expectedDto->playerStatusDtos, 'x');
+	$expectedDto->playerStatusDtos[$playerNumber] = InitPlayerStatusDto(
+			$playerId, $playerName, $seatNumber, $buyIn);
+	$expectedDto->playerStatusDtos[$playerNumber]->status = PlayerStatusType::SEATED;
 	$numberPlayers++;
 	//$activePlayers++;
 }
@@ -297,23 +308,11 @@ function MakePlayerActive($oldPlayerNumber, $playerId, $seatNumber, $playerName,
 	global $playerIds;
 	global $q;
 
-	/* find where the player to be made active is currently positioned first 
-	  while ($currentPlayerId = current($playerIds)) {
-	  if ($currentPlayerId == $playerId) {
-	  $oldPlayerNumber = key($playerIds);
-	  }
-	  next($playerIds);
-	  }
-	  if (!isset($oldPlayerNumber)) {
-	  echo "*** CANNOT FIND PLAYER ID $playerId TO MAKE ACTIVE <br />";
-	  exit;
-	  }
-	 * 
-	 */
 	/* remove first before putting back in right place */
 	$qNew = $q[$oldPlayerNumber];
 	array_splice($playerIds, $oldPlayerNumber, 1);
 	array_splice($q, $oldPlayerNumber, 1);
+	array_splice($expectedDto->playerStatusDtos, $oldPlayerNumber, 1);
 
 	/* put in right place */
 	array_splice($playerIds, $position, 0, $playerId);

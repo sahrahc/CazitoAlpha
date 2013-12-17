@@ -107,6 +107,49 @@ class PlayerAction {
         
         return $entity;
     }
-}
+
+		/**
+	 * Processes a player's action including practice virtual player, 
+	 * which includes the following steps:
+	 * 1) Update the player state: status, stake, lastPlayInstanceNumber, lastPlayAmount
+	 * 3) Update game instance: nextPlayerId and nextTurnNumber, potSize, lastBetSize, lastInstancePlayNumber
+	 * 4) Find next move, increase player # and community cards shown
+	 * @return ExpectedPokerMove 
+	 */
+	function ApplyPlayerAction(&$gameInstance) {
+		// initialize playerstatus
+		$playerInstanceStatus = PlayerInstance::getPlayerInstance($gameInstance->id, $this->playerId);
+
+		$playerInstanceStatus->status = $this->pokerActionType;
+
+		// update instance last play number;
+		$gameInstance->lastInstancePlayNumber +=1;
+		$playerInstanceStatus->lastPlayInstanceNumber = $gameInstance->lastInstancePlayNumber;
+
+		// fields that need to be calculated
+		// update the player stake and game instance potsize and lastbetsize
+		// for fold and checks, last play amount does not change
+		if ($this->pokerActionType == PokerActionType::CALLED ||
+				$this->pokerActionType == PokerActionType::BLIND_BET ||
+				$this->pokerActionType == PokerActionType::RAISED) {
+			$playerInstanceStatus->currentStake -= $this->actionValue;
+			$playerInstanceStatus->lastPlayAmount = $this->actionValue;
+			$gameInstance->currentPotSize += $this->actionValue;
+			$gameInstance->lastBetSize = $this->actionValue;
+		}
+		if ($this->pokerActionType == PokerActionType::CHECKED) {
+			$playerInstanceStatus->lastPlayAmount = null;
+		}
+		// update player status
+		$playerInstanceStatus->Update();
+
+		$pokerMove = $this->ConvertToPokerMove();
+		$pokerMove->Delete();
+
+		return $playerInstanceStatus;
+	}
+
+
+		}
 
 ?>

@@ -20,7 +20,7 @@ $ex = QueueManager::GetPlayerExchange($ch);
 $q = QueueManager::AddPlayerQueue($playerId, $ch);
 
 if ($suitType != null && $actionType != null) {
-    $player = EntityHelper::getPlayerByName($playerName);
+    $player = Player::getPlayerByName($playerName);
     switch ($suitType) {
         case 'hearts':
             $cardCodes = array('2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', 'Th', 'Jh', 'Qh', 'Kh', 'Ah');
@@ -36,7 +36,7 @@ if ($suitType != null && $actionType != null) {
             break;
     }
     if ($actionType == 'add') {
-		$gameInstance = EntityHelper::getSessionLastInstance($gameSessionId);
+		$gameInstance = GameSession::GetSessionLastInstance($gameSessionId);
         CheatingHelper::AddVisibleCards ($gameInstance);
         echo "Successfully marked $suitType cards for $playerName for 10 minutes";
     } elseif ($actionType == 'remove') {

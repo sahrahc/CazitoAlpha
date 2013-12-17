@@ -13,8 +13,10 @@ function logoutCallback(resp) {
 
     $.cookies.del('tableId');
     $.cookies.del('tableCode');
+    $.cookies.del('joinedTable');
     $.cookies.del('vanilla-play');
     $.cookies.del('sleeveCards');
+    $.cookies.del('grooveCards');
     var sPath = window.location.pathname;
     var sPage = sPath.substring(sPath.lastIndexOf('/') + 1);
 
@@ -23,6 +25,7 @@ function logoutCallback(resp) {
     }
     else {
 	window.location.replace("Home.php");
+	window.location.reload();
     }
 }
 function logout() {
@@ -47,7 +50,7 @@ function loginCallback(resp) {
 	path: '/'
     });
     $.cookies.set("playerName", resp.playerName);
-    refreshHeader();
+    window.location.reload();
 }
 
 function login(playerName) {

@@ -10,16 +10,18 @@ class PlayerHiddenCards {
 	public $playerId;
 	public $cardCodeList;
 	public $hideType;
+	private $history;
 
 	function __construct($playerId, $cardCodeList, $hideType) {
+		$this->history = Logger::getLogger(__CLASS__);
 		/*
-		global $pokerCardCode;
-		$cardCodeList = array();
-		if (!is_null($cardNameList) && count($cardNameList) > 0) {
-			for ($i=0; $i<count($cardNameList); $i++) {
-				array_push($cardCodeList, $pokerCardCode[$this->cardCodeList[$i]]);
-			}
-		}
+		  global $pokerCardCode;
+		  $cardCodeList = array();
+		  if (!is_null($cardNameList) && count($cardNameList) > 0) {
+		  for ($i=0; $i<count($cardNameList); $i++) {
+		  array_push($cardCodeList, $pokerCardCode[$this->cardCodeList[$i]]);
+		  }
+		  }
 		 * 
 		 */
 		$this->playerId = $playerId;
@@ -53,18 +55,21 @@ class PlayerHiddenCards {
 			return;
 		}
 		// start the cardposition with the number after the max
-		$result = executeSQL("select max(CardPosition) MaxPos 
+		$query = "select max(CardPosition) MaxPos 
             From PlayerHiddenCard WHERE PlayerId = $this->playerId
-            AND HideType = '$this->hideType'", __FUNCTION__ . ": Error retriving max cardposition");
-		$row = mysql_fetch_array($result);
+            AND HideType = '$this->hideType'";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
+		$row = mysql_fetch_array($result, MYSQL_NUM);
 		$maxPos = $row[0] == 0 ? 0 : (int) $row[0] + 1;
 		for ($i = 0; $i < count($this->cardCodeList); $i++) {
 			$cardCode = $this->cardCodeList[$i];
 			if ($cardCode != false) {
 				$cardPosition = $i + $maxPos;
-				executeSQL("INSERT INTO PlayerHiddenCard(PlayerId, CardCode, CardPosition, HideType)
-                VALUES ($this->playerId, '$cardCode', $cardPosition, '$this->hideType')", __FUNCTION__ . "
-                    : Error inserting $cardCode on PlayerHiddenCard for $this->playerId");
+				$vars = "PlayerId, CardCode, CardPosition, HideType";
+				$values = "$this->playerId, '$cardCode', $cardPosition, '$this->hideType'";
+				$event = "INSERT INTO PlayerHiddenCard ($vars) VALUES ($values)";
+				$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
+				$this->history->info("INSERTED $eventCount: $vars -INTO- $values");
 			}
 		}
 	}
@@ -79,13 +84,13 @@ class PlayerHiddenCards {
 		if ($this->playerId == null || $this->hideType == null) {
 			return null;
 		}
-		$result = executeSQL("SELECT * FROM PlayerHiddenCard WHERE PlayerId = $this->playerId
+		$query = "SELECT * FROM PlayerHiddenCard WHERE PlayerId = $this->playerId
             AND HideType = '$this->hideType' 
-                ORDER BY CardPosition", __FUNCTION__ . "
-                : Error selecting player hidden card for player $this->playerId");
+                ORDER BY CardPosition";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		$counter = 0;
 		$hiddenList = null;
-		while ($row = mysql_fetch_array($result)) {
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
 			$hiddenList[$counter++] = $row['CardCode'];
 		}
 		return $hiddenList;
@@ -115,15 +120,17 @@ class PlayerHiddenCards {
 			}
 			$i++;
 		}
-		$this->ResetSleeve();
+		$this->ResetSleeve(false);
 		$this->cardCodeList = $updatedHiddenList;
 		$this->Save();
 
 		// get the index for the hidden card
 		$gameCards = new GameInstanceCards($gameInstanceId);
-		$cardIndex = $gameCards->GetCardIndexForInstance($playerCardCode);
+		$gameCard = $gameCards->GetGameCardByCode($playerCardCode);
 		// update player hand
-		CardHelper::updatePlayerCard($this->playerId, $gameInstanceId, $pCardNum, $cardIndex, $playerCardCode);
+		$gameCard->playerId = $this->playerId;
+		$gameCard->playerCardNumber = $pCardNum;
+		$gameCard->UpdatePlayerCard();
 		// reset old player card
 
 		$dto = new PlayerCardDto($this->playerId, $pCardNum, $playerCardCode, null);
@@ -140,11 +147,12 @@ class PlayerHiddenCards {
 		return $messagesOut;
 	}
 
-	public function ResetSleeve() {
-
-		executeSQL("DELETE FROM PlayerHiddenCard WHERE PlayerId = $this->playerId AND
-                HideType = '$this->hideType'", __FUNCTION__ . "
-            :Error deleting from PlayerHiddenCard where player is $this->playerId");
+	public function ResetSleeve($all = false) {
+		$where = "PlayerId = $this->playerId";
+		if (!$all) {$where = $where . " AND HideType = '$this->hideType'"; }
+		$event = "DELETE FROM PlayerHiddenCard WHERE $where";
+		$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
+		$this->history->info("DELETED " . $eventCount . ": -WHERE- $where");
 	}
 
 }

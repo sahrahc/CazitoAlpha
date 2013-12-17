@@ -80,7 +80,6 @@ function CreateSchema() {
             NumberSeats int,
             IsPractice tinyint,
             IsCheatingAllowed tinyint,
-			IsActive tinyint,
             PRIMARY KEY (Id)
         )";
     executeDDL($tableName, $sql);

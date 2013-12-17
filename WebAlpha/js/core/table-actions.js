@@ -78,6 +78,10 @@ function createNewTable() {
 	expires: 1,
 	path: '/'
     });
+    $.cookies.set("tableName", O('tableName').value, {
+	expires: 1,
+	path: '/'
+    });
 
     // TODO: check if authenticated and pass -1 if not otherwise the currentPlayerId
     WSClient.call(CREATE_TABLE,
@@ -97,6 +101,10 @@ function findCasinoTable() {
     // add table code to cookie so they are not asked again when joining the
     // table (which happens if call successful)
     $.cookies.set("tableCode", O('tableCode').value, {
+	expires: 1,
+	path: '/'
+    });
+    $.cookies.set("tableName", O('tableName').value, {
 	expires: 1,
 	path: '/'
     });

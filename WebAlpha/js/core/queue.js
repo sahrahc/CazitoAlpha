@@ -119,6 +119,15 @@ function getEventMessageCallback(event) {
 	    break;
 	case USER_EJECTED:
 	    alert(message);
+	    // cookies
+	    $.cookies.del('dailyDisplayed');
+
+	    $.cookies.del('tableId');
+	    $.cookies.del('tableCode');
+	    $.cookies.del('joinedTable');
+	    $.cookies.del('vanilla-play');
+	    $.cookies.del('sleeveCards');
+	    $.cookies.del('grooveCards');
 	    window.location.replace("Home.php");
 	case CHEATED:
 	    for (var i = 0; i < message.length; i++) {

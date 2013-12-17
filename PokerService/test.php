@@ -3,10 +3,10 @@
 include_once('CoordinatorService.php');
 
 ConsumeTableQueue();
-ProcessExpiredPokerMoves();
+CleanUpAbandonedPlays();
 ProcessEndedCheatingItems();
 ProcessUnlockedCheatingItems();
-CleanUpAbandonedPlays();
+ProcessExpiredPokerMoves();
 //phpinfo();
 /*
   $address = '127.0.0.1';

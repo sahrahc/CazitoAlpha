@@ -314,7 +314,7 @@ function testCheatRiverUse($playerNumber, $cardIndex) {
 
 	connectToStateDB();
 	$gameCards = new GameInstanceCards($gameInstanceId);
-	$actualCards = $gameCards->GetSavedCommunityCardDtos(5);
+	$actualCards = $gameCards->GetSavedCommunityCardCodes(5);
 
 	// update expected community cards
 	$newRiverIndex = $startingPlayers * 2 + 5;

@@ -36,7 +36,7 @@ class PlayerDto {
         $this->reservedSeatNumber = $entity->reservedSeatNumber;
     }
     
-    /* same as the constructor but for an array*/
+    /* same as the constructor but for an array
     public static function mapPlayers($playerList) {
                 $obj = null;
         for ($i = 0, $l = count($playerList); $i < $l; $i++) {
@@ -51,7 +51,7 @@ class PlayerDto {
         }
         return $obj;
 
-    }
+    }*/
 }
 
 ?>

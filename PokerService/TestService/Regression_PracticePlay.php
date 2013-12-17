@@ -165,12 +165,14 @@ echo '****************************************************** <br />';
 /////////////////////////////////////////////////
 // cleanup
 
+queueEndPracticeGame($gameSessionId, $playerIds[0]);
+ConsumeTableQueue();
+/*
 include_once("CleanUpGameSessionById.php");
 include_once("CleanUpPlayerById.php");
 include_once("CleanUpOrphanCasino.php");
 
 connectToStateDB();
-/*
 echo 'GameSessionId : ' . $gameSessionId . '<br />';
 cleanUpGameSessionById($gameSessionId);
 CleanUpPlayerById($playerIds[0]);

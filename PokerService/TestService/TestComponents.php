@@ -83,7 +83,7 @@ function execLoadSleeve($playerId, $cardNames) {
 	$cardNamesEncoded = cheatLoadSleeve($args);
 
 	if (isset($printCheatingAPI) && $printCheatingAPI) {
-		echo "API Request " .__FUNCTION__ . ": $args <br />";
+		echo "API Request " . __FUNCTION__ . ": $args <br />";
 	}
 	return json_decode($cardNamesEncoded);
 }
@@ -116,9 +116,9 @@ function queueStartLiveGame($gameSessionId, $playerId, $indexCards = null) {
 	if ($indexCards) {
 		$par2 = array_merge($par, array('eventData' => $indexCards));
 		$par = $par2;
-	} 
+	}
 	$args = json_encode($par);
-	
+
 	$qConn = QueueManager::GetConnection();
 	$qCh = QueueManager::GetChannel($qConn);
 	$qEx = QueueManager::GetSessionExchange($qCh);
@@ -145,6 +145,24 @@ function queueStartPracticeGame($gameSessionId, $playerId) {
 
 	$args = json_encode(array(
 		"eventType" => ActionType::StartPracticeGame,
+		"gameSessionId" => $gameSessionId,
+		"requestingPlayerId" => $playerId));
+
+	$qConn = QueueManager::GetConnection();
+	$qCh = QueueManager::GetChannel($qConn);
+	$qEx = QueueManager::GetSessionExchange($qCh);
+	$qEx->publish($args, 's' . $gameSessionId);
+
+	if (isset($printAPI) && $printAPI) {
+		echo __FUNCTION__ . ": $args <br />";
+	}
+}
+
+function queueEndPracticeGame($gameSessionId, $playerId) {
+	global $printAPI;
+
+	$args = json_encode(array(
+		"eventType" => ActionType::EndPractice,
 		"gameSessionId" => $gameSessionId,
 		"requestingPlayerId" => $playerId));
 
@@ -458,7 +476,7 @@ function testPlayerLogout($playerId) {
 // TODO: test sleeve empty
 }
 
-function testPlayerLeaveTable($playerNumber, $playerId) {
+function testPlayerLeaveTable($playerNumber, $playerId, $playNumberSkipped = null) {
 	global $playerIds;
 	global $q;
 	global $expectedDto;
@@ -466,9 +484,14 @@ function testPlayerLeaveTable($playerNumber, $playerId) {
 	global $gameSessionId;
 
 	echo " Testing leaving table for player # $playerNumber id " . $playerIds[$playerNumber] . " <br/><br/>";
-	
+
 	queueLeaveTable($gameSessionId, $playerId);
 	ConsumeTableQueue();
+	// if user who left had turn, skip turn is generated
+	if (!is_null($playNumberSkipped)) {
+		$eventData = verifyQMessage($playerIds[$playerNumber], $q[$playerNumber], EventType::UserEjected);
+		testMove(0, $playerIds[1], PlayerStatusType::SKIPPED, null, $playNumberSkipped, true);
+	}
 	for ($i = 0; $i < $numberPlayers; $i++) {
 		if ($i == $playerNumber) {
 			continue;
@@ -482,9 +505,7 @@ function testPlayerLeaveTable($playerNumber, $playerId) {
 			echo "***FAILED: Player " . $playerIds[$i] . " told $actualPlayerId left instead of $playerId.<br />";
 		}
 	}
-	if (!$failed) {
-// update player status dtos
-		$expectedDto->playerStatusDtos[$playerNumber]->status = PlayerStatusType::LEFT;
+	if (!$failed) { // update player status dtos
 		echo "PASSED User Leaving Table Test<br />";
 	}
 }
@@ -496,6 +517,7 @@ function testJoinTable($playerNumber, $playerId, $playerName, $buyIn, $firstTest
 // out
 	global $gameSessionId;
 	global $casinoTableId;
+	global $buyIn;
 	global $expectedDto;
 
 	if ($firstTest) {
@@ -588,13 +610,14 @@ function testJoinTableMiddle($playerName, $gameStatus) {
 	global $tableCode;
 	global $expectedDto;
 	global $numberPlayers;
+	global $buyIn;
 
 	$playerId = testPlayerEntry($playerName);
 
 	echo "Player Id $playerId ($playerName) joining table... <br />";
 	$actualDto = execJoinTable($casinoTableId, $playerId, $tableCode);
 
-	InsertInactivePlayer($playerId);
+	InsertInactivePlayer($playerId, $playerName, $actualDto->userSeatNumber, $buyIn);
 
 // validate everyone got message user joined and user got seat number
 	switch ($gameStatus) {
@@ -659,7 +682,7 @@ function testPracticeGameStart($playerNumber) {
 	ValidateGameStatusDtoStart($actualDto, $expectedDto);
 }
 
-function testMove($playerNumber, $nextPlayerId, $type, $amount, $playNumber) {
+function testMove($playerNumber, $nextPlayerId, $type, $amount, $playNumber, $left = false) {
 	global $expectedDto;
 	global $playerIds;
 	global $q;
@@ -669,12 +692,22 @@ function testMove($playerNumber, $nextPlayerId, $type, $amount, $playNumber) {
 	//global $activePlayers;
 	global $numberPlayers;
 
-	$eventType = EventType::ChangeNextTurn;
+
+	if ($type === PlayerStatusType::SKIPPED && !$left) {
+		$eventType = PlayerStatusType::SKIPPED;
+	} else if ($type === PlayerStatusType::SKIPPED && $left) {
+		$eventType = PlayerStatusType::LEFT;
+	} else {
+		$eventType = EventType::ChangeNextTurn;
+	}
 	$playerId = $playerIds[$playerNumber];
 	$stake = $expectedDto->playerStatusDtos[$playerNumber]->currentStake;
-	UpdateExpTurnPlayerStatusDto($playerNumber, $type, $amount, $stake, $playNumber);
+	UpdateExpTurnPlayerStatusDto($playerNumber, $type, $amount, $stake, $playNumber, $left);
+	if ($left) {
+		$expectedDto->playerStatusDtos[$playerNumber]->status = PlayerStatusType::LEFT;
+	}
 	$expectedDto->currentPotSize +=$amount;
-	if ($eventType != PlayerStatusType::SKIPPED) {
+	if ($type !== PlayerStatusType::SKIPPED) {
 		queueSendPlayerAction($gameSessionId, $gameInstanceId, $playerId, $type, $amount);
 		ConsumeTableQueue();
 	}
@@ -692,8 +725,11 @@ function testMove($playerNumber, $nextPlayerId, $type, $amount, $playNumber) {
 	$updatedFlag = false;
 	for ($i = 0; $i < $numberPlayers; $i++) {
 		// may be null because of inactive players
-		if (isset($expectedDto->playerStatusDtos[$i]) &&
-				$expectedDto->playerStatusDtos[$i]->status == PlayerStatusType::LEFT) {
+		if (!isset($expectedDto->playerStatusDtos[$i]) ||
+				$expectedDto->playerStatusDtos[$i]->status === PlayerStatusType::LEFT) {
+			continue;
+		}
+		if ($left && $i === $playerNumber) {
 			continue;
 		}
 		$actualDto = verifyQMessage($playerIds[$i], $q[$i], $eventType);
@@ -779,12 +815,14 @@ function testPracticeMove($playerNumber, $nextPlayerId, $type, $amount, $playNum
 
 /* * *********************************************************************************** */
 
-function scriptPlayerLeaves($playerNumber) {
+function scriptPlayerLeaves($playerNumber, $playNumberSkipped = NULL) {
 	global $playerIds;
+	global $expectedDto;
 	// remove info since leaving in between games
 	$leavingPlayerId = $playerIds[$playerNumber];
-	testPlayerLeaveTable($playerNumber, $leavingPlayerId);
+	testPlayerLeaveTable($playerNumber, $leavingPlayerId, $playNumberSkipped);
 	testPlayerLogout($leavingPlayerId);
-}
+	array_splice($expectedDto->playerStatusDtos, $playerNumber, 1);
+	}
 
 ?>

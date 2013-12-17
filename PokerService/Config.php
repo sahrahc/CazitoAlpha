@@ -19,11 +19,11 @@ $defaultAvatarUrl = 'Avatar_user0.jpeg';
 /* * ***************************************************************************************************** */
 // time outs
 //$playerTimeOut = 'PT2M'; // period after which a player is considered inactive
-$instanceTimeOut = 'PT5H'; // period after which an instance is considered inactive
+$instanceTimeOut = 'PT5M'; // period after which an instance is considered inactive
 $playExpiration = 'PT20S'; // time given to a player to make a move
 $practiceExpiration = 'PT2S'; // time between practice player moves
 //$moveTimeOut = 'PT20M'; // time when next move is purged from the queue.
-$sessionExpiration = 'PT5H'; // time before a session without games or player joining table is expired
+$sessionExpiration = 'PT30M'; // time before a session without games or player joining table is expired
 /* * ***************************************************************************************************** */
 // cheating time outs
 $cHeartMarkerTimeOut = 'PT5M';
@@ -31,11 +31,11 @@ $cClubMarkerTimeOut = 'PT1M';
 $cDiamondMarkerTimeOut = 'PT3M';
 $cRiverShufflerTimeOut = 'PT10M'; 
 $cPokerPeekerTimeOut = 'PT15M';
-$cSocialSpotterTimeOut = 'PT6M'; //60
-$cSocialSpotterDuration = 'PT4M'; //45
-$cSnakeOilMarkerTimeOut = 'PT3M';
-$cSnakeOilMarkerDuration = 'PT2M';
-$cAntiOilMarkerTimeOut = 'PT4M';
+$cSocialSpotterTimeOut = 'PT10M'; //60
+$cSocialSpotterDuration = 'PT8M'; //45
+$cSnakeOilMarkerTimeOut = 'PT30M';
+$cSnakeOilMarkerDuration = 'PT20M';
+$cAntiOilMarkerTimeOut = 'PT15M';
 //$cRiverBendoTimeOut = 'PT10M';
 
 /* * ***************************************************************************************************** */
@@ -69,8 +69,7 @@ require_once(dirname(__FILE__) . '/Dto/AllInclude.php');
 
 Logger::configure(dirname(__FILE__) . '/log4php.xml');
 $analytics = Logger::getLogger('analytics');
-$log = Logger::getLogger('log');
-$logPlayer = Logger::getLogger('LogPlayer');
+$log = Logger::getLogger('main');
 
 connectToStateDB();
 ?>

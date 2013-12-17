@@ -107,18 +107,21 @@ class CheatingItem {
 	 */
 	public function ApplyAcePusher($gameInstance) {
 		global $pokerCardName;
-
+		global $CARDS;
+		
 		$pId = $this->playerId;
 		$pCardNum = $this->playerCardNumber;
-		$deck = EvalHelper::init2x2deck();
+
 		$suits = array('s', 'h', 'd', 'd');
-		$suitsBit = array(0x1000, 0x2000, 0x4000, 0x8000);
+		
 		$randIndex = rand(0, 3);
 		$randSuit = $suits[$randIndex];
 		$cardCode = 'A' . $randSuit;
-// Aces have rank = 12
-		$cardIndex = EvalHelper::find2x2DeckIndex(12, $suitsBit[$randIndex], $deck);
-		CardHelper::updatePlayerCard($pId, $gameInstance->id, $pCardNum, $cardIndex, $cardCode);
+
+		$cardIndex = $CARDS[$cardCode];
+		$gameCard = GameCard::InitPlayerCard($pCardNum, null, $cardCode);
+		$gameCard->SetInstance($gameInstance->id, $pId, $cardIndex);
+		$gameCard->UpdatePlayerCard();
 		/* ------------------------------------------------------------------------------ */
 // create record without time out
 

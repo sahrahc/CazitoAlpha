@@ -14,6 +14,7 @@ function CreateItems() {
     $tableName = "PlayerActiveItem";
     $sql = "CREATE TABLE $tableName
         (
+			Id int NOT NULL,
             PlayerId int NOT NULL,
             GameSessionId int,
             GameInstanceId int,
@@ -22,6 +23,7 @@ function CreateItems() {
             EndDateTime timestamp NULL,
             LockEndDateTime timestamp NULL,
             IsLocked tinyint,
+			IsNotified tinyint NOT NULL DEFAULT 0,
             NumberCards int,
 			OtherPlayerId int
         )";

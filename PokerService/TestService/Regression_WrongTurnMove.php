@@ -33,7 +33,7 @@ $result = executeSQL("SELECT GameInstanceId AS LastInstanceId, NextPlayerId
     INNER JOIN Player p ON p.id = ps.PlayerId
     INNER JOIN GameInstance i ON ps.GameInstanceId = i.Id WHERE p.Name = 'JP'
     ORDER BY ps.GameInstanceId desc", 'ERROR');
-$row = mysql_fetch_array($result);
+$row = mysql_fetch_array($result, MYSQL_NUM);
 $gameInstanceId = $row[0];
 $playerId = $row[1];
 /**********************************************************************************/

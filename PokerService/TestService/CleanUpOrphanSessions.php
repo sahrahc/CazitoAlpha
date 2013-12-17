@@ -30,7 +30,7 @@ function cleanUpOrphanCasino($conTest) {
             "Error selecting from GameSession with id's not in player state");
     $qConn = QueueManager::GetConnection();
     $qCh = QueueManager::GetChannel($qConn);
-    while ($row= mysql_fetch_array($result)) {
+    while ($row= mysql_fetch_array($result, MYSQL_NUM)) {
         $q = QueueManager::GetGameSessionQueue($row[0], $qCh);
         QueueManager::DeleteQueue($q);
     }

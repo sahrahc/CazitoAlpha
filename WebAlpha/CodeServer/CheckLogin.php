@@ -2,16 +2,13 @@
 
 session_start();
 // username and password sent from form
-$protoTester = $_POST['ProtoTester'];
-$protoPassword = $_POST['ProtoPassword'];
-
 // To protect MySQL injection (more detail about MySQL injection)
-$protoTester = stripslashes($protoTester);
-$protoPassword = stripslashes($protoPassword);
+$protoTester = filter_input(INPUT_POST, 'ProtoTester', FILTER_SANITIZE_STRING);
+$protoPassword = filter_input(INPUT_POST, 'ProtoPassword', FILTER_SANITIZE_SPECIAL_CHARS);
 
-if (strtolower($protoTester) == 'john' && strtolower($protoPassword) == 'mofactor8244') {
+if (strtolower($protoTester) == 'alpha' && strtolower($protoPassword) == 'ganzania') {
     // Register $myusername, $mypassword and redirect to file "login_success.php"
-    $_SESSION['UserName'] = $protoTester;
+    $_SESSION['ProtoTester'] = $protoTester;
     //$_SESSION['Password'] = $mypassword;
     //header("location:login_success.php?phpSESsid='" . session_id() . "'");
     if (!isset($_SESSION['srcLocation'])) {

@@ -15,7 +15,7 @@ $result = executeSQL("SELECT g.*, i.gameSessionId AS GameSessionId
     INNER JOIN GameInstance i ON g.GameInstanceId = i.Id WHERE p.Name = 'JP'
         AND g.PlayerCardNumber = 1
     ORDER BY g.GameInstanceId desc LIMIT 1 ", 'ERROR');
-$row = mysql_fetch_array($result);
+$row = mysql_fetch_array($result, MYSQL_ASSOC);
 $playerId = $row['PlayerId'];
 
 global $dateTimeFormat;
@@ -35,7 +35,7 @@ $par = json_encode(array("userPlayerId" => $playerId));
 $dtoEncoded = startPracticeSession($par);
 $gameStatusDto = json_decode($dtoEncoded);
 $gameSessionId = $gameStatusDto->gameSessionId;
-$gameInstance = EntityHelper::GetGameInstance($gameStatusDto->gameInstanceId);
+$gameInstance = GameInstance::GetGameInstance($gameStatusDto->gameInstanceId);
 $itemType = ItemType::SOCIAL_SPOTTER;
 $activeItems = CheatingHelper::GetPlayersWithItemType($gameInstance->gameSessionId, $itemType);
 echo "Active Player items before test: " . json_encode($activeItems) . "<br /><br />";
@@ -68,7 +68,7 @@ $par = json_encode(array("gameSessionId" => $gameSessionId, "requestingPlayerId"
 echo "Parameter: $par <br />";
 $gameStatusDtoEncoded = startGame($par);
 $gameStatusDto = json_decode($gameStatusDtoEncoded);
-$gameInstance2 = EntityHelper::GetGameInstance($gameStatusDto->gameInstanceId);
+$gameInstance2 = GameInstance::GetGameInstance($gameStatusDto->gameInstanceId);
 //showGameInstanceSetupValues($par, $gameStatusDto);
 
 echo 'TEST CASE 33.3: Reveal cards on same game instance <br /><br />';

@@ -11,9 +11,9 @@ function updatePlayerIdentity(playerStatusDto) {
     O(playerTag + 'Id').innerHTML = playerStatusDto.playerId;
     O(playerTag + 'Name').innerHTML = playerStatusDto.playerName;
     O(playerTag + 'Image').innerHTML = playerStatusDto.playerImageUrl;
-/*    O(playerTag + 'Status').innerHTML = playerStatusDto.status;
-    // updates status
-    O(playerTag + 'Stake').innerHTML = playerStatusDto.currentStake; */
+    /*    O(playerTag + 'Status').innerHTML = playerStatusDto.status;
+     // updates status
+     O(playerTag + 'Stake').innerHTML = playerStatusDto.currentStake; */
 }
 /**~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 function showPlayerCard(playerTag, cardPosition, cardValue) {
@@ -158,7 +158,7 @@ function displayGameResult(gameStatusDto) {
     var updateStatusNoHands = function(playerStatusDtos, winningPlayerId) {
 	for (var j = 0, m = playerStatusDtos.length; j < m; j++) {
 	    var playerElement = getPlayerPositionTag(playerStatusDtos[j].playerId);
-	    if (playerStatusDtos[j].playerId === winningPlayerId) {
+	    if (+playerStatusDtos[j].playerId === winningPlayerId) {
 		O(playerElement + 'Status').innerHTML = 'Won';
 	    }
 	    else if (playerStatusDtos[j].status === "Left" ||
@@ -188,12 +188,14 @@ function displayGameResult(gameStatusDto) {
 // set winner
     applyWinnerDisplay(getPlayerPositionTag(gameStatusDto.winningPlayerId));
     var countActive = 0;
-    for (var i = 0; i< gameStatusDto.playerStatusDtos.length; i++) {
-	if (gameStatusDto.playerStatusDtos[i].status !== "Left") {countActive++;}
+    for (var i = 0; i < gameStatusDto.playerStatusDtos.length; i++) {
+	if (gameStatusDto.playerStatusDtos[i].status !== "Left") {
+	    countActive++;
+	}
     }
     if (countActive > 1) {
 	O('startGameButton').disabled = false;
-        unDimItem('startGameButton');
+	unDimItem('startGameButton');
     }
     else {
 	O('startGameButton').disabled = true;
@@ -297,7 +299,10 @@ function showGameStatus(gameStatusDto) {
 	    var playerElement = getPlayerPositionTag(playerStatusDtos[i].playerId);
 	    if (gameStatus !== GAME_INACTIVE) {
 		for (var c = 1; c <= 2; c++) {
-		    if (playerStatusDtos[i].playerId !== +$.cookies.get("userPlayerId")) {
+		    S(playerElement + 'Card' + c + 'Image').display = 'block';
+		    O(playerElement + 'Card' + c + 'Image').src = "../../../images/PokerCard_back_small.png";
+		    if ($.cookies.get("vanilla-play") === 0 &&
+			    playerStatusDtos[i].playerId !== +$.cookies.get("userPlayerId")) {
 			$('#' + playerElement + 'Card' + c + 'Image')
 				// clunky combining two data elements on a single data function
 				.data('playerCardNumberAndId', String(c) + playerStatusDtos[i].playerId).droppable({
@@ -306,8 +311,6 @@ function showGameStatus(gameStatusDto) {
 			    drop: cheatRevealCard
 			});
 		    }
-		    S(playerElement + 'Card' + c + 'Image').display = 'block';
-		    O(playerElement + 'Card' + c + 'Image').src = "../../../images/PokerCard_back_small.png";
 		}
 	    }
 	}

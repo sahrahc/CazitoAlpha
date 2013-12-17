@@ -1,0 +1,32 @@
+<html>
+    <head>
+	<title>Cazito Restricted Access</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width">
+	<style>
+	    form{ 
+		margin: 0 auto; 
+		width:250px;
+	    }
+	    .entry {
+		display:inline_block;
+		width: 150px;
+		margin: 2px auto;
+	    }
+	    .submit {
+		margin-right: 80px;
+		float: right;
+	    }
+	    div { display:inline-block;
+		width: 80px;}
+	</style>
+    </head>
+    <body>
+	<form method="post" action="../CodeServer/CheckLogin.php">
+		<div>Name:</div> <input class="entry" type="text" name="ProtoTester" /><br/>
+		<div>Password:</div> <input class="entry" type="password" name="ProtoPassword"/>
+		<br/><br/>
+		<input class="submit" type="submit" align="right"/>
+	</form>
+    </body>
+</html>
