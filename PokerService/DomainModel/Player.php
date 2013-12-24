@@ -180,6 +180,24 @@ class Player {
 		return $player;
 	}
 
+	public function LeaveTable($casinoTableId) {
+		$playerTableId = $this->currentCasinoTableId;
+		// returned vacated seat if user on table
+		if ($casinoTableId === $playerTableId) {
+			$vacatedSeat = $this->currentSeatNumber;
+		}
+		if ($vacatedSeat == null) {
+			$vacatedSeat = $this->reservedSeatNumber;
+		}
+		$this->currentCasinoTableId = null;
+		$this->currentSeatNumber = null;
+		$this->buyIn = null;
+		$this->waitStartDateTime = null;
+		$this->reservedSeatNumber = null;
+		$this->Update();
+		return $vacatedSeat;
+	}
+
 	public function Insert() {
 		$playerName = $this->name;
 		$imageUrl = $this->imageUrl;
@@ -218,7 +236,7 @@ class Player {
 		$vars = "Id, IsVirtual, Name, ImageUrl, CurrentCasinoTableId, CurrentSeatNumber, BuyIn, "
 				. "LastUpdateDateTime, WaitStartDateTime";
 		$values = "$nextPlayerId, 1, '$this->name', '$this->imageUrl', null, $seatNum, $this->buyIn, "
-                . "$statusDTQ, null";
+				. "$statusDTQ, null";
 		$event = "INSERT INTO Player ($vars) VALUES ($values)";
 		$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
 		$this->history->info("INSERTED $eventCount: $vars -INTO- $values");
@@ -270,20 +288,27 @@ class Player {
 	 * @param type $pId
 	 */
 	public function UpdatePlayerSeat($seatNum, $isReserved = false) {
+		global $log;
 
 		$statusDTQ = "'" . Context::GetStatusDTString() . "'";
 		if ($isReserved) {
-			$this->reservedSeatNumber = $seatNum;
-			$vars = "LastUpdateDateTime, ReservedSeatNumber, CurrentSeatNumber";
-			$values = "$statusDTQ, $seatNum, null";
-			$where = "Id = $this->id";
-			$event = "UPDATE Player SET LastUpdateDateTime = $statusDTQ, "
-					. "ReservedSeatNumber = $seatNum, "
-					. "CurrentSeatNumber = null WHERE $where";
-			$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
-			$log = $vars . " -TO- " . $values . " -WHERE- $where";
-			$this->history->info("UPDATED " . $eventCount . ": $log");
-			return;
+			try {
+				$this->reservedSeatNumber = $seatNum;
+				$vars = "LastUpdateDateTime, ReservedSeatNumber, CurrentSeatNumber";
+				$values = "$statusDTQ, $seatNum, null";
+				$where = "Id = $this->id";
+				$event = "UPDATE Player SET LastUpdateDateTime = $statusDTQ, "
+						. "ReservedSeatNumber = $seatNum, "
+						. "CurrentSeatNumber = null WHERE $where";
+				$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
+				$log = $vars . " -TO- " . $values . " -WHERE- $where";
+				$this->history->info("UPDATED " . $eventCount . ": $log");
+				return true;
+			} catch (Exception $e) {
+				$this->reservedSeatNumber = null;
+				$log->warn("Seat should have been available but db update failed: " . $e->getMessage());
+				return false;
+			}
 		}
 		$this->currentSeatNumber = $seatNum;
 		$vars = "LastUpdateDateTime, CurrentSeatNumber, ReservedSeatNumber";

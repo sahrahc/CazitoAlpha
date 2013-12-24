@@ -104,8 +104,6 @@ function CleanUpAbandonedPlays() {
 	global $dateTimeFormat;
 
 	Context::Init();
-/*	  $playerExpiration = Context::GetStatusDT();
-	  $playerExpiration->sub(new DateInterval($playerTimeOut)); // 20 minutes */
 	$instanceExpiration = Context::GetStatusDT();
 	$instanceExpiration->sub(new DateInterval($instanceTimeOut)); // 20 minutes
 	$instanceExpString = $instanceExpiration->format($dateTimeFormat);
@@ -242,7 +240,8 @@ function ConsumeTableQueue() {
 					PokerCoordinator::StartGame($gameSessionId, $requestingPlayerId, $reqParam);
 					break;
 				case ActionType::StartPracticeGame:
-					PokerCoordinator::StartPracticeGame($gameSessionId, $reqParam);
+					$gameSession = GameSession::GetGameSession($gameSessionId);
+					PokerCoordinator::StartOrGetPracticeGame($gameSession, 0, $reqParam); 
 					break;
 				case ActionType::MakePokerMove:
 					$requestDto = $reqParam;
@@ -258,11 +257,7 @@ function ConsumeTableQueue() {
 				case ActionType::LeaveTable:
 					$casinoTable = CasinoTable::GetCasinoTableForSession($gameSessionId);
 					if ($casinoTable !== null) {
-						$vacatedSeat = TableCoordinator::RemoveUserFromTable($casinoTable, $requestingPlayerId);
-						PokerCoordinator::CheckGameEnd($gameInstanceId);
-						if (!is_null($vacatedSeat)) {
-							TableCoordinator::ReserveAndOfferSeat($casinoTable, $vacatedSeat);
-						}
+						TableCoordinator::RemoveUserFromTable($casinoTable, $requestingPlayerId);
 					}
 					$_SESSION['casinoTableId'] = null;
 

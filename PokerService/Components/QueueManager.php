@@ -47,7 +47,7 @@ class QueueManager {
         $ex->setType(AMQP_EX_TYPE_DIRECT);
         //$ex->setFlags(AMQP_DURABLE | AMQP_PASSIVE);
         $ex->setFlags(AMQP_DURABLE);
-        $ex->declare();
+        $ex->declareExchange();
         return $ex;
     }
 
@@ -59,7 +59,7 @@ class QueueManager {
         $ex->setType(AMQP_EX_TYPE_DIRECT);
         //$ex->setFlags(AMQP_DURABLE | AMQP_PASSIVE);
         $ex->setFlags(AMQP_DURABLE);
-        $ex->declare();
+        $ex->declareExchange();
         return $ex;
     }
     
@@ -71,7 +71,7 @@ class QueueManager {
         $ex->setType(AMQP_EX_TYPE_DIRECT);
         //$ex->setFlags(AMQP_DURABLE | AMQP_PASSIVE);
         $ex->setFlags(AMQP_DURABLE);
-        $ex->declare();
+        $ex->declareExchange();
         return $ex;
     }
 
@@ -90,7 +90,7 @@ class QueueManager {
         $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
         //$q->setFlags(AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE);
         $q->setName('p' . $playerId);
-        $q->declare();
+        $q->declareQueue();
         $q->purge();
         $q->bind($amqp_player_exchange, 'p' . $playerId);
         return $q;
@@ -112,7 +112,7 @@ class QueueManager {
         $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
         //$q->setFlags(AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE);
         $q->setName('s' . $gameSessionId);
-        $q->declare();
+        $q->declareQueue();
         $q->purge();
         $q->bind($amqp_session_exchange, 's' . $gameSessionId);
         return $q;
@@ -132,7 +132,7 @@ class QueueManager {
         $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
         //$q->setFlags(AMQP_DURABLE | AMQP_EXCLUSIVE | AMQP_AUTODELETE);
         $q->setName('i' . $gameSessionId);
-        $q->declare();
+        $q->declareQueue();
         $q->purge();
         $q->bind($amqp_chat_exchange, 'i' . $gameSessionId);
         return $q;
@@ -147,7 +147,7 @@ class QueueManager {
         $q = new AMQPQueue($ch);
         $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
         $q->setName('p' . $playerId);
-        $q->declare();
+        $q->declareQueue();
         $q->bind($amqp_player_exchange, 'p' . $playerId);
         return $q;
     }
@@ -163,7 +163,7 @@ class QueueManager {
         $q = new AMQPQueue($ch);
         $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
         $q->setName('s' . $gameSessionId);
-        $q->declare();
+        $q->declareQueue();
         $q->bind($amqp_session_exchange, 's' . $gameSessionId);
         return $q;
     }
@@ -176,7 +176,7 @@ class QueueManager {
         $q = new AMQPQueue($ch);
         $q->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
         $q->setName('i' . $gameSessionId);
-        $q->declare();
+        $q->declareQueue();
         $q->bind($amqp_chat_exchange, 'i' . $gameSessionId);
         return $q;
     }

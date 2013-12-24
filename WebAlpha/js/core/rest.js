@@ -15,12 +15,17 @@ WSClient.call = function(method, obj, callback) {
 	//dataType: "json",
 	//contentType: "application/json;charset=utf-8",
 	//contentType: "application/x-www-form-urlencoded;charset=utf-8",
-        success: function(respRaw) {
+	success: function(respRaw) {
 	    // already parsed
 	    // var rval = $.parseJSON(req);
 	    if (callback !== null) {
-	        var resp = $.parseJSON(respRaw.substring(2));
+		var resp = respRaw.substring(2);
+		if (resp.substring(0, 5) !== "Error") {
+		    resp = $.parseJSON(resp);
 		callback(resp);
+		} else {
+		    callback(resp. substring(7), 1);
+		}
 	    }
 	},
 	error: function(resp, textStatus, errorThrown) {

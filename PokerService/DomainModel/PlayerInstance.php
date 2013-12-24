@@ -114,7 +114,7 @@ class PlayerInstance {
 			$query = "SELECT *
                 FROM PlayerState
                 WHERE GameSessionId = $id AND Status != '$left' ORDER BY TurnNumber";
- //               WHERE GameSessionId = $id ORDER BY TurnNumber";
+			//               WHERE GameSessionId = $id ORDER BY TurnNumber";
 		} else {
 			$query = "SELECT *
                 FROM PlayerState
@@ -188,8 +188,7 @@ class PlayerInstance {
 	 * @return null|\PlayerInstance
 	 */
 	public static function GetNewPlayerStatesOnSession($gameInstance) {
-		$query = "SELECT p.Id PlayerId, 
-                p.IsVirtual, p.CurrentSeatNumber, p.BuyIn
+		$query = "SELECT p.Id PlayerId, p.CurrentSeatNumber, p.BuyIn, s.IsPractice
             FROM Player p 
             INNER JOIN CasinoTable c ON p.CurrentCasinoTableId = c.Id
              LEFT JOIN PlayerState s ON p.Id = s.PlayerId AND s.GameSessionId = c.CurrentGameSessionId
@@ -205,7 +204,7 @@ class PlayerInstance {
 			$playerStates[$i] = new PlayerInstance();
 			$playerStates[$i]->playerId = (int) $row["PlayerId"];
 			$playerStates[$i]->gameInstanceId = $gameInstance->id;
-			$playerStates[$i]->isVirtual = (int) $row["IsVirtual"];
+			$playerStates[$i]->isPractice = (int) $row["IsPractice"];
 			$playerStates[$i]->gameSessionId = (int) $gameInstance->gameSessionId;
 			$playerStates[$i]->lastUpdateDateTime = Context::GetStatusDT();
 			$playerStates[$i]->seatNumber = is_null($row["CurrentSeatNumber"]) ? null : (int) $row["CurrentSeatNumber"];
@@ -225,7 +224,7 @@ class PlayerInstance {
 		global $dateTimeFormat;
 		$this->playerId = (int) $row["PlayerId"];
 		$this->gameInstanceId = (int) $row["GameInstanceId"];
-		$this->isVirtual = (int) $row["IsVirtual"];
+		$this->isPractice = (int) $row["IsPractice"];
 		$this->gameSessionId = (int) $row["GameSessionId"];
 		$this->lastUpdateDateTime = DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
 		//(int) $row["SeatNumber"];
@@ -250,22 +249,34 @@ class PlayerInstance {
 		$lastPlayNumber = is_null($this->lastPlayInstanceNumber) ? 'null' : $this->lastPlayInstanceNumber;
 		$numberTimeOuts = is_null($this->numberTimeOuts) ? 'null' : $this->numberTimeOuts;
 
-		$vars = "PlayerId, GameInstanceId, IsVirtual, GameSessionId, LastUpdateDateTime, SeatNumber, "
-                . "TurnNumber, Status, CurrentStake, LastPlayAmount, LastPlayInstanceNumber, " 
+		$vars = "PlayerId, GameInstanceId, IsPractice, GameSessionId, LastUpdateDateTime, SeatNumber, "
+				. "TurnNumber, Status, CurrentStake, LastPlayAmount, LastPlayInstanceNumber, "
 				. "NumberTimeOuts";
-		$values = "$this->playerId, $gameInstanceId, $this->isVirtual, $this->gameSessionId, " 
-                . "$statusDTQ, $this->seatNumber, $turnNumber, '$this->status', $this->currentStake, "
-                . "$lastPlayAmount, $lastPlayNumber, $numberTimeOuts";
+		$values = "$this->playerId, $gameInstanceId, $this->isPractice, $this->gameSessionId, "
+				. "$statusDTQ, $this->seatNumber, $turnNumber, '$this->status', $this->currentStake, "
+				. "$lastPlayAmount, $lastPlayNumber, $numberTimeOuts";
 		$event = "INSERT INTO PlayerState ($vars) VALUES ($values)";
 		$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
 		$this->history->info("INSERTED $eventCount: $vars -INTO- $values");
 	}
 
-	public function Delete() {
+	public function DeleteAndUpdatePlayer() {
+		$leavingPlayer = Player::GetPlayer($this->playerId);
+		
 		$where = "PlayerId = $this->playerId AND GameInstanceId = $this->gameInstanceId";
 		$event = "DELETE FROM PlayerState WHERE $where";
 		$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
 		$this->history->info("DELETED " . $eventCount . ": $where -RECORD- " . json_encode($this));
+		if ($leavingPlayer->isVirtual) {
+			$leavingPlayer->Delete();
+		} else {
+			$leavingPlayer->currentCasinoTableId = null;
+			$leavingPlayer->currentSeatNumber = null;
+			$leavingPlayer->buyIn = null;
+			$leavingPlayer->waitStartDateTime = null;
+			$leavingPlayer->reservedSeatNumber = null;
+			$leavingPlayer->Update();
+		}
 	}
 
 	public function Update() {
@@ -291,7 +302,7 @@ class PlayerInstance {
 		$vars = "LastUpdateDateTime, GameInstanceId, TurnNumber, Status, CurrentStake, "
 				. "LastPlayAmount, LastPlayInstanceNumber, NumberTimeOuts";
 		$values = "$statusDTQ, $this->gameInstanceId, $turnNumber, '$this->status', $stake, "
-			. "$lastPlayAmount, $lastPlayInstanceNumber, $numberTimeOuts";
+				. "$lastPlayAmount, $lastPlayInstanceNumber, $numberTimeOuts";
 		$where = "PlayerId = $this->playerId AND GameSessionId = $this->gameSessionId";
 		$event = "UPDATE PlayerState set LastUpdateDateTime = $statusDTQ, "
 				. "GameInstanceId = $this->gameInstanceId, "
@@ -323,7 +334,7 @@ class PlayerInstance {
 		}
 		if (!is_null($playerInstances)) {
 			foreach ($playerInstances as $playerInstance) {
-				$playerInstance->Delete();
+				$playerInstance->DeleteAndUpdatePlayer();
 			}
 		}
 	}

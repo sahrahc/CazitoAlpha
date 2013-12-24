@@ -43,17 +43,28 @@ function logout() {
 }
 
 
-function loginCallback(resp) {
-    O('hello').innerHTML = 'Hello ' + resp.playerName + '!';
-    $.cookies.set("userPlayerId", resp.userPlayerId, {
-	expires: 1,
-	path: '/'
-    });
-    $.cookies.set("playerName", resp.playerName);
-    window.location.reload();
+function loginCallback(resp, errorFound) {
+    if (errorFound) {
+	alert("There was an error logging you in. Please try again.");
+	$('#dialog-login').dialog('open');
+    }
+    else {
+	O('hello').innerHTML = 'Hello ' + resp.playerName + '!';
+	$.cookies.set("userPlayerId", resp.userPlayerId, {
+	    expires: 1,
+	    path: '/'
+	});
+	$.cookies.set("playerName", resp.playerName);
+	window.location.reload();
+    }
 }
 
 function login(playerName) {
+    if (playerName === null || playerName === "") {
+	alert("The player name cannot be blank.")
+	$('#dialog-login').dialog('open');
+	return;
+    }
     var obj = {
 	playerName: playerName === "" ? null : playerName
     };

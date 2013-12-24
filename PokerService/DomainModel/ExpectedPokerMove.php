@@ -131,7 +131,7 @@ class ExpectedPokerMove {
 
 	public static function GetExpiredPokerMoves($expirationDateTime) {
 		// check if expiration
-		$query = "SELECT m.*, s.IsVirtual, s.Status
+		$query = "SELECT m.*, s.Status
             FROM ExpectedPokerMove m INNER JOIN PlayerState s
             ON m.gameInstanceId = s.GameInstanceId AND m.PlayerId = s.PlayerId
 			INNER JOIN GameSession gs on gs.Id = s.GameSessionId
@@ -216,6 +216,14 @@ class ExpectedPokerMove {
 			foreach ($expiredMoves as $move) {
 				$move->Delete();
 			}
+		}
+	}
+	
+	public static function DeleteInstanceMoves($gameInstanceId) {
+		$move = self::GetExpectedMoveForInstance($gameInstanceId);
+		while (!is_null($move)) {
+			$move->Delete();
+			$move = self::GetExpectedMoveForInstance($gameInstanceId);
 		}
 	}
 	/**

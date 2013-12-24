@@ -1,5 +1,12 @@
 <?php
 
+// Setup ////////////////////////////////////////
+include_once('../PokerPlayerService.php');
+include_once('../CoordinatorService.php');
+require_once('TestComponents.php');
+require_once('TestData.php');
+require_once('ValidateGameStatus.php');
+
 // prevent time out, this script runs for a long time
 ini_set('max_execution_time', 600);
 echo "exec time " . ini_get('max_execution_time') . "<br/>";
@@ -11,13 +18,6 @@ echo '* TODO: Fix comparison - player name not returned on practice game restart
 echo '* TODO: Fix comparison - player status skipped vs. time out<br />';
 echo '* TODO: Not comparing UserPlayerId yet';
 echo '********************************************************** <br />';
-
-// Setup ////////////////////////////////////////
-include_once('../PokerPlayerService.php');
-include_once('../CoordinatorService.php');
-require_once('TestComponents.php');
-require_once('TestData.php');
-require_once('ValidateGameStatus.php');
 
 /*************** configuration values ********/
 global $buyInMultiplier;
@@ -47,7 +47,8 @@ $q = null;
 //$playerStatusDtos = null;
 $expectedDto = null;  
 
-session_start();
+// already started by PokerPlayService.php
+//session_start();
 
 $qConn = QueueManager::GetConnection();
 $qCh = QueueManager::GetChannel($qConn);

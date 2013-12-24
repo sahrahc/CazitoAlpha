@@ -21,8 +21,14 @@ class GameSession {
 		$this->requestingPlayerId = (int) $playerId;
 	}
 
-	public static function GetGameSession($gameSessionId) {
+	private function mapRow($row) {
 		global $dateTimeFormat;
+		$this->tableMinimum = is_null($row["TableMinimum"]) ? null : (int) $row["TableMinimum"];
+		$this->numberSeats = is_null($row["NumberSeats"]) ? null : (int) $row["NumberSeats"];
+		$this->startDateTime = DateTime::createFromFormat($dateTimeFormat, $row["StartDateTime"]);
+	}
+
+	public static function GetGameSession($gameSessionId) {
 		$query = "SELECT * FROM GameSession WHERE Id = $gameSessionId";
 		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		if (mysql_num_rows($result) == 0) {
@@ -35,9 +41,7 @@ class GameSession {
 		} else {
 			$gameSession = new GameSession($row["Id"], $row["RequestingPlayerId"]);
 		}
-		$gameSession->tableMinimum = is_null($row["TableMinimum"]) ? null : (int) $row["TableMinimum"];
-		$gameSession->numberSeats = is_null($row["NumberSeats"]) ? null : (int) $row["NumberSeats"];
-		$gameSession->startDateTime = DateTime::createFromFormat($dateTimeFormat, $row["StartDateTime"]);
+		$gameSession->mapRow($row);
 		return $gameSession;
 	}
 
@@ -69,54 +73,31 @@ class GameSession {
 		return $gameSessionIds;
 	}
 
-	/**
-	 * Get a game session's last instance, including the last dealer, bet size and pot size.
-	 * @param int $gSessionId
-	 * @return GameInstance
-	 */
-	public static function GetSessionLastInstance($gSessionId) {
-		global $dateTimeFormat;
-		// left join on casino table and practice session
-		$query = "SELECT g.*, c.TableMinimum AS CasinoMin, s.TableMinimum AS
-                PracticeMin, dp.TurnNumber AS DealerTurnNumber, np.TurnNumber AS NextTurnNumber
-                FROM GameInstance g
-                LEFT JOIN PlayerState dp ON g.Id = dp.GameInstanceId
-                    AND g.DealerPlayerId = dp.PlayerId
-                LEFT JOIN PlayerState np on g.Id = np.GameInstanceId
-                    AND g.NextPlayerId = np.PlayerId
-                LEFT JOIN CasinoTable c ON g.GameSessionId = c.CurrentGameSessionId
-                LEFT JOIN GameSession s on g.GameSessionId = s.Id
-                WHERE g.GameSessionId = $gSessionId ORDER BY StartDateTime DESC LIMIT 1";
-		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
+	/* Used to find active practice instances */
+
+	public static function GetLastSessionByRequestor($currentGameSessionId, $playerId) {
+		$result = executeSQL("select * from GameSession "
+				. "WHERE RequestingPlayerId = $playerId and Id <> $currentGameSessionId "
+				. "ORDER BY StartDateTime DESC LIMIT 1", __CLASS__ . "-" . __FUNCTION__);
+		if (mysql_num_rows($result) == 0) {
+			$result = executeSQL("select s.* from GameSession s "
+					. "INNER JOIN PlayerState i ON s.Id = i.GameSessionId "
+					. "WHERE i.PlayerId = $playerId and s.Id <> $currentGameSessionId "
+					. "ORDER BY StartDateTime DESC LIMIT 1", __CLASS__ . "-" . __FUNCTION__);
+		}
 		if (mysql_num_rows($result) == 0) {
 			return null;
 		}
 
 		$row = mysql_fetch_array($result, MYSQL_ASSOC);
-		$obj = new GameInstance($row["Id"]);
-		$obj->gameSessionId = $row["GameSessionId"] == null ? null : (int) $row["GameSessionId"];
-		$obj->status = $row["Status"];
-		$obj->startDateTime = $row["StartDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["StartDateTime"]);
-		$obj->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
-
-		$obj->numberPlayers = $row["NumberPlayers"] == null ? null : (int) $row["NumberPlayers"];
-		$obj->dealerPlayerId = $row["DealerPlayerId"] == null ? null : (int) $row["DealerPlayerId"];
-		$obj->firstPlayerId = $row["FirstPlayerId"] == null ? null : (int) $row["FirstPlayerId"];
-		$obj->nextPlayerId = $row["NextPlayerId"] == null ? null : (int) $row["NextPlayerId"];
-		$obj->currentPotSize = $row["CurrentPotSize"] == null ? null : (int) $row["CurrentPotSize"];
-		$obj->lastBetSize = $row["LastBetSize"] == null ? null : (int) $row["LastBetSize"];
-		$obj->numberCommunityCardsShown = $row['NumberCommunityCardsShown'] == null ? null : (int) $row['NumberCommunityCardsShown'];
-		$obj->lastInstancePlayNumber = $row['LastInstancePlayNumber'] == null ? null : (int) $row['LastInstancePlayNumber'];
-		$obj->winningPlayerId = $row['WinningPlayerId'] == null ? null : (int) $row['WinningPlayerId'];
-
-		/*
-		  $obj->tableMinimum = $row["CasinoMin"] == null ? null : (int)$row["CasinoMin"]; // via join
-		  if (is_null($obj->tableMinimum)) {
-		  $obj->tableMinimum = $row["PracticeMin"] == null ? null : (int)$row["PracticeMin"];
-		  }
-		 * 
-		 */
-		return $obj;
+		$isPractice = is_null($row["IsPractice"]) ? null : (int) $row["IsPractice"];
+		if ($isPractice) {
+			$gameSession = new PracticeSession($row["Id"], $row["RequestingPlayerId"]);
+		} else {
+			$gameSession = new GameSession($row["Id"], $row["RequestingPlayerId"]);
+		}
+		$gameSession->mapRow($row);
+		return $gameSession;
 	}
 
 	/**
@@ -203,7 +184,7 @@ class GameSession {
 		$unusedString = "'" . $unusedDateTime->format($dateTimeFormat) . "'";
 
 		$query = "SELECT gs.Id GameSessionId, gs.RequestingPlayerId PlayerId, "
-				. "c.Id CasinoTableId "
+				. "c.Id CasinoTableId, gs.IsPractice "
 				. "FROM GameSession gs "
 				. "LEFT JOIN CasinoTable c ON gs.Id = c.CurrentGameSessionId "
 				. "LEFT JOIN GameInstance i on i.GameSessionId = gs.Id "
@@ -215,47 +196,50 @@ class GameSession {
 		// want to loop, so you can log
 		$ch = Context::GetQCh();
 		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
-			$gameSessionId = $row['GameSessionId'];
-			$casinoTableId = $row['CasinoTableId'];
-			if (is_null($casinoTableId)) {
-				continue;
-			}
-			$requestingPlayerId = $row['PlayerId'];
-			$casinoTable = new CasinoTable($casinoTableId);
-			$casinoTable->currentGameSessionId = $gameSessionId;
+			$gameSessionId = (int) $row['GameSessionId'];
+			$casinoTableId = $row['CasinoTableId'] == null ? null : (int) $row['CasinoTableId'];
+			$requestingPlayerId = (int) $row['PlayerId'];
+			$isPractice = (int) $row['IsPractice'];
+			// live game only
+			if (!is_null($casinoTableId)) {
+				$casinoTable = new CasinoTable($casinoTableId);
+				$casinoTable->currentGameSessionId = $gameSessionId;
 
-			$players = Player::GetPlayersForCasinoTable($casinoTableId);
-			if (!is_null($players)) {
-				foreach ($players as $player) {
-					$text = "Ending inactive game.";
-					$casinoTable->CommunicateUserMessage(EventType::UserEjected, $player->id, $text);
+				$players = Player::GetPlayersForCasinoTable($casinoTableId);
+				if (!is_null($players)) {
+					foreach ($players as $player) {
+						$text = "Ending inactive game.";
+						$casinoTable->CommunicateUserMessage(EventType::UserEjected, $player->id, $text);
 
-					$player->currentCasinoTableId = null;
-					$player->currentSeatNumber = null;
-					$player->waitStartDateTime = null;
-					$player->reservedSeatNumber = null;
-					$player->buyIn = null;
-					$player->Update();
-					// reset hidden and visible cards;
-					$hidden = new PlayerHiddenCards($player->id, null, null);
-					$hidden->ResetSleeve(true);
-					$visibles = new PlayerVisibleCards($player->id, $gameSessionId, null, null);
-					$visibles->ResetVisible(true);
+						$player->currentCasinoTableId = null;
+						$player->currentSeatNumber = null;
+						$player->waitStartDateTime = null;
+						$player->reservedSeatNumber = null;
+						$player->buyIn = null;
+						$player->Update();
+						// reset hidden and visible cards;
+						$hidden = new PlayerHiddenCards($player->id, null, null);
+						$hidden->ResetSleeve(true);
+						$visibles = new PlayerVisibleCards($player->id, $gameSessionId, null, null);
+						$visibles->ResetVisible(true);
 
-					$q = QueueManager::GetPlayerQueue($player->id, $ch);
-					QueueManager::DeleteQueue($q);
+						$q = QueueManager::GetPlayerQueue($player->id, $ch);
+						QueueManager::DeleteQueue($q);
+					}
 				}
+				PlayerActiveItem::DeleteForSession($gameSessionId);
+
+				$casinoTable->currentGameSessionId = null;
+				$casinoTable->sessionStartDateTime = null;
+				$casinoTable->UpdateSessionForCasinoTable();
+				$gameSession = new GameSession($gameSessionId, $requestingPlayerId);
+				$gameSession->Delete();
+				$q = QueueManager::GetGameSessionQueue($gameSessionId, $ch);
+				QueueManager::DeleteQueue($q);
 			}
-			PlayerActiveItem::DeleteForSession($gameSessionId);
-
-			$casinoTable->currentGameSessionId = null;
-			$casinoTable->sessionStartDateTime = null;
-			$casinoTable->UpdateSessionForCasinoTable();
-
-			$gameSession = new GameSession($gameSessionId, $requestingPlayerId);
-			$gameSession->Delete();
-			$q = QueueManager::GetGameSessionQueue($gameSessionId, $ch);
-			QueueManager::DeleteQueue($q);
+			if ($isPractice) {
+				PokerCoordinator::EndPracticeSession($gameSessionId, $requestingPlayerId);
+			}
 		}
 	}
 

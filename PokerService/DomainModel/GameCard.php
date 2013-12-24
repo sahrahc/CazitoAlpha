@@ -125,6 +125,17 @@ class GameCard {
 		}
 	}
 
+	public static function DeleteInstanceCards($gameInstanceId) {
+		$query = "SELECT * FROM GameCard WHERE GameInstanceId = $gameInstanceId";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
+		while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+			$gameCard = new GameCard();
+			$gameCard->gameInstanceId = (int) $row["GameInstanceId"];
+			$gameCard->deckPosition = (int) $row["DeckPosition"];
+			$gameCard->Delete($row);
+		}
+	}
+
 	public function Delete($row) {
 		if (is_null($row)) {$row = $this;}
 		$where = "GameInstanceId = $this->gameInstanceId AND DeckPosition = $this->deckPosition";

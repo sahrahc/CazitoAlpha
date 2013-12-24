@@ -23,7 +23,7 @@ $instanceTimeOut = 'PT5M'; // period after which an instance is considered inact
 $playExpiration = 'PT20S'; // time given to a player to make a move
 $practiceExpiration = 'PT2S'; // time between practice player moves
 //$moveTimeOut = 'PT20M'; // time when next move is purged from the queue.
-$sessionExpiration = 'PT30M'; // time before a session without games or player joining table is expired
+$sessionExpiration = 'PT10M'; // time before a session without games or player joining table is expired
 /* * ***************************************************************************************************** */
 // cheating time outs
 $cHeartMarkerTimeOut = 'PT5M';

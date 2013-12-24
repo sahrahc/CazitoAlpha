@@ -1,5 +1,8 @@
 <?php
-header('Content-type: application/json; charset=utf-8');
+
+session_start();
+//header('Content-type: application/json; charset=utf-8');
+header('Content-Type: text/html; charset=utf-8');
 
 include_once(dirname(__FILE__) . '/Config.php');
 include_once(dirname(__FILE__) . '/../Helper/WebServiceDecoder.php');
@@ -27,37 +30,31 @@ function startPracticeSession($par) {
 	}
 	Context::Init();
 
-	// sequencing of poker game start
+	// check if active session first and return it instead
+	$practiceSession = GameSession::GetLastSessionByRequestor(-1, $playerId);
+	$isNewGame = 0;
+	if (is_null($practiceSession)) {
+		$practiceSession = new PracticeSession(null, $playerId);
+		$practiceSession->CreatePracticeSession();
+		$isNewGame = 1;
+		// resets the queue for the requesting player and creates one for game session
+		QueueManager::addPlayerQueue($playerId, Context::GetQCh());
+		QueueManager::addGameSessionQueue($practiceSession->id, Context::GetQCh());
+	} else {
+		if (!$practiceSession->isPractice) {
+			$casinoTable = CasinoTable::GetCasinoTableForSession($practiceSession->id);
+			TableCoordinator::RemoveUserFromTable($casinoTable, $playerId);
+			// reset player queue
+			QueueManager::addPlayerQueue($playerId, Context::GetQCh());
+			$practiceSession = new PracticeSession(null, $playerId);
+			$practiceSession->CreatePracticeSession();
+			$isNewGame = 1;
+			QueueManager::addGameSessionQueue($practiceSession->id, Context::GetQCh());
+		}
+	}
 
-	$practiceSession = new PracticeSession(null, $playerId);
-	$practiceSession->CreatePracticeSession();
-	$gameInstance = $practiceSession->InitNewGameInstance();
-	$practiceSession->InitPlayers($playerId, $gameInstance->id);
-
-	// resets the queue for the requesting player and creates one for game session
-	QueueManager::addPlayerQueue($playerId, Context::GetQCh());
-	QueueManager::addGameSessionQueue($practiceSession->id, Context::GetQCh());
-
-	$blindBetAmounts = $practiceSession->FindBlindBetAmounts();
-	$tableSize = $practiceSession->tableMinimum;
-
-	$playerStatuses = $gameInstance->ResetActivePlayers(true);
-
-	$gameInstance->InitInstanceWithDealerAndBlinds($blindBetAmounts, $playerStatuses);
-	$gameCards = new GameInstanceCards($gameInstance->id);
-	$gameCards->InitDealGameCards($indexCards);
-	$firstMove = ExpectedPokerMove::InitFirstMoveConstraints($gameInstance, $tableSize, 1);
-
-	// start populating the response
-	$gameStatusDto = GameStatusDto::SetStartedGame($gameInstance);
-	$gameStatusDto->playerStatusDtos = PlayerInstance::GetPlayersWithStates($gameInstance->id, null);
-
-	$gameStatusDto->userPlayerId = $playerId;
-	$gameStatusDto->userSeatNumber = 0;
-	$gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($playerId, $gameInstance->id);
-
-	$gameStatusDto->nextMoveDto = new ExpectedPokerMoveDto($firstMove);
-
+	QueueManager::GetPlayerQueue($playerId, Context::GetQCh());
+	$gameStatusDto = PokerCoordinator::StartOrGetPracticeGame($practiceSession, $isNewGame);
 	/* --------------------------------------------------------------------- */
 	Context::Disconnect();
 	/* --------------------------------------------------------------------- */
@@ -127,11 +124,11 @@ function getTable($par) {
 
 	Context::Disconnect();
 	if ($casinoTableDto === null) {
-		return "Cannot find the $tableName table, please try again.";
+		return "Error: Cannot find the $tableName table, please try again.";
 	}
-	
+
 	if ($tableName != $casinoTableDto->casinoTableName) {
-		return "You are trying to hack me!";
+		return "Error: You are trying to hack me!";
 	}
 	return json_encode($casinoTableDto);
 }
@@ -142,7 +139,6 @@ function getTable($par) {
  * @param type $par
  * @return type
  */
-
 
 function joinTable($par) {
 	$decodedPar = json_decode($par, true);
@@ -164,12 +160,11 @@ function joinTable($par) {
 	// 1. get or create a new table if it does not exist
 	$casinoTable = CasinoTable::GetCasinoTable($tableId);
 	if ($casinoTable->code != $tableCode) {
-		return "You are trying to hack me!";
+		return "Error: You are trying to hack me!";
 	}
 	// 3. update the player's casino
 	$gameStatusDto = TableCoordinator::AddUserToTable($playerId, $casinoTable);
 	// --------------------------------------------------------------------------------------
-
 	// check sleeve
 	CheatingHelper::UpdateSleeveSession($playerId, $casinoTable->currentGameSessionId);
 	$_SESSION['casinoTableId'] = $casinoTable->id;
@@ -200,7 +195,6 @@ function logout($par) {
 		$casinoTable = CasinoTable::GetCasinoTable($player->currentCasinoTableId);
 		TableCoordinator::RemoveUserFromTable($casinoTable, $playerId);
 	}
-	//session_start();
 	unset($_SESSION['userPlayerId']);
 	// no need to send messages, user logging out.
 	$status = 'OK';
@@ -218,6 +212,9 @@ function login($par) {
 	$decodedPar = json_decode($par, true);
 	$playerName = $decodedPar["playerName"];
 
+	if (is_null($playerName) || $playerName === "") {
+		return "Error: Player name is missing";
+	}
 	Context::Init();
 	// --------------------------------------------------------------------------------------
 	global $dateTimeFormat;
@@ -227,7 +224,6 @@ function login($par) {
 	$newPlayer = Player::GetOrCreatePlayer($playerName);
 	$player = array('userPlayerId' => $newPlayer->id, 'playerName' => $newPlayer->name);
 
-//	session_start();
 	$_SESSION['userPlayerId'] = $newPlayer->id;
 	Context::Disconnect();
 	$response = json_encode($player);
@@ -282,18 +278,17 @@ function cheatGetSleeve($par) {
 /* * ************************************************************************************** */
 /* comment out to run regression tests */
 
-  $server->register("startPracticeSession");
-  $server->register("joinTable");
-  $server->register("login");
-  $server->register("logout");
-  $server->register("cheatLoadSleeve");
-  $server->register("cheatGetSleeve");
-  $server->register("getTable");
-  $server->register("createTable");
-  // fixme: convert to POST
-
-  $method = $_GET["method"];
-  $param = $_GET["param"];
-  $server->serve($method, $param);
+$server->register("startPracticeSession");
+$server->register("joinTable");
+$server->register("login");
+$server->register("logout");
+$server->register("cheatLoadSleeve");
+$server->register("cheatGetSleeve");
+$server->register("getTable");
+$server->register("createTable");
+// fixme: convert to POST
+$method = $_GET["method"];
+$param = $_GET["param"];
+$server->serve($method, $param);
 
 ?>

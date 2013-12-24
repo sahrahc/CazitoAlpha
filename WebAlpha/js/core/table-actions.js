@@ -5,56 +5,66 @@
  * @param {type} casinoTableDto
  * @returns {undefined}
  */
-function createNewTableCallback(casinoTableDto) {
-    // add table id to cookie for use when joining table
-    $.cookies.set("tableId", casinoTableDto.casinoTableId, {
-	expires: 1,
-	path: '/'
-    });
-    // messages to user:
-    var tableName = casinoTableDto.casinoTableName;
-    O('dialog-table-setup-message').children[0].innerHTML = 'You have successfully created your table ' + tableName;
-    $('#dialog-table-setup-message').dialog('open');
+function createNewTableCallback(casinoTableDto, errorFound) {
+    if (errorFound) {
+	alert(casinoTableDto);
+	$('#dialog-table-setup').dialog('open');
+    }
+    else {
+	// add table id to cookie for use when joining table
+	$.cookies.set("tableId", casinoTableDto.casinoTableId, {
+	    expires: 1,
+	    path: '/'
+	});
+	// messages to user:
+	var tableName = casinoTableDto.casinoTableName;
+	O('dialog-table-setup-message').children[0].innerHTML = 'You have successfully created your table ' + tableName;
+	$('#dialog-table-setup-message').dialog('open');
 
-    // on cookie in case 
-    $.cookies.del('waitingForSeat');
+	// on cookie in case 
+	$.cookies.del('waitingForSeat');
+    }
 }
-
 /**
  * If the request to save casino table callback is successful, then notify
  * user. Also show the number of current players and waiting list players.
  * @param {type} casinoTableDto
  * @returns {undefined}
  */
-function findCasinoTableCallback(casinoTableDto) {
-    // add table id to cookie for use when joining table
-    $.cookies.set("tableId", casinoTableDto.casinoTableId, {
-	expires: 1,
-	path: '/'
-    });
-    // messages to user:
-    var numberPlayers = casinoTableDto.numberCurrentPlayers;
-    var waitingPlayers = casinoTableDto.numberWaitingPlayers;
-    var msg;
-    if (numberPlayers > 0) {
-	msg = 'There are ' + numberPlayers + ' players at this table.';
+function findCasinoTableCallback(casinoTableDto, errorFound) {
+    if (errorFound) {
+	alert(casinoTableDto);
+	$('#dialog-table-setup').dialog('open');
     }
     else {
-	msg = 'There are no players yet at this table.';
-    }
+	// add table id to cookie for use when joining table
+	$.cookies.set("tableId", casinoTableDto.casinoTableId, {
+	    expires: 1,
+	    path: '/'
+	});
+	// messages to user:
+	var numberPlayers = casinoTableDto.numberCurrentPlayers;
+	var waitingPlayers = casinoTableDto.numberWaitingPlayers;
+	var msg;
+	if (numberPlayers > 0) {
+	    msg = 'There are ' + numberPlayers + ' players at this table.';
+	}
+	else {
+	    msg = 'There are no players yet at this table.';
+	}
 
-    if (waitingPlayers > 0) {
-	msg += '<br/>There are ' + waitingPlayers + ' players in the waiting list.';
-	// on cookie because heading changes
-	$.cookies.set("waitingForSeat", waitingPlayers);
+	if (waitingPlayers > 0) {
+	    msg += '<br/>There are ' + waitingPlayers + ' players in the waiting list.';
+	    // on cookie because heading changes
+	    $.cookies.set("waitingForSeat", waitingPlayers);
+	}
+	else {
+	    msg += '<br/>There are no players on the waiting list.';
+	}
+	O('dialog-table-setup-message').children[0].innerHTML = msg;
+	$('#dialog-table-setup-message').dialog('open');
     }
-    else {
-	msg += '<br/>There are no players on the waiting list.';
-    }
-    O('dialog-table-setup-message').children[0].innerHTML = msg;
-    $('#dialog-table-setup-message').dialog('open');
 }
-
 
 function createNewTable() {
     var userPlayerId = $.cookies.get("userPlayerId");

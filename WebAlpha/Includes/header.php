@@ -28,8 +28,10 @@
 					<input type='submit' id='buyCurrencyButton' value='Buy currency' />
 				</li>
 				<!-- only shows up in Home page, not FrontStreet  -->
+				<!--
 				<li><input type="submit" id='registerButton' value="Register" 
 						   onclick="$('#dialog-register').dialog('open');" /></li>
+	-->
 				<li><input type="submit" id='loginButton' value="Sign in" 
 						   onclick="$('#dialog-login').dialog('open');" /></li>
 			</ul>

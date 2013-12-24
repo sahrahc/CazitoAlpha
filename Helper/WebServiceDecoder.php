@@ -1,7 +1,6 @@
 <?php
 /* retrieved from http://seancode.blogspot.com/2006/05/my-own-jsonphp-web-services.html */
 require_once("JSON.php");
-header('Content-Type: text/html; charset=utf-8');
 class WebServiceDecoder {
     var $methods;
     var $json;
@@ -44,7 +43,7 @@ class WebServiceDecoder {
     */
     function serve($method, $param) {
 		// SCM 08/31/2013
-		session_start();
+		//session_start();
         //$obj = $this->json->decode(stripslashes($param));
         $obj = stripslashes($param);
         if ($this->methods[$method] == true) {
