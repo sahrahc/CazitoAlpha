@@ -1,7 +1,7 @@
 <?php
 // configure logging
 /* * ***************************************************************************************************** */
-$dbName = 'cazito5_sprint9';
+$dbName = 'cazito5_sprint333';
 /* * ***************************************************************************************************** */
 /** poker playing defaults */
 $defaultTableMin = 1000; // practice
@@ -41,14 +41,14 @@ $cAntiOilMarkerTimeOut = 'PT15M';
 /* * ***************************************************************************************************** */
 /* messaging - centralized config parmeters helps with deployment */
 $stomp_port = 61613;
-$stomp_host = '192.168.1.70';
-//$stomp_host = 'localhost';
+//$stomp_host = '192.168.1.70';
+$stomp_host = 'cazito.net';
 $stomp_exchange = 'direct';// 'player';
 $stomp_vhost = '/';
 /* * ***************************************************************************************************** */
 $amqp_port = 5672;
-$amqp_host = '192.168.1.70';
-//$amqp_host = 'localhost';
+//$amqp_host = '192.168.1.70';
+$amqp_host = 'cazito.net';
 $amqp_player_exchange = 'player';
 $amqp_session_exchange = 'session';
 $amqp_chat_exchange = 'chat';

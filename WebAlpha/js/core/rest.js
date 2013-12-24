@@ -1,5 +1,5 @@
-constServiceUrl = "//192.168.1.70//PokerService//PokerPlayerService.php";
-//constServiceUrl = "http://localhost//PokerService//PokerPlayerService.php";
+//constServiceUrl = "//192.168.1.70//PokerService//PokerPlayerService.php";
+constServiceUrl = "https://cazito.net//PokerService//PokerPlayerService.php";
 /********************************************************************************************/
 function WSClient() {
 
