@@ -1,4 +1,13 @@
 <?php
+echo "time 1 " . time() . "<br/>";
+sleep(1);
+echo "time 2 " . time() . "<br/>";
+sleep(1);
+echo "time 3 " . time() . "<br/>";
+sleep(1);
+echo "time 4 " . time() . "<br/>";
+sleep(1);
+phpinfo();
 /** testing null vs undefined
 class test {
 	public $f1;
@@ -14,11 +23,10 @@ echo "set property: " . $test->f3 . "<br/>";
 */
 /* testing objects
  * 
- */
 require_once('TestService/TestComponents.php');
 require_once('TestService/ValidateGameStatus.php');
 
-/* gameStatusDto */
+// gameStatusDto 
 $expectedDto = InitGameStatusDto(1);
 
 	$expectedDto->playerStatusDtos[0] = InitPlayerStatusDto(
@@ -29,5 +37,6 @@ $expectedDto = InitGameStatusDto(1);
 $playerStatusDtos[0] = clone $expectedDto->playerStatusDtos[0];
 $playerStatusDtos[1] = $expectedDto->playerStatusDtos[1];
 
+ */
 
 ?>

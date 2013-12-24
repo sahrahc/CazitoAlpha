@@ -128,7 +128,7 @@ function CreateSchema() {
             GameSessionId int,
             GameInstanceId int,
             PRIMARY KEY (GameSessionId, GameInstanceId, PlayerId),
-            IsVirtual tinyint,
+            IsPractice tinyint,
             LastUpdateDateTime timestamp,
             SeatNumber int,
             TurnNumber int,

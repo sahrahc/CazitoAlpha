@@ -54,7 +54,8 @@ $expectedDto = null; // will keep updating as the game progresses
 $casinoTableId = null;
 
 /* * ************************ initialize *********************** */
-session_start();
+// already set by PokerPlayerService.php
+// session_start();
 
 $qConn = QueueManager::GetConnection();
 $qCh = QueueManager::GetChannel($qConn);

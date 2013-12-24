@@ -28,7 +28,7 @@ class PokerCoordinator {
 
 		// validate last game was finished. Abandoned games do finish 
 		// with all players timing out.
-		$lastInstance = GameSession::GetSessionLastInstance($gameSessionId);
+		$lastInstance = GameInstance::GetSessionLastInstance($gameSessionId);
 		if ($lastInstance && $lastInstance->status !== GameStatus::ENDED) {
 			$analytics->info("Game instance for session $gameSessionId requested by $requestingPlayerId but live instance $lastInstance->id");
 			$log->error("Game instance for session $gameSessionId requested by $requestingPlayerId but live instance $lastInstance->id");
@@ -94,70 +94,84 @@ class PokerCoordinator {
 	 * @global type $log
 	 * @global type $dateTimeFormat
 	 */
-	public static function StartPracticeGame($gameSessionId, $indexCards = null) {
+	public static function StartOrGetPracticeGame($gameSession, $isNewGame = 0, $indexCards = null) {
 		global $log;
 
-		// can't start game if another is being played
-		if (is_null(GameSession::GetSessionLastInstance($gameSessionId))) {
-			return;
-		}
-
-		$gameSession = GameSession::GetGameSession($gameSessionId);
 		// validate it is a practice session
 		if (!$gameSession->isPractice) {
-			$log->error("Live game $gameSessionId confused as practice session.");
+			$log->error("Live game $gameSession->id confused as practice session.");
 			return;
 		}
 
-		$blindBetAmounts = $gameSession->FindBlindBetAmounts();
-		$tableSize = $gameSession->tableMinimum;
+		// can't start game if another is being played, return current
+		$gameInstance = GameInstance::GetSessionLastInstance($gameSession->id);
+		if (is_null($gameInstance) || $gameInstance->status === GameStatus::ENDED) {
+			$gameInstance = $gameSession->InitNewGameInstance();
+			/* 		} */
+			if ($isNewGame) {
+				$gameSession->InitPlayers($gameSession->requestingPlayerId, $gameInstance->id);
+			}
 
-		// sequencing of poker game start - same sequencing for live vs.
-		// practice games (excluding communication)
-		$gameInstance = $gameSession->InitNewGameInstance();
-		$playerStatuses = $gameInstance->ResetActivePlayers(true);
+			// sequencing of poker game start - same sequencing for live vs.
+			// practice games (excluding communication)
+			//if ($gameInstance->status === GameStatus::NONE) {
+			$playerStatuses = $gameInstance->ResetActivePlayers(true);
 
-		$gameInstance->InitInstanceWithDealerAndBlinds($blindBetAmounts, $playerStatuses);
-		$gameCards = new GameInstanceCards($gameInstance->id);
-		$gameCards->InitDealGameCards($indexCards);
-		$firstMove = ExpectedPokerMove::InitFirstMoveConstraints($gameInstance, $tableSize, 1);
+			$blindBetAmounts = $gameSession->FindBlindBetAmounts();
+			$tableSize = $gameSession->tableMinimum;
 
+			$gameInstance->InitInstanceWithDealerAndBlinds($blindBetAmounts, $playerStatuses);
+			$gameCards = new GameInstanceCards($gameInstance->id);
+			$gameCards->InitDealGameCards($indexCards);
+			$nextMove = ExpectedPokerMove::InitFirstMoveConstraints($gameInstance, $tableSize, 1);
+		} else {
+			$nextMove = ExpectedPokerMove::GetExpectedMoveForInstance($gameInstance->id);
+		}
 		// start populating the response
-		$gameStatusDto = GameStatusDto::SetStartedGame($gameInstance);
+		$gameStatusDto = GameStatusDto::InitForInstance($gameInstance);
 		$gameStatusDto->playerStatusDtos = PlayerInstance::GetPlayersWithStates($gameInstance->id, null);
-		$gameStatusDto->nextMoveDto = new ExpectedPokerMoveDto($firstMove);
-		// communicate to user
-		$gameSession->CommunicateGameStarted($gameStatusDto, null);
+
+		$gameStatusDto->userPlayerId = $gameSession->requestingPlayerId;
+		$gameStatusDto->userSeatNumber = 0;
+		$gameStatusDto->userPlayerHandDto = CardHelper::getPlayerHandDto($gameSession->requestingPlayerId, $gameInstance->id);
+		$gameStatusDto->nextMoveDto = new ExpectedPokerMoveDto($nextMove);
+		// communicate to user via queue but not on session first start 
+		if (!$isNewGame && $gameInstance->status === GameStatus::STARTED) {
+			$gameSession->CommunicateGameStarted($gameStatusDto, null);
+		}
+		if (!$isNewGame && $gameInstance->status === GameStatus::IN_PROGRESS) {
+			$gameCards = new GameInstanceCards($gameInstance->id, $gameInstance->numberCommunityCardsShown);
+			$gameStatusDto->communityCards = $gameCards->GetSavedCommunityCardCodes();
+		}
+
+		return $gameStatusDto;
 	}
 
 	public static function EndPracticeSession($gameSessionId, $userPlayerId) {
 		$gameSession = GameSession::GetGameSession($gameSessionId);
-		$gameInstance = GameSession::GetSessionLastInstance($gameSessionId);
+		$gameInstance = GameInstance::GetSessionLastInstance($gameSessionId);
 		$playerInstances = PlayerInstance::GetPlayerInstancesForGame($gameSessionId, true);
 		if ($playerInstances) {
 			foreach ($playerInstances as $playerInstance) {
-				$leavingPlayer = Player::GetPlayer($playerInstance->playerId);
-				$playerInstance->Delete();
-				if ($leavingPlayer->isVirtual) {
-					$leavingPlayer->Delete();
-				} else {
-					$leavingPlayer->currentCasinoTableId = null;
-					$leavingPlayer->currentSeatNumber = null;
-					$leavingPlayer->buyIn = null;
-					$leavingPlayer->waitStartDateTime = null;
-					$leavingPlayer->reservedSeatNumber = null;
-					$leavingPlayer->Update();
-				}
+				$playerInstance->DeleteAndUpdatePlayer();
 			}
 		}
-		$gameInstance->status = GameStatus::ENDED;
-		$gameInstance->Update();
-		$gameInstance->Delete();
-		$gameSession->Delete();
-		// cleaning up of queue
+		if ($gameInstance) {
+			GameCard::DeleteInstanceCards($gameInstance->id);
+			ExpectedPokerMove::DeleteInstanceMoves($gameInstance->id);
+			$gameInstance->status = GameStatus::ENDED;
+			$gameInstance->Update();
+			$gameInstance->Delete();
+		}
+		$gameSession->Delete();		
+		
+		// cleaning up of queue, only if user is not in another session
 		$ch = Context::GetQCh();
-		$q = QueueManager::GetPlayerQueue($userPlayerId, $ch);
-		QueueManager::DeleteQueue($q);
+		$activeInstance = GameSession::GetLastSessionByRequestor($gameSession->id, $userPlayerId);
+		if (is_null($activeInstance)) {
+			$q = QueueManager::GetPlayerQueue($userPlayerId, $ch);
+			QueueManager::DeleteQueue($q);
+		}
 	}
 
 	/**
@@ -170,7 +184,9 @@ class PokerCoordinator {
 		// FindWinner updates the winning player and all player hands
 		$playerStatuses = PlayerInstance::GetPlayerInstancesForGame($gameInstance->id);
 		$count = 0;
-		if (count($playerStatuses) === 0) {return;}
+		if (count($playerStatuses) === 0) {
+			return;
+		}
 		foreach ($playerStatuses as $playerStatus) {
 			// LEFT already excluded
 			if ($playerStatus->status !== PlayerStatusType::FOLDED) {
@@ -203,6 +219,8 @@ class PokerCoordinator {
 		/* mark cards that are to be seen if item is enabled */
 		CheatingHelper::AddVisibleCards($gameInstance);
 
+		// delete game instance cards
+		GameCard::DeleteInstanceCards($gameInstance->id);
 		//$gameStatusDto->playerStatusDtos = PlayerStatusDto::MapPlayerStatuses($playerStatuses);
 		// moved 
 		$casinoTable = CasinoTable::GetCasinoTableForSession($gameInstance->gameSessionId);
@@ -238,7 +256,8 @@ class PokerCoordinator {
 		global $log;
 
 		$gameInstance = GameInstance::GetGameInstance($playerAction->gameInstanceId);
-		if ($gameInstance->IsGameEnded()) {
+		$shouldGameEnd = $gameInstance->ShouldGameEnd();
+		if (is_null($shouldGameEnd) || $shouldGameEnd) {
 			$log->error("User attempted move but game is ended: " . json_encode($playerAction));
 			return;
 		}
@@ -271,7 +290,7 @@ class PokerCoordinator {
 			$playerInstanceStatus = $playerAction->ApplyPlayerAction($gameInstance);
 		}
 		// current play may have triggered game end
-		if ($gameInstance->IsGameEnded()) {
+		if ($gameInstance->ShouldGameEnd()) {
 			self::endGame($gameInstance, $gameStatusDto);
 		} else {
 			$gameInstance->status = GameStatus::IN_PROGRESS;
@@ -319,7 +338,8 @@ class PokerCoordinator {
 		global $log;
 		global $dateTimeFormat;
 		// Logic --------------------------------------------------------------------------------
-		if ($gameInstance->IsGameEnded()) {
+		$shouldGameEnd = $gameInstance->ShouldGameEnd();
+		if (is_null($shouldGameEnd) || $shouldGameEnd) {
 			$log->error("Time out triggered but game already ended: " . json_encode($pokerMove));
 			return;
 		}
@@ -336,8 +356,7 @@ class PokerCoordinator {
 			// || $playerInstanceStatus->status == PlayerStatusType::LEFT) {
 			$casinoTable = CasinoTable::GetCasinoTableForSession($gameInstance->gameSessionId);
 			// note that pokerMove is null; this avoids infinite loops between SkipPokerMove and RemoveUserFromTable
-			$vacatedSeat = TableCoordinator::RemoveUserFromTable($casinoTable, $playerId);
-			TableCoordinator::ReserveAndOfferSeat($casinoTable, $vacatedSeat);
+			TableCoordinator::RemoveUserFromTable($casinoTable, $playerId);
 			$playerInstanceStatus->status = PlayerStatusType::LEFT;
 		}
 
@@ -345,7 +364,7 @@ class PokerCoordinator {
 		$gameStatusDto = GameStatusDto::InitForInstance($gameInstance);
 
 		// current play may have triggered game end
-		if ($gameInstance->IsGameEnded()) {
+		if ($gameInstance->ShouldGameEnd()) {
 			self::endGame($gameInstance, $gameStatusDto);
 		} else {
 			// update the next player id and turn number
@@ -392,9 +411,13 @@ class PokerCoordinator {
 	public static function CheckGameEnd($gameInstanceId) {
 		// Logic --------------------------------------------------------------------------------
 		$gameInstance = GameInstance::GetGameInstance($gameInstanceId);
-		if ($gameInstance === null || !$gameInstance->IsGameEnded()) {
+		if ($gameInstance === null || !$gameInstance->ShouldGameEnd()) {
 			return;
 		}
+		if (!is_null($gameInstance->winningPlayerId) || $gameInstance->status === GameStatus::ENDED) {
+			return;
+		}
+
 		// follow player status update with instance level follow-up
 		$gameStatusDto = GameStatusDto::InitForInstance($gameInstance);
 		self::endGame($gameInstance, $gameStatusDto);
@@ -420,7 +443,7 @@ class PokerCoordinator {
 		// an active game instance is required for the next items
 		$gameInstance = GameInstance::GetGameInstance($gameInstanceId);
 		if (is_null($gameInstance)) {
-			$gameInstance = GameSession::GetSessionLastInstance($gameSessionId);
+			$gameInstance = GameInstance::GetSessionLastInstance($gameSessionId);
 		}
 		if (is_null($gameInstance)) {
 			// no message out, possible fraud

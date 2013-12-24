@@ -11,51 +11,51 @@
 <configuration xmlns="http://logging.apache.org/log4php/">
     <appender name="serviceAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/PokerService.log" />
+        <param name="file" value="/home/cazito5/logs/PokerService.log" />
     </appender>
     <appender name="analyticsAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/Analytics.log" />
+        <param name="file" value="/home/cazito5/logs/Analytics.log" />
     </appender>
     <appender name="CasinoTableAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/CasinoTable.log" />
+        <param name="file" value="/home/cazito5/logs/CasinoTable.log" />
     </appender>
     <appender name="ExpectedPokerMoveAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/ExpectedPokerMove.log" />
+        <param name="file" value="/home/cazito5/logs/ExpectedPokerMove.log" />
     </appender>
     <appender name="GameCardAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/GameCard.log" />
+        <param name="file" value="/home/cazito5/logs/GameCard.log" />
     </appender>
     <appender name="GameInstanceAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/GameInstance.log" />
+        <param name="file" value="/home/cazito5/logs/GameInstance.log" />
     </appender>
     <appender name="GameSessionAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/GameSession.log" />
+        <param name="file" value="/home/cazito5/logs/GameSession.log" />
     </appender>
     <appender name="PlayerAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/Player.log" />
+        <param name="file" value="/home/cazito5/logs/Player.log" />
     </appender>
     <appender name="PlayerInstanceAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/PlayerState.log" />
+        <param name="file" value="/home/cazito5/logs/PlayerState.log" />
     </appender>
     <appender name="PlayerActiveItemAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/PlayerActiveItem.log" />
+        <param name="file" value="/home/cazito5/logs/PlayerActiveItem.log" />
     </appender>
     <appender name="PlayerHiddenCardsAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/PlayerHiddenCard.log" />
+        <param name="file" value="/home/cazito5/logs/PlayerHiddenCard.log" />
     </appender>
     <appender name="PlayerVisibleCardsAppender" class="LoggerAppenderFile">
         <layout class="LoggerLayoutTTCC" />
-        <param name="file" value="/home/cazito/logs/PlayerVisibleCard.log" />
+        <param name="file" value="/home/cazito5/logs/PlayerVisibleCard.log" />
     </appender>
     <root>
         <level value="DEBUG" />

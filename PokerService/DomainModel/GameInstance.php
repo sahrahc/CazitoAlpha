@@ -36,21 +36,61 @@ class GameInstance {
 		$this->id = $id == null ? null : (int) $id;
 	}
 
+	private function mapRow($row) {
+		global $dateTimeFormat;
+		
+		$this->gameSessionId = $row["GameSessionId"] == null ? null : (int) $row["GameSessionId"];
+		$this->status = $row["Status"];
+		$this->startDateTime = $row["StartDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["StartDateTime"]);
+		$this->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
+		$this->numberPlayers = $row["NumberPlayers"] == null ? null : (int) $row["NumberPlayers"];
+		$this->dealerPlayerId = $row["DealerPlayerId"] == null ? null : (int) $row["DealerPlayerId"];
+		$this->firstPlayerId = $row["FirstPlayerId"] == null ? null : (int) $row["FirstPlayerId"];
+		$this->nextPlayerId = $row["NextPlayerId"] == null ? null : (int) $row["NextPlayerId"];
+		$this->currentPotSize = $row["CurrentPotSize"] == null ? null : (int) $row["CurrentPotSize"];
+		$this->lastBetSize = $row["LastBetSize"] == null ? null : (int) $row["LastBetSize"];
+		$this->numberCommunityCardsShown = $row['NumberCommunityCardsShown'] == null ? null : (int) $row['NumberCommunityCardsShown'];
+		$this->lastInstancePlayNumber = $row['LastInstancePlayNumber'] == null ? null : (int) $row['LastInstancePlayNumber'];
+		$this->winningPlayerId = $row['WinningPlayerId'] == null ? null : (int) $row['WinningPlayerId'];
+	}
 	/**
 	 * Get the game instance object given the identifier or null if not found. Exception handling if not found to be decided by the calling operation.
 	 * @param int $gInstId
 	 * @return GameInstance
 	 */
 	public static function GetGameInstance($gInstId) {
-		global $dateTimeFormat;
 		if (is_null($gInstId)) {
 			return null;
 		}
+		$query = "SELECT g.* FROM GameInstance g WHERE g.Id = $gInstId";
+		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
+		if (mysql_num_rows($result) == 0) {
+			return null;
+		}
+		$row = mysql_fetch_array($result, MYSQL_ASSOC);
+		$obj = new GameInstance($row["Id"]);
+		$obj->mapRow($row);
+		return $obj;
+	}
 
+		/**
+	 * Get a game session's last instance, including the last dealer, bet size and pot size.
+	 * @param int $gSessionId
+	 * @return GameInstance
+	 */
+	public static function GetSessionLastInstance($gSessionId) {
+		global $dateTimeFormat;
 		// left join on casino table and practice session
-		$query = "SELECT g.* 
+		$query = "SELECT g.*, c.TableMinimum AS CasinoMin, s.TableMinimum AS
+                PracticeMin, dp.TurnNumber AS DealerTurnNumber, np.TurnNumber AS NextTurnNumber
                 FROM GameInstance g
-                WHERE g.Id = $gInstId";
+                LEFT JOIN PlayerState dp ON g.Id = dp.GameInstanceId
+                    AND g.DealerPlayerId = dp.PlayerId
+                LEFT JOIN PlayerState np on g.Id = np.GameInstanceId
+                    AND g.NextPlayerId = np.PlayerId
+                LEFT JOIN CasinoTable c ON g.GameSessionId = c.CurrentGameSessionId
+                LEFT JOIN GameSession s on g.GameSessionId = s.Id
+                WHERE g.GameSessionId = $gSessionId ORDER BY StartDateTime DESC LIMIT 1";
 		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		if (mysql_num_rows($result) == 0) {
 			return null;
@@ -58,25 +98,12 @@ class GameInstance {
 
 		$row = mysql_fetch_array($result, MYSQL_ASSOC);
 		$obj = new GameInstance($row["Id"]);
-		$obj->gameSessionId = $row["GameSessionId"] == null ? null : (int) $row["GameSessionId"];
-		$obj->status = $row["Status"];
-		$obj->startDateTime = $row["StartDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["StartDateTime"]);
-		$obj->lastUpdateDateTime = $row["LastUpdateDateTime"] == null ? null : DateTime::createFromFormat($dateTimeFormat, $row["LastUpdateDateTime"]);
-		$obj->numberPlayers = $row["NumberPlayers"] == null ? null : (int) $row["NumberPlayers"];
-		$obj->dealerPlayerId = $row["DealerPlayerId"] == null ? null : (int) $row["DealerPlayerId"];
-		$obj->firstPlayerId = $row["FirstPlayerId"] == null ? null : (int) $row["FirstPlayerId"];
-		$obj->nextPlayerId = $row["NextPlayerId"] == null ? null : (int) $row["NextPlayerId"];
-		$obj->currentPotSize = $row["CurrentPotSize"] == null ? null : (int) $row["CurrentPotSize"];
-		$obj->lastBetSize = $row["LastBetSize"] == null ? null : (int) $row["LastBetSize"];
-		$obj->numberCommunityCardsShown = $row['NumberCommunityCardsShown'] == null ? null : (int) $row['NumberCommunityCardsShown'];
-		$obj->lastInstancePlayNumber = $row['LastInstancePlayNumber'] == null ? null : (int) $row['LastInstancePlayNumber'];
-		$obj->winningPlayerId = $row['WinningPlayerId'] == null ? null : (int) $row['WinningPlayerId'];
-
+		$obj->mapRow($row);
 		return $obj;
 	}
 
-	/*
-	 * Resets the active players data structures to account for players who 
+
+	/* Resets the active players data structures to account for players who 
 	 * left in the middle new ones taking their place. Use status only
 	 * Player turn numbers increase with seat number order.
 	 */
@@ -155,6 +182,7 @@ class GameInstance {
 		//$this->dealerTurnNumber = $dealerTurn;
 		$this->firstPlayerId = $this->nextPlayerId;
 
+		$this->status = GameStatus::STARTED;
 		$this->lastBetSize = $blind2;
 		$this->currentPotSize = $blind1 + $blind2;
 		$this->numberPlayers = $count;
@@ -332,11 +360,11 @@ class GameInstance {
 
 	/**
 	 * Checks whether the end of the game was reached on database.
-	 * @return bool
+	 * @return null if already ended or true/false
 	 */
-	public function IsGameEnded() {
-		if (!is_null($this->winningPlayerId)) {
-			return true;
+	public function ShouldGameEnd() {
+		if (!is_null($this->winningPlayerId) || $this->status === GameStatus::ENDED) {
+			return null;
 		}
 		// see if current player's move triggered and end date before calculating the next.
 		// 1 - if only on user remaining (status - not folded) then end game
@@ -432,13 +460,13 @@ class GameInstance {
 			$curTurnNum = -1;
 		}
 		//                   AND Status != '" . PlayerStatusType::LEFT. "'
-		$query = "SELECT PlayerId, TurnNumber, Status, IsVirtual 
+		$query = "SELECT PlayerId, TurnNumber, Status
             FROM PlayerState
                 WHERE GameInstanceId = $this->id AND TurnNumber > $curTurnNum
                 ORDER BY TurnNumber LIMIT 1";
 		$result = executeSQL($query, __CLASS__ . "-" . __FUNCTION__);
 		if (mysql_num_rows($result) == 0) {
-			$query = "SELECT PlayerId, TurnNumber, Status, IsVirtual
+			$query = "SELECT PlayerId, TurnNumber, Status
                     FROM PlayerState 
                     WHERE GameInstanceId = $this->id AND TurnNumber >= 0
                     ORDER BY TurnNumber LIMIT 1";
@@ -456,7 +484,6 @@ class GameInstance {
 				$row['Status'] != PlayerStatusType::LEFT) {
 			$nextPlayerId = $row['PlayerId'];
 			$nextPlayerStatus = PlayerInstance::GetPlayerInstance($this->id, $nextPlayerId);
-			//$nextPlayerStatus->isVirtual = $row['IsVirtual'];
 			$this->nextPlayerId = $nextPlayerId;
 			//$this->nextTurnNumber = $nextTurn;
 			return $nextPlayerStatus;

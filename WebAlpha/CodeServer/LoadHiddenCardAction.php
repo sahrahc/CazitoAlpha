@@ -36,7 +36,7 @@ if ($suitType != null && $actionType != null) {
             break;
     }
     if ($actionType == 'add') {
-		$gameInstance = GameSession::GetSessionLastInstance($gameSessionId);
+		$gameInstance = GameInstance::GetSessionLastInstance($gameSessionId);
         CheatingHelper::AddVisibleCards ($gameInstance);
         echo "Successfully marked $suitType cards for $playerName for 10 minutes";
     } elseif ($actionType == 'remove') {

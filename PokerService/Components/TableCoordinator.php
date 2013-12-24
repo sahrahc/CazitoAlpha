@@ -93,7 +93,7 @@ class TableCoordinator {
 			$gameSession = $casinoTable->CreateLiveSession($playerId);
 		} else {
 			$gameSession = GameSession::GetGameSession($casinoTable->currentGameSessionId);
-			$lastInstance = GameSession::GetSessionLastInstance($casinoTable->currentGameSessionId);
+			$lastInstance = GameInstance::GetSessionLastInstance($casinoTable->currentGameSessionId);
 			$countPlayers = 0;
 			if (!is_null($lastInstance)) {
 				// reset game session if session stale or not users left- the user will be the first 
@@ -123,14 +123,17 @@ class TableCoordinator {
 		// scenario #2 If user in another table, eject so seat vacated and minimize wait for time out
 		if (!is_null($player->currentCasinoTableId) && $casinoTable->id !== $player->currentCasinoTableId) {
 			//self::log()->debug(__FUNCTION__ . ": player $player->id at new casino table id
-            //            $casinoTable->id previous " . $player->currentCasinoTableId);
+			//            $casinoTable->id previous " . $player->currentCasinoTableId);
 			$otherTable = CasinoTable::GetCasinoTable($player->currentCasinoTableId);
 			if (!is_null($otherTable)) {
-				$vacatedSeat = TableCoordinator::RemoveUserFromTable($otherTable, $playerId);
-				TableCoordinator::ReserveAndOfferSeat($otherTable, $vacatedSeat);
+				TableCoordinator::RemoveUserFromTable($otherTable, $playerId);
 			}
 		}
-
+		// scenario #3 If user was in practice session, end practice
+		$practiceSession = GameSession::GetLastSessionByRequestor($gameSession->id, $playerId);
+		if (!is_null($practiceSession) && $practiceSession->isPractice) {
+			PokerCoordinator::EndPracticeSession($practiceSession->id, $playerId);
+		}
 		// find user a seat
 		$seatNum = SeatingHelper::FindAvailableSeat($casinoTable->numberSeats, $allPlayers);
 
@@ -171,22 +174,9 @@ class TableCoordinator {
 		$vacatedSeat = null;
 
 		if (!is_null($leavingPlayer)) {
-			$playerTableId = $leavingPlayer->currentCasinoTableId;
-			// returned vacated seat if user on table
-			if ($casinoTable->id === $playerTableId) {
-				$vacatedSeat = $leavingPlayer->currentSeatNumber;
-			}
-			if ($vacatedSeat == null) {
-				$vacatedSeat = $leavingPlayer->reservedSeatNumber;
-			}
-			$leavingPlayer->currentCasinoTableId = null;
-			$leavingPlayer->currentSeatNumber = null;
-			$leavingPlayer->buyIn = null;
-			$leavingPlayer->waitStartDateTime = null;
-			$leavingPlayer->reservedSeatNumber = null;
-			$leavingPlayer->Update();
+			$vacatedSeat = $leavingPlayer->LeaveTable($casinoTable->id);
 		}
-		$gameInstance = GameSession::GetSessionLastInstance($casinoTable->currentGameSessionId);
+		$gameInstance = GameInstance::GetSessionLastInstance($casinoTable->currentGameSessionId);
 		if ($gameInstance !== null) {
 			// if leaving user's turn set it to next
 			$leavingPlayerStatus = PlayerInstance::GetPlayerInstance($gameInstance->id, $playerId);
@@ -202,7 +192,7 @@ class TableCoordinator {
 		} else {
 			$leavingPlayerStatus = new PlayerInstance();
 			$leavingPlayerStatus->playerId = $leavingPlayer->id;
-			$leavingPlayerStatus->isVirtual = $leavingPlayer->isVirtual;
+			$leavingPlayerStatus->isPractice = 0;
 			$leavingPlayerStatus->seatNumber = $leavingPlayer->currentSeatNumber;
 			$leavingPlayerStatus->status = PlayerStatusType::SEATED;
 		}
@@ -211,21 +201,22 @@ class TableCoordinator {
 		$text = "You are being ejected because you missed three turns or joined another table.";
 		$casinoTable->CommunicateUserMessage(EventType::UserEjected, $playerId, $text);
 		$players = Player::GetPlayersForCasinoTable($casinoTable->id);
-		SeatingHelper::CommunicateUserLeft($casinoTable, $leavingPlayerStatus, $players);
-		// clean up - purge queue and reset sleeves 
-		/* purge queue later
-		  $ch = Context::GetQCh();
-		  $q = QueueManager::GetPlayerQueue($playerId, $ch);
-		  QueueManager::DeleteQueue($q);
-		 * 
-		 */
+		if ($players) {
+			SeatingHelper::CommunicateUserLeft($casinoTable, $leavingPlayerStatus, $players);
+		}
 		// removes from both sleeve and under table groove 
 		$hidden = new PlayerHiddenCards($playerId, null, ItemType::TUCKER_TABLE_SLIDE_UNDER);
 		$hidden->ResetSleeve(true);
 		$visible = new PlayerVisibleCards($playerId);
 		$visible->ResetVisible();
 
-		return $vacatedSeat;
+		// check game end after use leaves
+		if ($gameInstance) {
+			PokerCoordinator::CheckGameEnd($gameInstance->id);
+		}
+		if ($vacatedSeat) {
+			TableCoordinator::ReserveAndOfferSeat($casinoTable, $vacatedSeat);
+		}
 	}
 
 	/**
@@ -236,9 +227,6 @@ class TableCoordinator {
 	 * @throws Exception
 	 */
 	public static function ReserveAndOfferSeat($casinoTable, $seatNum) {
-		global $log;
-		$statusDT = "'" . Context::GetStatusDTString() . "'";
-
 		$waitingPlayer = SeatingHelper::FindNextWaitingPlayer($casinoTable->id);
 		if (is_null($waitingPlayer)) {
 // nobody waiting for seat
@@ -270,23 +258,11 @@ class TableCoordinator {
 		$waitingPlayer->reservedSeatNumber = $seatNum;
 
 // TODO: move to CasinoTable
-		try {
-			$vars = "ReservedSeatNumber, LastUpdateDateTime";
-			$values = "$seatNum, $statusDT";
-			$where = "Id = $waitingPlayer->id";
-			$event = "UPDATE Player SET ReservedSeatNumber = $seatNum, "
-					. "LastUpdateDateTime = $statusDT WHERE $where";
-			$eventCount = executeNonQuery($event, __CLASS__ . "-" . __FUNCTION__);
-			$log = $vars . " -TO- " . $values . " -WHERE- $where";
-			$this->history->info("UPDATED " . $eventCount . ": $log");
-		} catch (Exception $e) {
-			$waitingPlayer->reservedSeatNumber = null;
-			$log->warn("Seat should have been available but db update failed: " . $e->getMessage());
-			return false;
-		}
+		if ($waitingPlayer->UpdatePlayerSeat($seatNum, true)) {
 
-		SeatingHelper::CommunicateSeatOffered($casinoTable, $waitingPlayer->id, $seatNum);
-		return true;
+			SeatingHelper::CommunicateSeatOffered($casinoTable, $waitingPlayer->id, $seatNum);
+			return true;
+		}
 	}
 
 	/**

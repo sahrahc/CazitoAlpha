@@ -3,7 +3,7 @@ session_start();
 include '../Includes/betaLock.php';
 
 include '../Includes/fileInclude.html';
-include '../Includes/header.php';
+include '../Includes/headerPlay.php';
 
 include '../Includes/onlineFriends.html';
 include '../Includes/pokerPlay.html';

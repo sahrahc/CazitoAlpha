@@ -25,8 +25,9 @@ window.onload = function() {
 	// FIXME: seedy salon is hard coded, there should be another login page.
 	window.location.replace("Home.php");
     }
-    O('leaveSaloonButton').value = 'Leave Table';
 
+    O('leaveSaloonButton').value = 'Leave Table';
+    
     // make rest call to join table
     if ($.cookies.get("tableId") !== null) {
 	joinCasinoTable();

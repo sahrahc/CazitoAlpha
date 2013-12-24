@@ -184,20 +184,21 @@ body a:active {
 #region-messaging .msg .msgText {
   width: 140px;
   height: 161px;
+  text-align: left;
   background-color: white;
   border: 1px outset grey;
   margin: 0px 1px 2px 1px;
   font-family: "Trebuchet MS", Helvetica, sans-serif;
   font-size: 0.8em;
 }
-/* line 49, ../sass/core/_messaging.scss */
+/* line 50, ../sass/core/_messaging.scss */
 #region-messaging .msg .msgInput {
   width: 98px;
   border: 1px inset grey;
   height: 30px;
   font-size: 0.6em;
 }
-/* line 55, ../sass/core/_messaging.scss */
+/* line 56, ../sass/core/_messaging.scss */
 #region-messaging .msg .msgSend {
   width: 35px;
   font-size: 0.6em;
@@ -924,98 +925,100 @@ section#play-section input {
   background-color: #7E8493;
   border-style: outset;
   z-index: 100;
+  font-family: Helvetica;
+  font-size: 0.7em;
 }
 
-/* line 499, ../sass/core/_pokerPlay.scss */
+/* line 501, ../sass/core/_pokerPlay.scss */
 #userRaiseButton {
   width: 95px;
 }
 
-/* line 502, ../sass/core/_pokerPlay.scss */
+/* line 504, ../sass/core/_pokerPlay.scss */
 #userFoldButton {
   width: 55px;
 }
 
-/* line 505, ../sass/core/_pokerPlay.scss */
+/* line 507, ../sass/core/_pokerPlay.scss */
 #userCallButton {
   width: 95px;
 }
 
-/* line 508, ../sass/core/_pokerPlay.scss */
+/* line 510, ../sass/core/_pokerPlay.scss */
 #userCheckButton {
   width: 55px;
 }
 
-/* line 511, ../sass/core/_pokerPlay.scss */
+/* line 513, ../sass/core/_pokerPlay.scss */
 .player0Raise {
   top: 249px;
   left: 5px;
 }
 
-/* line 515, ../sass/core/_pokerPlay.scss */
+/* line 517, ../sass/core/_pokerPlay.scss */
 .player0Fold {
   top: 249px;
   left: 103px;
 }
 
-/* line 519, ../sass/core/_pokerPlay.scss */
+/* line 521, ../sass/core/_pokerPlay.scss */
 .player0Check {
   top: 279px;
   left: 5px;
 }
 
-/* line 523, ../sass/core/_pokerPlay.scss */
+/* line 525, ../sass/core/_pokerPlay.scss */
 .player0Call {
   top: 279px;
   left: 63px;
 }
 
 /* player 1 positions */
-/* line 528, ../sass/core/_pokerPlay.scss */
+/* line 530, ../sass/core/_pokerPlay.scss */
 .player1Raise {
   top: 90px;
   left: 5px;
 }
 
-/* line 532, ../sass/core/_pokerPlay.scss */
+/* line 534, ../sass/core/_pokerPlay.scss */
 .player1Fold {
   top: 90px;
   left: 103px;
 }
 
-/* line 536, ../sass/core/_pokerPlay.scss */
+/* line 538, ../sass/core/_pokerPlay.scss */
 .player1Check {
   top: 120px;
   left: 5px;
 }
 
-/* line 540, ../sass/core/_pokerPlay.scss */
+/* line 542, ../sass/core/_pokerPlay.scss */
 .player1Call {
   top: 120px;
   left: 63px;
 }
 
 /* player 2 button positions */
-/* line 545, ../sass/core/_pokerPlay.scss */
+/* line 547, ../sass/core/_pokerPlay.scss */
 .player2Raise {
   top: 90px;
   left: 482px;
 }
 
-/* line 549, ../sass/core/_pokerPlay.scss */
+/* line 551, ../sass/core/_pokerPlay.scss */
 .player2Fold {
   top: 90px;
   left: 580px;
   /* 482 + 98 */
 }
 
-/* line 553, ../sass/core/_pokerPlay.scss */
+/* line 555, ../sass/core/_pokerPlay.scss */
 .player2Check {
   top: 120px;
   left: 482px;
 }
 
-/* line 557, ../sass/core/_pokerPlay.scss */
+/* line 559, ../sass/core/_pokerPlay.scss */
 .player2Call {
   top: 120px;
   left: 540px;
@@ -1023,25 +1026,25 @@ section#play-section input {
 }
 
 /* player 3 positions */
-/* line 562, ../sass/core/_pokerPlay.scss */
+/* line 564, ../sass/core/_pokerPlay.scss */
 .player3Raise {
   top: 249px;
   left: 482px;
 }
 
-/* line 566, ../sass/core/_pokerPlay.scss */
+/* line 568, ../sass/core/_pokerPlay.scss */
 .player3Fold {
   top: 249px;
   left: 580px;
 }
 
-/* line 570, ../sass/core/_pokerPlay.scss */
+/* line 572, ../sass/core/_pokerPlay.scss */
 .player3Check {
   top: 279px;
   left: 482px;
 }
 
-/* line 574, ../sass/core/_pokerPlay.scss */
+/* line 576, ../sass/core/_pokerPlay.scss */
 .player3Call {
   top: 279px;
   left: 540px;
@@ -1050,7 +1053,7 @@ section#play-section input {
 /*************************************************************************************/
 /* this button shows up if a seat becomes available for a waiting user so that
    the user can accept it */
-/* line 581, ../sass/core/_pokerPlay.scss */
+/* line 583, ../sass/core/_pokerPlay.scss */
 #takeSeatButton {
   display: none;
   position: absolute;

@@ -10,7 +10,8 @@ function refreshHeader() {
     }
     // navigation bar
     if (userPlayerId) {
-	S('registerButton').display = 'none';
+	/* temporarily commented out
+	S('registerButton').display = 'none'; */
 	S('loginButton').display = 'none';
 
 	S('logoutButton').display = 'inline';
@@ -19,7 +20,8 @@ function refreshHeader() {
 
     }
     else {
-	S('registerButton').display = 'inline';
+	/* temporarily commented out
+	S('registerButton').display = 'inline'; */
 	S('loginButton').display = 'inline';
 
 	S('logoutButton').display = 'none';
@@ -49,7 +51,7 @@ function refreshHeaderPlay() {
     S('leaveSaloonButton').display = 'inline';
     S('startGameButton').display = 'inline';
 
-    var isPractice = O('isPractice') === null ? "0" : "1";
+    var isPractice = O('isPractice') === "1" ? "1" : "0";
     if (isPractice === "1") {
 	S('inviteToTable').display = 'inline';
     }
