@@ -1,4 +1,7 @@
 <?php
+include_once('../Includes/Env.php');
+header("Access-Control-Allow-Origin: http://" . $site . ":55674");
+header("Access-Control-Allow-Credentials: true");
 session_start();
 include '../Includes/betaLock.php';
 

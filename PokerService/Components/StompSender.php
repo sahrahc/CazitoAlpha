@@ -44,7 +44,7 @@ class StompSender {
     }
 
     /**
-     * Sets host where stomp is listening, default 'http://localhost'
+     * Sets host where stomp is listening,
      * @param type $host
      */
     public function setHost($host) {

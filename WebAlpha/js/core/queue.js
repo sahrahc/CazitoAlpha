@@ -1,5 +1,4 @@
-//constServer = "http://localhost:55674/stomp";
-constServer = "http://192.168.1.70:55674/stomp";
+constServer = "http://" + constSite + ":55674/stomp";
 var client;
 
 window.onbeforeunload = function() {

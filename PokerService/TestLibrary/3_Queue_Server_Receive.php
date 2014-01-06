@@ -26,7 +26,7 @@ $ch = new AMQPChannel($cnn);
 $ext1 = new AMQPExchange($ch);
 $ext1->setName('tableExchange1');
 $ext1->setType(AMQP_EX_TYPE_DIRECT);
-$ext1->declare();
+$ext1->declareExchange();
 
 // Create table queue /////////////////////////
 //$q = new AMQPQueue('exchange1');
@@ -34,7 +34,7 @@ $qt = new AMQPQueue($ch);
 // the following are settings for casino tables
 $qt->setFlags(AMQP_DURABLE);
 $qt->setName('table1');
-$qt->declare();
+$qt->declareQueue();
 $qt->bind('tableExchange1', 'routing.key');
 
 // Read from the queue

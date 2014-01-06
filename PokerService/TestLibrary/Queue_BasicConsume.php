@@ -1,12 +1,13 @@
 <?php
+include_once('../Env.php');
+include_once('../Config.php');
 
 function getQueueMessage($playerId) {
-$HOST = '192.168.1.70';
-//$HOST = 'localhost';
-$PORT = 5672;
+$HOST = $site;
+$PORT = $amqp_port;
 $USER = 'guest';
 $PASS = 'guest';
-$VHOST = '/';
+$VHOST = $amqp_vhost;
 $QUEUE = '/queue/' . $playerId;
 
 try {

@@ -27,31 +27,31 @@ $ch = new AMQPChannel($cnn);
 $ext1 = new AMQPExchange($ch);
 $ext1->setName('tableExchange1');
 $ext1->setType(AMQP_EX_TYPE_DIRECT);
-$ext1->declare();
+$ext1->declareExchange();
 
 $ext2 = new AMQPExchange($ch);
 $ext2->setName('tableExchange2');
 $ext2->setType(AMQP_EX_TYPE_DIRECT);
-$ext2->declare();
+$ext2->declareExchange();
 
 // Test sharing an exchange for players - not autodelete
 $exP = new AMQPExchange($ch);
 $exP->setName('userExchange');
 $exP->setType(AMQP_EX_TYPE_DIRECT);
 $exP->setFlags(AMQP_AUTODELETE);
-$exP->declare();
+$exP->declareExchange();
 
 // Create table queue /////////////////////////
 $qt1 = new AMQPQueue($ch);
 $qt1->setFlags(AMQP_DURABLE);
 $qt1->setName('table1');
-$qt1->declare();
+$qt1->declareQueue();
 $qt1->bind('tableExchange1', 'routing.key');
 
 $qt2 = new AMQPQueue($ch);
 $qt2->setFlags(AMQP_DURABLE);
 $qt2->setName('table2');
-$qt2->declare();
+$qt2->declareQueue();
 $qt2->bind('tableExchange2', 'routing.key');
 
 // Create user 1 queue ///////////////////////
@@ -59,13 +59,13 @@ $q1 = new AMQPQueue($ch);
 // don't use autodelete, used timeout instead
 $q1->setFlags(AMQP_DURABLE | AMQP_AUTODELETE);
 $q1->setName('user1');
-$q1->declare();
+$q1->declareQueue();
 $q1->bind('userExchange', 'user1');
 // Create user 2 queue 
 $q2 = new AMQPQueue($ch);
 $q2->setFlags(AMQP_DURABLE | AMQP_AUTODELETE); // this is if created by user
 $q2->setName('user2');
-$q2->declare();
+$q2->declareQueue();
 $q2->bind('userExchange', 'user2');
  
 echo "Clean up starting...<br/>";

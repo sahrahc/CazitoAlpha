@@ -1,7 +1,6 @@
 <?php
+include_once('Env.php');
 // configure logging
-/* * ***************************************************************************************************** */
-$dbName = 'cazito5_sprint9';
 /* * ***************************************************************************************************** */
 /** poker playing defaults */
 $defaultTableMin = 1000; // practice
@@ -41,18 +40,16 @@ $cAntiOilMarkerTimeOut = 'PT15M';
 /* * ***************************************************************************************************** */
 /* messaging - centralized config parmeters helps with deployment */
 $stomp_port = 61613;
-$stomp_host = '192.168.1.70';
-//$stomp_host = 'localhost';
+$stomp_host = $site;
 $stomp_exchange = 'direct';// 'player';
 $stomp_vhost = '/';
 /* * ***************************************************************************************************** */
 $amqp_port = 5672;
-$amqp_host = '192.168.1.70';
-//$amqp_host = 'localhost';
+$amqp_host = $site;
 $amqp_player_exchange = 'player';
 $amqp_session_exchange = 'session';
 $amqp_chat_exchange = 'chat';
-$qmap_vhost = '/';
+$amqp_vhost = '/';
 
 // Include Libraries
 include_once(dirname(__FILE__) . '/../Libraries/log4php/Logger.php');

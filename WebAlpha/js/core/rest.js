@@ -1,5 +1,4 @@
-constServiceUrl = "//192.168.1.70//PokerService//PokerPlayerService.php";
-//constServiceUrl = "http://localhost//PokerService//PokerPlayerService.php";
+constServiceUrl = "//" + constSite + "//PokerService//PokerPlayerService.php";
 /********************************************************************************************/
 function WSClient() {
 
