@@ -37,5 +37,4 @@
 			</ul>
 		</nav>
 
-	</div>
-</header>
+	</header>
