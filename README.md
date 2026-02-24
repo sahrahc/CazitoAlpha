@@ -75,6 +75,7 @@ flowchart LR
 
     Poker --> DB
     PHP --> DB
+```
 
 🔄 Runtime Data Flow (Example)
 
