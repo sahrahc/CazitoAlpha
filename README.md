@@ -166,13 +166,3 @@ Senior Software / Data Engineer
 
 This repository is intended as a system design and real-time architecture prototype, not a production application.
 
----
-
-### ✅ Next (Optional)
-If you want, I can:
-- Generate a **PNG/SVG architecture diagram** to include as a fallback
-- Tighten language to be **FAANG/Netflix interview optimized**
-- Add **badges** (tech stack, status, license)
-- Write a **“Design Decisions”** section explicitly mapping tradeoffs
-
-Just tell me what you want to polish next.
